@@ -13,7 +13,8 @@
   "longitude",
   "speed",
   "accuracy",
-  "source"
+  "source",
+  "battery"
  ],
  "fields": [
   {
@@ -31,7 +32,8 @@
   {
    "fieldname": "timestamp",
    "fieldtype": "Datetime",
-   "label": "Timestamp"
+   "label": "Timestamp",
+   "options": "Background\nForegorund\nManual"
   },
   {
    "fieldname": "latitude",
@@ -57,13 +59,18 @@
    "fieldname": "source",
    "fieldtype": "Select",
    "label": "Source",
-   "options": "Background\nForeground\nManual"
+   "options": "background\nforeground\nmanual"
+  },
+  {
+   "fieldname": "battery",
+   "fieldtype": "Int",
+   "label": "Battery"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-17 17:10:39.485144",
+ "modified": "2026-09-18 12:17:56.875267",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Location Ping",
@@ -78,6 +85,19 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "select": 1,
    "share": 1,
    "write": 1
   }
