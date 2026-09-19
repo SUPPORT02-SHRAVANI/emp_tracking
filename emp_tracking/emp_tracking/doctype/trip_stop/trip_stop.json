@@ -23,7 +23,7 @@
    "fieldname": "trip",
    "fieldtype": "Link",
    "label": "Trip",
-   "options": "Trip"
+   "options": "Trip 2"
   },
   {
    "fieldname": "stop_type",
@@ -80,7 +80,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 13:59:54.863640",
+ "modified": "2026-09-19 10:46:13.759872",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Trip Stop",

@@ -27,7 +27,7 @@
    "fieldname": "trip",
    "fieldtype": "Link",
    "label": "Trip",
-   "options": "Trip"
+   "options": "Trip 2"
   },
   {
    "fieldname": "timestamp",
@@ -70,7 +70,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 12:17:56.875267",
+ "modified": "2026-09-19 10:47:45.304163",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Location Ping",

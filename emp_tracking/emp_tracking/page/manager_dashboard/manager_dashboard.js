@@ -1390,12 +1390,12 @@ class ManagerDashboard {
 					order_by: 'time asc',
 					limit: 50,
 				}),
-				frappe.db.get_list('Trip', {
+				quiet_get_list('Trip', {
 					fields: ['name', 'start_time', 'end_time', 'total_distance_km', 'total_duration_minutes', 'total_halt_minutes'],
 					filters: [['employee', '=', employeeId], ['start_time', '>=', dayStart], ['start_time', '<=', dayEnd]],
 					order_by: 'start_time asc',
 					limit: 20,
-				}).catch(() => []),
+				}),
 				frappe.db.get_list('Location Ping', {
 					fields: ['timestamp', 'latitude', 'longitude', 'speed', 'battery', 'source'],
 					filters: [['employee', '=', employeeId], ['timestamp', '>=', dayStart], ['timestamp', '<=', dayEnd]],
@@ -1407,12 +1407,12 @@ class ManagerDashboard {
 			var tripIds = trips.map((t) => t.name);
 			var stops = [];
 			if (tripIds.length) {
-				stops = await frappe.db.get_list('Trip Stop', {
+				stops = await quiet_get_list('Trip Stop', {
 					fields: ['trip', 'stop_type', 'title', 'address', 'start_time', 'end_time', 'duration_minutes', 'distance_km', 'avg_speed_kmh', 'latitude', 'longitude'],
 					filters: [['trip', 'in', tripIds]],
 					order_by: 'start_time asc',
 					limit: 200,
-				}).catch(() => []);
+				});
 			}
 
 			var payload = this.compute_timeline_payload(checkins || [], trips || [], stops || [], pings || []);
@@ -1694,6 +1694,23 @@ function format_punch_label(iso, isPunchedIn) {
 	else dayStr = d.toLocaleDateString([], { day: 'numeric', month: 'short' });
 
 	return (isPunchedIn ? 'Punched IN : ' : 'Punched OUT : ') + dayStr + ' at ' + timeStr;
+}
+
+// Like frappe.db.get_list, but never pops Frappe's default error dialog and
+// always resolves (to []) even if the server rejects the query — used for
+// Trip/Trip Stop, which are optional/best-effort inputs to the Timeline tab.
+function quiet_get_list(doctype, args) {
+	return new Promise((resolve) => {
+		var callArgs = Object.assign({ doctype: doctype }, args);
+		frappe.call({
+			method: 'frappe.desk.reportview.get_list',
+			args: callArgs,
+			type: 'GET',
+			silent: true,
+			callback: (r) => resolve((r && r.message) || []),
+			error: () => resolve([]),
+		});
+	});
 }
 
 function geocode_key(lat, lng) {
