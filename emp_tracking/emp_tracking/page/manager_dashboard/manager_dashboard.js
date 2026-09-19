@@ -813,7 +813,14 @@ class ManagerDashboard {
 			this.render_overview();
 			if (this.timelineInitialized) {
 				this.populate_timeline_employee_select();
-				if (!this.timelineDataLoaded) this.load_timeline();
+				// Today's timeline is still live (pings keep arriving as the trip
+				// progresses), so keep it refreshing on the same cycle as everything
+				// else. A past date is finished, so leave it alone once loaded.
+				if (!this.timelineDataLoaded) {
+					this.load_timeline();
+				} else if (this.timelineDate === frappe.datetime.get_today()) {
+					this.load_timeline(true);
+				}
 			}
 			this.page.set_indicator('Live', 'green');
 		} catch (e) {
@@ -1387,7 +1394,7 @@ class ManagerDashboard {
 		this.timelineMarkersLayer = L.layerGroup().addTo(this.timelineMap);
 	}
 
-	async load_timeline() {
+	async load_timeline(silent) {
 		var employeeId = this.$root.find('.md-tl-emp-select').val() || this.timelineEmployeeId;
 		var date = this.timelineDate;
 		if (!employeeId) return;
@@ -1398,7 +1405,7 @@ class ManagerDashboard {
 		var dayEnd = date + ' 23:59:59';
 		var isToday = date === frappe.datetime.get_today();
 
-		this.$root.find('.md-tl-events').html('<div class="md-tl-empty">Loading…</div>');
+		if (!silent) this.$root.find('.md-tl-events').html('<div class="md-tl-empty">Loading…</div>');
 
 		try {
 			// Employee Timeline is a per-employee-per-day cache: once a past day is
