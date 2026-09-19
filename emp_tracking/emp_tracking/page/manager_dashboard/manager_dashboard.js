@@ -868,7 +868,7 @@ class ManagerDashboard {
 			var latestCheckin = checkins.find((c) => c.employee === emp.name);
 			var isPunchedIn = latestCheckin ? latestCheckin.log_type === 'IN' : false;
 
-			var empPings = pingsByEmployee[emp.name] || [];
+			var empPings = filter_ping_outliers(pingsByEmployee[emp.name] || []);
 			var latestPing = empPings.length ? empPings[empPings.length - 1] : null;
 			var lat = latestPing ? Number(latestPing.latitude) : null;
 			var lng = latestPing ? Number(latestPing.longitude) : null;
@@ -1507,7 +1507,8 @@ class ManagerDashboard {
 				});
 			}
 
-			var payload = this.compute_timeline_payload(checkins || [], trips || [], stops || [], pings || []);
+			var cleanPings = filter_ping_outliers(pings || []);
+			var payload = this.compute_timeline_payload(checkins || [], trips || [], stops || [], cleanPings);
 			this.render_timeline_payload(payload);
 			this.save_employee_timeline(employeeId, date, payload, cached ? cached.name : null);
 		} catch (e) {
@@ -1597,7 +1598,7 @@ class ManagerDashboard {
 		});
 		events.sort((a, b) => new Date(a.time) - new Date(b.time));
 
-		var pingsLite = pings.map((p) => ({ t: p.timestamp, lat: Number(p.latitude), lng: Number(p.longitude) }));
+		var pingsLite = pings.map((p) => ({ t: p.timestamp, lat: Number(p.latitude), lng: Number(p.longitude), speed: p.speed != null ? Number(p.speed) : null }));
 
 		return {
 			attendanceStatus: attendanceStatus,
@@ -1675,7 +1676,7 @@ class ManagerDashboard {
 				<span class="md-battery-icon"><span style="width:${level}%;background:currentColor"></span></span>${level}%</span>`;
 		};
 
-		var haltNum = 1;
+		var stopNum = 1;
 		var prevTime = null;
 		events.forEach((ev, idx) => {
 			if (prevTime != null) {
@@ -1694,12 +1695,16 @@ class ManagerDashboard {
 
 			var addressText = ev.address || (ev.lat != null && ev.lng != null ? ev.lat.toFixed(4) + ', ' + ev.lng.toFixed(4) : 'No location data');
 			var gapLabel = idx === 0 ? '' : format_hm_from_minutes((new Date(ev.time) - new Date(events[0].time)) / 60000);
+			// The trip-start point (first event of the day, whatever kind) and every
+			// Halt after it share one running number — that's the sequence of
+			// distinct stops. Any other punch in between is just a plain mark.
+			var isNumbered = idx === 0 || ev.kind === 'halt';
 
 			if (ev.kind === 'halt') {
 				var haltDuration = ev.durationMinutes ? format_hm_from_minutes(ev.durationMinutes) : null;
 				$events.append(`
 					<div class="md-tl-row">
-						<div class="md-tl-num halt">${haltNum}</div>
+						<div class="md-tl-num halt">${stopNum}</div>
 						<div class="md-tl-row-body">
 							<div class="md-tl-row-top">
 								<span class="md-tl-row-title halt">Halted${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
@@ -1710,12 +1715,15 @@ class ManagerDashboard {
 						</div>
 					</div>
 				`);
-				haltNum++;
+				stopNum++;
 			} else {
 				var isIn = ev.kind === 'in';
+				var markHtml = isNumbered
+					? `<div class="md-tl-num ${isIn ? 'in' : 'out'}">${stopNum}</div>`
+					: `<div class="md-tl-mark ${isIn ? 'in' : 'out'}"></div>`;
 				$events.append(`
 					<div class="md-tl-row">
-						<div class="md-tl-mark ${isIn ? 'in' : 'out'}"></div>
+						${markHtml}
 						<div class="md-tl-row-body">
 							<div class="md-tl-row-top">
 								<span class="md-tl-row-title ${isIn ? 'in' : 'out'}">${isIn ? 'Punch In' : 'Punch Out'}${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
@@ -1726,6 +1734,7 @@ class ManagerDashboard {
 						</div>
 					</div>
 				`);
+				if (isNumbered) stopNum++;
 			}
 			prevTime = new Date(ev.time).getTime();
 		});
@@ -1739,25 +1748,33 @@ class ManagerDashboard {
 		var bounds = [];
 
 		if (pings.length > 1) {
-			var latlngs = pings.map((p) => [p.lat, p.lng]);
-			L.polyline(latlngs, { color: '#16a34a', weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
-			bounds = bounds.concat(latlngs);
+			// Colour each leg of the route by movement status at that point —
+			// same green/orange language as the rest of the dashboard — instead of
+			// one flat line for the whole day.
+			for (var i = 1; i < pings.length; i++) {
+				var leg = [[pings[i - 1].lat, pings[i - 1].lng], [pings[i].lat, pings[i].lng]];
+				var legColor = pings[i].speed != null && pings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
+				L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
+			}
+			bounds = bounds.concat(pings.map((p) => [p.lat, p.lng]));
 		}
 
-		var haltNum = 1;
-		events.forEach((ev) => {
+		var stopNum = 1;
+		events.forEach((ev, idx) => {
 			if (ev.lat == null || ev.lng == null) return;
 
+			var isNumbered = idx === 0 || ev.kind === 'halt';
 			var icon;
-			if (ev.kind === 'halt') {
+			if (isNumbered) {
+				var circleColor = ev.kind === 'halt' ? '#2563eb' : ev.kind === 'in' ? '#16a34a' : '#dc2626';
 				icon = L.divIcon({
 					className: '',
-					html: `<div style="width:24px;height:24px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;
-							display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);">${haltNum}</div>`,
+					html: `<div style="width:24px;height:24px;border-radius:50%;background:${circleColor};color:#fff;font-size:11px;font-weight:800;
+							display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);">${stopNum}</div>`,
 					iconSize: [24, 24],
 					iconAnchor: [12, 12],
 				});
-				haltNum++;
+				stopNum++;
 			} else {
 				var color = ev.kind === 'in' ? '#16a34a' : '#dc2626';
 				icon = L.divIcon({
@@ -1835,6 +1852,28 @@ function detect_halts_from_pings(pings) {
 		}
 	}
 	return halts;
+}
+
+// Drops pings that imply an impossible speed from the previous kept ping (GPS
+// glitches / stale fixes that jump miles away for one reading) — otherwise the
+// route polyline zigzags out to that bad point and back, and distance totals
+// get inflated by it. Expects raw Location Ping rows (latitude/longitude/timestamp).
+function filter_ping_outliers(pings) {
+	if (pings.length < 3) return pings;
+	var MAX_SPEED_KMH = 150;
+	var filtered = [pings[0]];
+	for (var i = 1; i < pings.length; i++) {
+		var prev = filtered[filtered.length - 1];
+		var cur = pings[i];
+		var distKm = haversine(
+			Number(prev.latitude), Number(prev.longitude),
+			Number(cur.latitude), Number(cur.longitude)
+		) / 1000;
+		var hours = (new Date(cur.timestamp) - new Date(prev.timestamp)) / 3600000;
+		var speedKmh = hours > 0 ? distKm / hours : (distKm > 0.05 ? Infinity : 0);
+		if (speedKmh <= MAX_SPEED_KMH) filtered.push(cur);
+	}
+	return filtered;
 }
 
 function time_ago(iso) {
