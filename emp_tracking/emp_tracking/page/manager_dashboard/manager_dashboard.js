@@ -279,10 +279,20 @@ class ManagerDashboard {
 						color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
 					.md-tl-hide-btn:hover { background: #1d4ed8; }
 					.md-tl-emp-pill { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0;
-						border-radius: 8px; padding: 7px 14px; flex: 1; min-width: 200px; max-width: 320px; }
+						border-radius: 8px; padding: 7px 14px; flex: 1; min-width: 200px; max-width: 320px; position: relative;
+						transition: border-color .15s, box-shadow .15s; }
+					.md-tl-emp-pill:focus-within { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
 					.md-tl-emp-pill .icon { color: #2563eb; flex-shrink: 0; display: flex; }
-					.md-tl-emp-select { border: none; background: transparent; outline: none; font-size: 12.5px; font-weight: 700;
+					.md-tl-emp-search { border: none; background: transparent; outline: none; font-size: 12.5px; font-weight: 700;
 						color: #0f172a; flex: 1; min-width: 0; }
+					.md-tl-emp-search::placeholder { font-weight: 600; color: #94a3b8; }
+					.md-tl-emp-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #fff;
+						border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 6px 18px rgba(15,23,42,0.15);
+						max-height: 240px; overflow-y: auto; z-index: 1200; display: none; }
+					.md-tl-emp-dropdown.open { display: block; }
+					.md-tl-emp-option { padding: 8px 14px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; }
+					.md-tl-emp-option:hover, .md-tl-emp-option.active { background: #eff6ff; color: #2563eb; }
+					.md-tl-emp-option.empty { color: #94a3b8; cursor: default; text-align: center; font-weight: 500; }
 					.md-tl-date-nav { display: flex; align-items: center; gap: 8px; }
 					.md-tl-date-prev, .md-tl-date-next { width: 30px; height: 30px; border: 1px solid #e2e8f0; background: #fff;
 						border-radius: 7px; color: #475569; cursor: pointer; font-size: 14px; flex-shrink: 0; }
@@ -540,7 +550,9 @@ class ManagerDashboard {
 						<button class="md-tl-hide-btn">&times; Hide Details</button>
 						<div class="md-tl-emp-pill">
 							<span class="icon">${ICON_PERSON}</span>
-							<select class="md-tl-emp-select"></select>
+							<input type="text" class="md-tl-emp-search" placeholder="Search employee..." autocomplete="off">
+							<input type="hidden" class="md-tl-emp-select">
+							<div class="md-tl-emp-dropdown"></div>
 						</div>
 					</div>
 
@@ -702,6 +714,31 @@ class ManagerDashboard {
 		});
 
 		this.$root.find('.md-tl-emp-select').on('change', () => this.load_timeline());
+
+		this.$root.find('.md-tl-emp-search').on('focus', (e) => {
+			this.render_timeline_emp_dropdown($(e.currentTarget).val());
+			this.$root.find('.md-tl-emp-dropdown').addClass('open');
+		});
+		this.$root.find('.md-tl-emp-search').on('input', (e) => {
+			this.render_timeline_emp_dropdown($(e.currentTarget).val());
+			this.$root.find('.md-tl-emp-dropdown').addClass('open');
+		});
+		this.$root.find('.md-tl-emp-dropdown').on('mousedown', '.md-tl-emp-option[data-employee]', (e) => {
+			var employeeId = $(e.currentTarget).data('employee');
+			var employee = this.employees.find((x) => x.employeeId === employeeId);
+			if (!employee) return;
+			this.timelineEmployeeId = employeeId;
+			this.$root.find('.md-tl-emp-select').val(employeeId);
+			this.$root.find('.md-tl-emp-search').val(employee.employeeName);
+			this.$root.find('.md-tl-emp-dropdown').removeClass('open');
+			this.load_timeline();
+		});
+		$(document).off('click.mdTlEmpDropdown').on('click.mdTlEmpDropdown', (e) => {
+			if (!$(e.target).closest('.md-tl-emp-pill').length) {
+				this.$root.find('.md-tl-emp-dropdown').removeClass('open');
+				this.populate_timeline_employee_select(); // restore the selected name if they typed and clicked away
+			}
+		});
 
 		this.$root.find('.md-tl-date-prev').on('click', () => this.shift_timeline_date(-1));
 		this.$root.find('.md-tl-date-next').on('click', () => this.shift_timeline_date(1));
@@ -1223,7 +1260,7 @@ class ManagerDashboard {
 			// snapping back out to fit everyone every 10 seconds.
 			if (!this.hasFittedLiveMap && bounds.length) {
 				if (bounds.length === 1) this.map.setView(bounds[0], 13);
-				else this.map.fitBounds(bounds, { padding: [30, 30] });
+				else this.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
 				this.hasFittedLiveMap = true;
 			}
 			setTimeout(() => this.map.invalidateSize(), 200);
@@ -1396,12 +1433,32 @@ class ManagerDashboard {
 	}
 
 	populate_timeline_employee_select() {
-		var $select = this.$root.find('.md-tl-emp-select').empty();
-		this.employees.forEach((e) => {
-			$select.append(`<option value="${frappe.utils.escape_html(e.employeeId)}">${frappe.utils.escape_html(e.employeeName)}</option>`);
-		});
 		if (!this.timelineEmployeeId && this.employees.length) this.timelineEmployeeId = this.employees[0].employeeId;
-		$select.val(this.timelineEmployeeId);
+		this.$root.find('.md-tl-emp-select').val(this.timelineEmployeeId);
+		// Don't clobber what the manager is actively typing into the search box.
+		if (!this.$root.find('.md-tl-emp-search').is(':focus')) {
+			var current = this.employees.find((e) => e.employeeId === this.timelineEmployeeId);
+			this.$root.find('.md-tl-emp-search').val(current ? current.employeeName : '');
+		}
+	}
+
+	render_timeline_emp_dropdown(filterText) {
+		var $dd = this.$root.find('.md-tl-emp-dropdown');
+		var q = (filterText || '').trim().toLowerCase();
+		var matches = q
+			? this.employees.filter((e) => e.employeeName.toLowerCase().indexOf(q) !== -1)
+			: this.employees;
+
+		$dd.empty();
+		if (!matches.length) {
+			$dd.append('<div class="md-tl-emp-option empty">No employees found</div>');
+			return;
+		}
+		matches.slice(0, 50).forEach((e) => {
+			$dd.append(
+				`<div class="md-tl-emp-option${e.employeeId === this.timelineEmployeeId ? ' active' : ''}" data-employee="${frappe.utils.escape_html(e.employeeId)}">${frappe.utils.escape_html(e.employeeName)}</div>`
+			);
+		});
 	}
 
 	// Shows "Today" / "Yesterday" / a friendly date instead of a raw date picker,
@@ -1770,10 +1827,32 @@ class ManagerDashboard {
 		var bounds = [];
 
 		if (pings.length > 1) {
-			// Drop near-duplicate points before drawing (GPS wobble while stationary
-			// draws a messy zigzag even after outlier filtering) — display-only, the
-			// full point list is still what halts/distance/stats are computed from.
-			var displayPings = simplify_for_display(pings, 20);
+			// While halted, the phone keeps pinging but isn't actually moving — the
+			// scatter of those pings drew as a zigzag even after outlier filtering.
+			// Collapse each halt's own pings into its single (already-computed)
+			// location, then simplify the remaining travel pings the same way.
+			var haltRanges = events
+				.filter((ev) => ev.kind === 'halt' && ev.lat != null && ev.lng != null)
+				.map((ev) => {
+					var startMs = new Date(ev.time).getTime();
+					return { startMs: startMs, endMs: startMs + (ev.durationMinutes || 0) * 60000, lat: ev.lat, lng: ev.lng };
+				});
+			var skeleton = [];
+			var insertedHalt = null;
+			pings.forEach((p) => {
+				var t = new Date(p.t).getTime();
+				var range = haltRanges.find((r) => t >= r.startMs && t <= r.endMs);
+				if (range) {
+					if (insertedHalt !== range) {
+						skeleton.push({ lat: range.lat, lng: range.lng, speed: 0, t: p.t });
+						insertedHalt = range;
+					}
+				} else {
+					insertedHalt = null;
+					skeleton.push(p);
+				}
+			});
+			var displayPings = simplify_for_display(skeleton, 20);
 			// Colour each leg of the route by movement status at that point —
 			// same green/orange language as the rest of the dashboard — instead of
 			// one flat line for the whole day.
@@ -1819,7 +1898,7 @@ class ManagerDashboard {
 		// re-fitting on every auto-refresh would fight the manager's own zoom/pan.
 		if (!this.hasFittedTimelineMap && bounds.length) {
 			if (bounds.length === 1) this.timelineMap.setView(bounds[0], 13);
-			else this.timelineMap.fitBounds(bounds, { padding: [30, 30] });
+			else this.timelineMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
 			this.hasFittedTimelineMap = true;
 		}
 		setTimeout(() => this.timelineMap.invalidateSize(), 200);
@@ -1843,45 +1922,53 @@ function haversine(lat1, lon1, lat2, lon2) {
 // Stop has no halts recorded for that employee/day, so the timeline still
 // shows something meaningful from the raw GPS trail alone.
 function detect_halts_from_pings(pings) {
-	var STOP_RADIUS_M = 150;
+	var STOP_RADIUS_M = 100;
 	var MIN_HALT_MINUTES = 5;
 	var halts = [];
-	var clusterStart = 0;
+	if (!pings.length) return halts;
 
-	for (var i = 1; i <= pings.length; i++) {
-		var brokeCluster = i === pings.length;
-		if (!brokeCluster) {
-			var d = haversine(
-				Number(pings[clusterStart].latitude), Number(pings[clusterStart].longitude),
-				Number(pings[i].latitude), Number(pings[i].longitude)
-			);
-			brokeCluster = d > STOP_RADIUS_M;
+	var cluster = [pings[0]];
+
+	var centroidOf = (pts) => {
+		var sumLat = 0, sumLng = 0;
+		pts.forEach((p) => {
+			sumLat += Number(p.latitude);
+			sumLng += Number(p.longitude);
+		});
+		return { lat: sumLat / pts.length, lng: sumLng / pts.length };
+	};
+
+	var flush = () => {
+		if (cluster.length < 2) return;
+		var startMs = new Date(cluster[0].timestamp).getTime();
+		var endMs = new Date(cluster[cluster.length - 1].timestamp).getTime();
+		var durationMin = (endMs - startMs) / 60000;
+		if (durationMin >= MIN_HALT_MINUTES) {
+			var c = centroidOf(cluster);
+			halts.push({
+				start_time: cluster[0].timestamp,
+				address: null,
+				duration_minutes: durationMin,
+				latitude: c.lat,
+				longitude: c.lng,
+			});
 		}
-		if (brokeCluster) {
-			var clusterEnd = i - 1;
-			if (clusterEnd > clusterStart) {
-				var startMs = new Date(pings[clusterStart].timestamp).getTime();
-				var endMs = new Date(pings[clusterEnd].timestamp).getTime();
-				var durationMin = (endMs - startMs) / 60000;
-				if (durationMin >= MIN_HALT_MINUTES) {
-					var sumLat = 0, sumLng = 0, n = 0;
-					for (var k = clusterStart; k <= clusterEnd; k++) {
-						sumLat += Number(pings[k].latitude);
-						sumLng += Number(pings[k].longitude);
-						n++;
-					}
-					halts.push({
-						start_time: pings[clusterStart].timestamp,
-						address: null,
-						duration_minutes: durationMin,
-						latitude: sumLat / n,
-						longitude: sumLng / n,
-					});
-				}
-			}
-			clusterStart = i;
+	};
+
+	for (var i = 1; i < pings.length; i++) {
+		// Compare against the cluster's running centroid, not just its first
+		// point — a fixed first-point comparison lets slow drift wander the
+		// cluster up to 2x the radius away before ever breaking it.
+		var c = centroidOf(cluster);
+		var d = haversine(c.lat, c.lng, Number(pings[i].latitude), Number(pings[i].longitude));
+		if (d <= STOP_RADIUS_M) {
+			cluster.push(pings[i]);
+		} else {
+			flush();
+			cluster = [pings[i]];
 		}
 	}
+	flush();
 	return halts;
 }
 
