@@ -586,6 +586,7 @@ class ManagerDashboard {
 								<div class="md-map-legend">
 									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Route — Moving</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#f97316"></span>Route — Stopped</div>
+								<div class="md-map-legend-row"><span class="sw" style="background:#94a3b8;border-style:dashed"></span>No ping data (gap)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#2563eb"></span>Halt stop (numbered)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Punch In</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#dc2626"></span>Punch Out</div>
@@ -1855,12 +1856,28 @@ class ManagerDashboard {
 			var displayPings = simplify_for_display(skeleton, 20);
 			// Colour each leg of the route by movement status at that point —
 			// same green/orange language as the rest of the dashboard — instead of
-			// one flat line for the whole day.
+			// one flat line for the whole day. A leg spanning a long silent gap
+			// (no ping for several minutes) isn't a tracked path, just two points
+			// with nothing in between — draw that honestly as a dashed "no data"
+			// line instead of a solid one implying continuous movement.
+			var GAP_MINUTES = 5;
 			for (var i = 1; i < displayPings.length; i++) {
 				var leg = [[displayPings[i - 1].lat, displayPings[i - 1].lng], [displayPings[i].lat, displayPings[i].lng]];
-				var legColor = displayPings[i].speed != null && displayPings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
-				L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
+				var gapMin = (new Date(displayPings[i].t) - new Date(displayPings[i - 1].t)) / 60000;
+				if (gapMin > GAP_MINUTES) {
+					L.polyline(leg, { color: '#94a3b8', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(this.timelineMarkersLayer);
+				} else {
+					var legColor = displayPings[i].speed != null && displayPings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
+					L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
+				}
 			}
+			// Small dots for every real kept ping, so it's visible this is actual
+			// tracked data and not just an abstract connecting line.
+			displayPings.forEach((p) => {
+				L.circleMarker([p.lat, p.lng], {
+					radius: 3, weight: 1, color: '#fff', fillColor: '#334155', fillOpacity: 0.9,
+				}).addTo(this.timelineMarkersLayer);
+			});
 			bounds = bounds.concat(pings.map((p) => [p.lat, p.lng]));
 		}
 
