@@ -48,6 +48,8 @@ var ICON_PLAY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentCo
 var ICON_PAUSE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 var ICON_OFFLINE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
 var ICON_ROUTE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H9a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7"/></svg>';
+var ICON_NAV = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>';
+var ICON_PERSON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
 var TABS = [
 	{ key: 'overview', icon: '📊', label: 'Overview' },
@@ -261,50 +263,66 @@ class ManagerDashboard {
 					.md-cardview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 
 					.md-tl-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-					.md-tl-hide-btn { border: 1px solid #e2e8f0; background: #fff; color: #475569; border-radius: 8px;
-						padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
-					.md-tl-hide-btn:hover { border-color: #cbd5e1; }
-					.md-tl-emp-select { min-width: 220px; }
-					.md-tl-date-nav { display: flex; align-items: center; gap: 4px; }
-					.md-tl-date-nav button { width: 28px; height: 28px; border: 1px solid #e2e8f0; background: #fff; border-radius: 7px;
-						color: #475569; cursor: pointer; font-size: 14px; }
-					.md-tl-date-nav button:hover { border-color: #93c5fd; color: #2563eb; }
-					.md-tl-date-input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; font-size: 12px; color: #334155; }
+					.md-tl-hide-btn { display: flex; align-items: center; gap: 6px; border: none; background: #2563eb;
+						color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+					.md-tl-hide-btn:hover { background: #1d4ed8; }
+					.md-tl-emp-pill { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0;
+						border-radius: 8px; padding: 7px 14px; flex: 1; min-width: 200px; max-width: 320px; }
+					.md-tl-emp-pill .icon { color: #2563eb; flex-shrink: 0; display: flex; }
+					.md-tl-emp-select { border: none; background: transparent; outline: none; font-size: 12.5px; font-weight: 700;
+						color: #0f172a; flex: 1; min-width: 0; }
+					.md-tl-date-nav { display: flex; align-items: center; gap: 8px; }
+					.md-tl-date-prev, .md-tl-date-next { width: 30px; height: 30px; border: 1px solid #e2e8f0; background: #fff;
+						border-radius: 7px; color: #475569; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+					.md-tl-date-prev:hover, .md-tl-date-next:hover { border-color: #93c5fd; color: #2563eb; }
+					.md-tl-date-label { border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 12.5px;
+						font-weight: 700; color: #334155; cursor: pointer; padding: 7px 14px; white-space: nowrap; }
+					.md-tl-date-label:hover { border-color: #93c5fd; }
+					.md-tl-date-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+					.md-tl-locsetting { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+						padding: 7px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: #475569;
+						margin-bottom: 14px; width: fit-content; }
+					.md-tl-locsetting .pin { display: flex; }
+					.md-tl-locsetting.good { background: #dcfce7; border-color: #bbf7d0; color: #15803d; }
+					.md-tl-locsetting.good .pin { color: #16a34a; }
+					.md-tl-locsetting.fair { background: #fef3c7; border-color: #fde68a; color: #b45309; }
+					.md-tl-locsetting.fair .pin { color: #f59e0b; }
+					.md-tl-locsetting.poor { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+					.md-tl-locsetting.poor .pin { color: #dc2626; }
 
 					.md-tl-body { display: flex; gap: 16px; height: 640px; }
 					@media (max-width: 900px) { .md-tl-body { flex-direction: column; height: auto; } }
 					.md-tl-details { width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
 					@media (max-width: 900px) { .md-tl-details { width: 100%; } }
-					.md-tl-stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
-					.md-tl-stat { flex: 1; min-width: 62px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
-						padding: 8px 6px; text-align: center; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
-					.md-tl-stat .v { font-size: 12px; font-weight: 800; color: #0f172a; }
-					.md-tl-stat .l { font-size: 8.5px; color: #64748b; font-weight: 600; margin-top: 2px; }
-					.md-tl-badges { display: flex; gap: 8px; flex-wrap: wrap; }
-					.md-tl-badge { font-size: 11.5px; font-weight: 700; padding: 7px 12px; border-radius: 8px; border: 1px solid #e2e8f0;
-						background: #fff; color: #475569; }
-					.md-tl-badge.good { background: #dcfce7; border-color: #bbf7d0; color: #15803d; }
-					.md-tl-badge.poor { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+					.md-tl-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+					.md-tl-stat { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+						padding: 12px 10px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+					.md-tl-stat .v { font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.2; }
+					.md-tl-stat .l { font-size: 9.5px; color: #64748b; font-weight: 700; margin-top: 4px; line-height: 1.3; text-transform: uppercase;
+						letter-spacing: .02em; }
 
 					.md-tl-events { flex: 1; overflow-y: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-						padding: 4px 12px; }
-					.md-tl-event { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-					.md-tl-event:last-child { border-bottom: none; }
-					.md-tl-event-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 800;
+						padding: 4px 14px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+					.md-tl-row { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+					.md-tl-row:last-child { border-bottom: none; }
+					.md-tl-num { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 11.5px; font-weight: 800;
 						display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-					.md-tl-event-num.in { background: #16a34a; }
-					.md-tl-event-num.out { background: #dc2626; }
-					.md-tl-event-num.halt { background: #64748b; }
-					.md-tl-event-body { flex: 1; min-width: 0; }
-					.md-tl-event-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-					.md-tl-event-time { font-size: 11.5px; font-weight: 700; color: #334155; }
-					.md-tl-event-gap { font-size: 9.5px; color: #94a3b8; font-weight: 600; margin-left: 4px; }
-					.md-tl-event-battery { font-size: 10.5px; font-weight: 700; display: flex; align-items: center; gap: 3px; }
-					.md-tl-event-address { font-size: 11.5px; color: #334155; font-weight: 700; margin-top: 3px; }
-					.md-tl-event-sub { font-size: 10.5px; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
-					.md-tl-event-sub .tag { background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 5px; font-weight: 700; }
-					.md-tl-travel-row { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 32px; font-size: 11px;
-						color: #64748b; font-weight: 700; border-bottom: 1px solid #f1f5f9; }
+					.md-tl-num.in { background: #16a34a; }
+					.md-tl-num.out { background: #dc2626; }
+					.md-tl-num.halt { background: #2563eb; }
+					.md-tl-row-body { flex: 1; min-width: 0; }
+					.md-tl-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+					.md-tl-row-title { font-size: 13px; font-weight: 800; }
+					.md-tl-row-title.in { color: #16a34a; } .md-tl-row-title.out { color: #dc2626; } .md-tl-row-title.halt { color: #0f172a; }
+					.md-tl-row-gap { font-size: 10px; color: #94a3b8; font-weight: 600; margin-left: 5px; }
+					.md-tl-row-address { font-size: 11.5px; color: #334155; font-weight: 700; margin-top: 4px; }
+					.md-tl-row-sub { font-size: 10.5px; color: #94a3b8; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+					.md-tl-row-sub .tag { background: #f1f5f9; color: #475569; padding: 1px 7px; border-radius: 5px; font-weight: 700; }
+					.md-tl-travel-row { display: flex; align-items: center; gap: 7px; padding: 8px 0 8px 33px; font-size: 11px;
+						color: #94a3b8; font-weight: 700; border-bottom: 1px solid #f1f5f9; }
+					.md-tl-batt-pill { flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 4px 9px; border-radius: 20px;
+						display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 					.md-tl-empty { text-align: center; color: #94a3b8; font-size: 12.5px; padding: 30px 10px; }
 
 					.md-tl-body.details-hidden .md-tl-details { display: none; }
@@ -497,27 +515,29 @@ class ManagerDashboard {
 				<div class="md-tab-panel" data-panel="timeline">
 					<div class="md-tl-toolbar">
 						<button class="md-tl-hide-btn">&times; Hide Details</button>
-						<select class="md-select md-tl-emp-select"></select>
-						<div class="md-tl-date-nav">
-							<button class="md-tl-date-prev">‹</button>
-							<input type="date" class="md-tl-date-input">
-							<button class="md-tl-date-next">›</button>
+						<div class="md-tl-emp-pill">
+							<span class="icon">${ICON_PERSON}</span>
+							<select class="md-tl-emp-select"></select>
 						</div>
-						<button class="md-timeline-btn md-tl-apply-btn" style="padding:7px 16px;">Apply</button>
-						<button class="md-filter-icon-btn md-tl-reset-btn" title="Reset" style="margin-left:auto">${ICON_FUNNEL}</button>
 					</div>
+
+					<div class="md-tl-locsetting"><span class="pin">${ICON_PIN}</span><span>Location Setting: <b class="md-tl-loc-value">—</b></span></div>
+
+					<div class="md-tl-date-nav">
+						<button class="md-tl-date-prev">‹</button>
+						<button class="md-tl-date-label">Today</button>
+						<button class="md-tl-date-next">›</button>
+					</div>
+					<input type="date" class="md-tl-date-hidden-input">
 
 					<div class="md-tl-body">
 						<div class="md-tl-details">
 							<div class="md-tl-stats-row">
-								<div class="md-tl-stat"><div class="v md-tl-att-status">-</div><div class="l">Attendance Status</div></div>
-								<div class="md-tl-stat"><div class="v md-tl-att-hours">-</div><div class="l">Attendance Hours</div></div>
+								<div class="md-tl-stat"><div class="v md-tl-att-status">-</div><div class="l">Attendance</div></div>
+								<div class="md-tl-stat"><div class="v md-tl-att-hours">-</div><div class="l">Attendance Hrs</div></div>
 								<div class="md-tl-stat"><div class="v md-tl-time-tracked">-</div><div class="l">Time Tracked</div></div>
 								<div class="md-tl-stat"><div class="v md-tl-gps-distance">-</div><div class="l">GPS Distance</div></div>
 								<div class="md-tl-stat"><div class="v md-tl-activities">-</div><div class="l">Activities</div></div>
-							</div>
-							<div class="md-tl-badges">
-								<div class="md-tl-badge md-tl-location-setting">Location Setting : —</div>
 							</div>
 							<div class="md-tl-events"></div>
 						</div>
@@ -651,18 +671,19 @@ class ManagerDashboard {
 			if (this.timelineMap) setTimeout(() => this.timelineMap.invalidateSize(), 260);
 		});
 
-		this.$root.find('.md-tl-apply-btn').on('click', () => this.load_timeline());
+		this.$root.find('.md-tl-emp-select').on('change', () => this.load_timeline());
 
 		this.$root.find('.md-tl-date-prev').on('click', () => this.shift_timeline_date(-1));
 		this.$root.find('.md-tl-date-next').on('click', () => this.shift_timeline_date(1));
 
-		this.$root.find('.md-tl-reset-btn').on('click', () => {
-			this.timelineDate = frappe.datetime.get_today();
-			this.$root.find('.md-tl-date-input').val(this.timelineDate);
-			if (this.employees.length) {
-				this.timelineEmployeeId = this.employees[0].employeeId;
-				this.$root.find('.md-tl-emp-select').val(this.timelineEmployeeId);
-			}
+		this.$root.find('.md-tl-date-label').on('click', () => {
+			var $input = this.$root.find('.md-tl-date-hidden-input');
+			if ($input[0].showPicker) $input[0].showPicker();
+			else $input.trigger('click');
+		});
+		this.$root.find('.md-tl-date-hidden-input').on('change', (e) => {
+			this.timelineDate = $(e.currentTarget).val() || this.timelineDate;
+			this.update_timeline_date_label();
 			this.load_timeline();
 		});
 
@@ -1299,7 +1320,7 @@ class ManagerDashboard {
 	ensure_timeline_ready() {
 		if (!this.timelineInitialized) {
 			this.timelineInitialized = true;
-			this.$root.find('.md-tl-date-input').val(this.timelineDate);
+			this.update_timeline_date_label();
 			this.populate_timeline_employee_select();
 			this.load_leaflet(() => {
 				this.init_timeline_map();
@@ -1317,18 +1338,34 @@ class ManagerDashboard {
 		});
 		if (!this.timelineEmployeeId && this.employees.length) this.timelineEmployeeId = this.employees[0].employeeId;
 		$select.val(this.timelineEmployeeId);
-		$select.off('change').on('change', (e) => {
-			this.timelineEmployeeId = $(e.currentTarget).val();
-		});
+	}
+
+	// Shows "Today" / "Yesterday" / a friendly date instead of a raw date picker,
+	// matching the mobile app's Timeline — the native picker is still there
+	// (hidden), opened by tapping the label, for jumping to an arbitrary day.
+	update_timeline_date_label() {
+		var today = frappe.datetime.get_today();
+		var d = new Date(this.timelineDate + 'T00:00:00');
+		var yest = new Date(today + 'T00:00:00');
+		yest.setDate(yest.getDate() - 1);
+		var pad = (n) => String(n).padStart(2, '0');
+		var yestStr = yest.getFullYear() + '-' + pad(yest.getMonth() + 1) + '-' + pad(yest.getDate());
+
+		var label;
+		if (this.timelineDate === today) label = 'Today';
+		else if (this.timelineDate === yestStr) label = 'Yesterday';
+		else label = d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+
+		this.$root.find('.md-tl-date-label').text(label);
+		this.$root.find('.md-tl-date-hidden-input').val(this.timelineDate);
 	}
 
 	shift_timeline_date(days) {
-		var current = this.$root.find('.md-tl-date-input').val() || this.timelineDate;
-		var d = new Date(current + 'T00:00:00');
+		var d = new Date(this.timelineDate + 'T00:00:00');
 		d.setDate(d.getDate() + days);
 		var pad = (n) => String(n).padStart(2, '0');
 		this.timelineDate = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-		this.$root.find('.md-tl-date-input').val(this.timelineDate);
+		this.update_timeline_date_label();
 		this.load_timeline();
 	}
 
@@ -1347,7 +1384,7 @@ class ManagerDashboard {
 
 	async load_timeline() {
 		var employeeId = this.$root.find('.md-tl-emp-select').val() || this.timelineEmployeeId;
-		var date = this.$root.find('.md-tl-date-input').val() || this.timelineDate;
+		var date = this.timelineDate;
 		if (!employeeId) return;
 		this.timelineEmployeeId = employeeId;
 		this.timelineDate = date;
@@ -1454,7 +1491,7 @@ class ManagerDashboard {
 		var timeTrackedHours = (tripDurationMin || pingDurationMin) ? (tripDurationMin || pingDurationMin) / 60 : null;
 		var gpsDistanceKm = (tripDistanceKm || pingDistanceKm) || null;
 		var avgGapMin = pings.length >= 2 ? pingDurationMin / (pings.length - 1) : null;
-		var gpsQuality = avgGapMin == null ? null : (avgGapMin <= 6 ? 'Good' : 'Poor');
+		var gpsQuality = avgGapMin == null ? null : (avgGapMin <= 6 ? 'Good' : avgGapMin <= 15 ? 'Fair' : 'Poor');
 
 		var nearest_ping = (time) => {
 			var t = new Date(time).getTime();
@@ -1556,19 +1593,23 @@ class ManagerDashboard {
 		this.$root.find('.md-tl-gps-distance').text(payload.gpsDistanceKm != null ? Number(payload.gpsDistanceKm).toFixed(2) + ' KM' : '-');
 		this.$root.find('.md-tl-activities').text(payload.activitiesCount != null ? payload.activitiesCount : '0');
 
-		var $loc = this.$root.find('.md-tl-location-setting');
-		if (!payload.gpsQuality) {
-			$loc.removeClass('good poor').text('Location Setting : —');
-		} else if (payload.gpsQuality === 'Good') {
-			$loc.removeClass('poor').addClass('good').text('Location Setting : Good');
-		} else {
-			$loc.removeClass('good').addClass('poor').text('Location Setting : Poor');
-		}
+		var $loc = this.$root.find('.md-tl-locsetting');
+		var qualityClass = payload.gpsQuality ? payload.gpsQuality.toLowerCase() : '';
+		$loc.removeClass('good fair poor').addClass(qualityClass);
+		this.$root.find('.md-tl-loc-value').text(payload.gpsQuality || '—');
 
 		var $events = this.$root.find('.md-tl-events').empty();
 		if (!events.length) {
 			$events.append('<div class="md-tl-empty">No activity recorded for this day.</div>');
 		}
+
+		var battery_pill = (level) => {
+			if (level == null) return '';
+			var color = level <= 15 ? '#dc2626' : level <= 30 ? '#b45309' : '#15803d';
+			var bg = level <= 15 ? '#fee2e2' : level <= 30 ? '#fef3c7' : '#dcfce7';
+			return `<span class="md-tl-batt-pill" style="color:${color};background:${bg}">
+				<span class="md-battery-icon"><span style="width:${level}%;background:currentColor"></span></span>${level}%</span>`;
+		};
 
 		var num = 1;
 		var prevTime = null;
@@ -1582,43 +1623,40 @@ class ManagerDashboard {
 					}
 				}
 				if (travelKm > 0.02) {
-					$events.append(`<div class="md-tl-travel-row">↝ Travel: ${travelKm.toFixed(2)} KM</div>`);
+					var travelMins = Math.round((new Date(ev.time).getTime() - prevTime) / 60000);
+					$events.append(`<div class="md-tl-travel-row">${ICON_NAV} Travel: ${travelKm.toFixed(2)} KM · ${travelMins} min</div>`);
 				}
 			}
 
-			var batteryHtml = ev.battery != null
-				? `<span class="md-tl-event-battery" style="color:${ev.battery <= 15 ? '#ef4444' : ev.battery <= 30 ? '#f97316' : '#16a34a'}">
-					<span class="md-battery-icon"><span style="width:${ev.battery}%;background:currentColor"></span></span>${ev.battery}%</span>`
-				: '';
-			var gapLabel = idx === 0 ? '' : format_gap_since(events[0].time, ev.time);
 			var addressText = ev.address || (ev.lat != null && ev.lng != null ? ev.lat.toFixed(4) + ', ' + ev.lng.toFixed(4) : 'No location data');
+			var gapLabel = idx === 0 ? '' : format_hm_from_minutes((new Date(ev.time) - new Date(events[0].time)) / 60000);
 
 			if (ev.kind === 'halt') {
 				$events.append(`
-					<div class="md-tl-event">
-						<div class="md-tl-event-num halt">${num}</div>
-						<div class="md-tl-event-body">
-							<div class="md-tl-event-top">
-								<span class="md-tl-event-time">${format_time_12h(ev.time)}${gapLabel ? '<span class="md-tl-event-gap">(' + gapLabel + ')</span>' : ''}</span>
-								${batteryHtml}
+					<div class="md-tl-row">
+						<div class="md-tl-num halt">${num}</div>
+						<div class="md-tl-row-body">
+							<div class="md-tl-row-top">
+								<span class="md-tl-row-title halt">${format_time_12h(ev.time)}${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
+								${battery_pill(ev.battery)}
 							</div>
-							<div class="md-tl-event-address">${frappe.utils.escape_html(addressText)}</div>
-							${ev.durationMinutes ? '<div class="md-tl-event-sub">Halted for ' + format_hm_from_minutes(ev.durationMinutes) + '</div>' : ''}
+							<div class="md-tl-row-address">${frappe.utils.escape_html(addressText)}</div>
+							${ev.durationMinutes ? '<div class="md-tl-row-sub">Halted for ' + format_hm_from_minutes(ev.durationMinutes) + '</div>' : ''}
 						</div>
 					</div>
 				`);
 			} else {
 				var isIn = ev.kind === 'in';
 				$events.append(`
-					<div class="md-tl-event">
-						<div class="md-tl-event-num ${isIn ? 'in' : 'out'}">${num}</div>
-						<div class="md-tl-event-body">
-							<div class="md-tl-event-top">
-								<span class="md-tl-event-time">${isIn ? 'Punch In' : 'Punch Out'}${gapLabel ? '<span class="md-tl-event-gap">(' + gapLabel + ')</span>' : ''}</span>
-								${batteryHtml}
+					<div class="md-tl-row">
+						<div class="md-tl-num ${isIn ? 'in' : 'out'}">${num}</div>
+						<div class="md-tl-row-body">
+							<div class="md-tl-row-top">
+								<span class="md-tl-row-title ${isIn ? 'in' : 'out'}">${isIn ? 'Punch In' : 'Punch Out'}${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
+								${battery_pill(ev.battery)}
 							</div>
-							<div class="md-tl-event-address">${frappe.utils.escape_html(addressText)}</div>
-							<div class="md-tl-event-sub"><span class="tag">${ev.source || 'App'}</span> ${format_time_12h(ev.time)}</div>
+							<div class="md-tl-row-address">${frappe.utils.escape_html(addressText)}</div>
+							<div class="md-tl-row-sub"><span class="tag">${ev.source || 'App'}</span> ${format_time_12h(ev.time)}</div>
 						</div>
 					</div>
 				`);
@@ -1744,13 +1782,6 @@ function format_hm_from_minutes(totalMins) {
 	var h = Math.floor(totalMins / 60);
 	var m = totalMins % 60;
 	return h ? h + 'h ' + m + 'm' : m + 'm';
-}
-
-function format_gap_since(firstIso, thisIso) {
-	var mins = Math.max(0, Math.round((new Date(thisIso) - new Date(firstIso)) / 60000));
-	var h = Math.floor(mins / 60);
-	var m = mins % 60;
-	return h + 'h ' + m + 'm';
 }
 
 function hash_code(str) {
