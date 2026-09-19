@@ -1351,9 +1351,10 @@ class ManagerDashboard {
 		var pad = (n) => String(n).padStart(2, '0');
 		var yestStr = yest.getFullYear() + '-' + pad(yest.getMonth() + 1) + '-' + pad(yest.getDate());
 
+		var shortDate = d.toLocaleDateString([], { day: 'numeric', month: 'short' });
 		var label;
-		if (this.timelineDate === today) label = 'Today';
-		else if (this.timelineDate === yestStr) label = 'Yesterday';
+		if (this.timelineDate === today) label = 'Today · ' + shortDate;
+		else if (this.timelineDate === yestStr) label = 'Yesterday · ' + shortDate;
 		else label = d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
 
 		this.$root.find('.md-tl-date-label').text(label);
@@ -1468,7 +1469,22 @@ class ManagerDashboard {
 	}
 
 	compute_timeline_payload(checkins, trips, stops, pings) {
-		var halts = stops.filter((s) => s.stop_type === 'halted');
+		// Trip Stop halts are authoritative when they exist, but that pipeline may
+		// simply have nothing recorded for this employee/day — fall back to
+		// detecting halts directly from the raw GPS trail so Halt/Travel still
+		// show up instead of silently disappearing.
+		var halts = stops
+			.filter((s) => s.stop_type === 'halted')
+			.map((s) => ({
+				start_time: s.start_time,
+				address: s.address,
+				duration_minutes: s.duration_minutes,
+				latitude: s.latitude,
+				longitude: s.longitude,
+			}));
+		if (!halts.length && pings.length) {
+			halts = detect_halts_from_pings(pings);
+		}
 
 		var firstIn = checkins.find((c) => c.log_type === 'IN');
 		var lastOut = [...checkins].reverse().find((c) => c.log_type === 'OUT');
@@ -1525,7 +1541,7 @@ class ManagerDashboard {
 				kind: 'halt',
 				time: h.start_time,
 				battery: ping && ping.battery != null ? ping.battery : null,
-				address: h.address || 'Halt',
+				address: h.address || null,
 				durationMinutes: h.duration_minutes || null,
 				lat: h.latitude != null ? Number(h.latitude) : null,
 				lng: h.longitude != null ? Number(h.longitude) : null,
@@ -1713,6 +1729,54 @@ function haversine(lat1, lon1, lat2, lon2) {
 	var dLon = toRad(lon2 - lon1);
 	var a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
 	return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Simple stay-point detection: walks the day's raw pings and groups consecutive
+// points that stay within STOP_RADIUS_M of the group's first point into a
+// "halt" once that group spans at least MIN_HALT_MINUTES. Used only when Trip
+// Stop has no halts recorded for that employee/day, so the timeline still
+// shows something meaningful from the raw GPS trail alone.
+function detect_halts_from_pings(pings) {
+	var STOP_RADIUS_M = 150;
+	var MIN_HALT_MINUTES = 5;
+	var halts = [];
+	var clusterStart = 0;
+
+	for (var i = 1; i <= pings.length; i++) {
+		var brokeCluster = i === pings.length;
+		if (!brokeCluster) {
+			var d = haversine(
+				Number(pings[clusterStart].latitude), Number(pings[clusterStart].longitude),
+				Number(pings[i].latitude), Number(pings[i].longitude)
+			);
+			brokeCluster = d > STOP_RADIUS_M;
+		}
+		if (brokeCluster) {
+			var clusterEnd = i - 1;
+			if (clusterEnd > clusterStart) {
+				var startMs = new Date(pings[clusterStart].timestamp).getTime();
+				var endMs = new Date(pings[clusterEnd].timestamp).getTime();
+				var durationMin = (endMs - startMs) / 60000;
+				if (durationMin >= MIN_HALT_MINUTES) {
+					var sumLat = 0, sumLng = 0, n = 0;
+					for (var k = clusterStart; k <= clusterEnd; k++) {
+						sumLat += Number(pings[k].latitude);
+						sumLng += Number(pings[k].longitude);
+						n++;
+					}
+					halts.push({
+						start_time: pings[clusterStart].timestamp,
+						address: null,
+						duration_minutes: durationMin,
+						latitude: sumLat / n,
+						longitude: sumLng / n,
+					});
+				}
+			}
+			clusterStart = i;
+		}
+	}
+	return halts;
 }
 
 function time_ago(iso) {
