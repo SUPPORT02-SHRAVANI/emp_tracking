@@ -803,7 +803,7 @@ class ManagerDashboard {
 					limit: 5000,
 				}),
 				frappe.db.get_list('Location Ping', {
-					fields: ['employee', FIELD_TIMESTAMP, 'latitude', 'longitude', FIELD_SPEED, FIELD_BATTERY],
+					fields: ['employee', FIELD_TIMESTAMP, 'latitude', 'longitude', FIELD_SPEED, FIELD_BATTERY, 'accuracy'],
 					filters: [[FIELD_TIMESTAMP, '>=', start]],
 					order_by: FIELD_TIMESTAMP + ' desc',
 					limit: 5000,
@@ -1489,7 +1489,7 @@ class ManagerDashboard {
 					limit: 20,
 				}),
 				frappe.db.get_list('Location Ping', {
-					fields: ['timestamp', 'latitude', 'longitude', 'speed', 'battery', 'source'],
+					fields: ['timestamp', 'latitude', 'longitude', 'speed', 'battery', 'source', 'accuracy'],
 					filters: [['employee', '=', employeeId], ['timestamp', '>=', dayStart], ['timestamp', '<=', dayEnd]],
 					order_by: 'timestamp asc',
 					limit: 3000,
@@ -1858,22 +1858,39 @@ function detect_halts_from_pings(pings) {
 // glitches / stale fixes that jump miles away for one reading) — otherwise the
 // route polyline zigzags out to that bad point and back, and distance totals
 // get inflated by it. Expects raw Location Ping rows (latitude/longitude/timestamp).
+var GPS_MAX_ACCURACY_METERS = 50;
+var GPS_MAX_SPEED_MS = 40; // ~144 km/h — a fix implying anything faster is treated as noise
+
+function is_usable_fix(accuracy) {
+	return accuracy == null || !isFinite(Number(accuracy)) || Number(accuracy) <= GPS_MAX_ACCURACY_METERS;
+}
+
 function filter_ping_outliers(pings) {
-	if (pings.length < 3) return pings;
-	var MAX_SPEED_KMH = 150;
-	var filtered = [pings[0]];
-	for (var i = 1; i < pings.length; i++) {
-		var prev = filtered[filtered.length - 1];
-		var cur = pings[i];
-		var distKm = haversine(
-			Number(prev.latitude), Number(prev.longitude),
-			Number(cur.latitude), Number(cur.longitude)
-		) / 1000;
-		var hours = (new Date(cur.timestamp) - new Date(prev.timestamp)) / 3600000;
-		var speedKmh = hours > 0 ? distKm / hours : (distKm > 0.05 ? Infinity : 0);
-		if (speedKmh <= MAX_SPEED_KMH) filtered.push(cur);
+	var kept = [];
+	var consecutiveJumps = 0;
+
+	for (var idx = 0; idx < pings.length; idx++) {
+		var p = pings[idx];
+		var lat = Number(p.latitude), lng = Number(p.longitude);
+		if (!isFinite(lat) || !isFinite(lng)) continue;
+		if (!is_usable_fix(p.accuracy)) continue;
+
+		var last = kept[kept.length - 1];
+		if (last) {
+			var d = haversine(Number(last.latitude), Number(last.longitude), lat, lng);
+			var seconds = (new Date(p.timestamp) - new Date(last.timestamp)) / 1000;
+			// After a few rejected "jumps" in a row, the earlier kept point was
+			// probably the bad one — stop rejecting so a whole new (legitimate)
+			// cluster of points doesn't get thrown away forever.
+			if (seconds > 0 && d / seconds > GPS_MAX_SPEED_MS && consecutiveJumps < 3) {
+				consecutiveJumps++;
+				continue;
+			}
+		}
+		consecutiveJumps = 0;
+		kept.push(p);
 	}
-	return filtered;
+	return kept;
 }
 
 function time_ago(iso) {
