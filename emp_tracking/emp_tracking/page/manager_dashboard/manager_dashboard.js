@@ -405,7 +405,7 @@ class ManagerDashboard {
 							</div>
 							<div class="md-ov-scroll">
 								<table class="md-ov-table">
-									<thead><tr><th>Employee</th><th>Attendance</th><th>Last Location</th></tr></thead>
+									<thead><tr><th>Employee</th><th>Attendance</th><th>Punch Location</th><th>Last Location</th></tr></thead>
 									<tbody class="md-ov-emp-body"></tbody>
 								</table>
 							</div>
@@ -846,18 +846,25 @@ class ManagerDashboard {
 			var batteryLevel = pingWithBattery ? Number(pingWithBattery[FIELD_BATTERY]) : null;
 			var batteryStale = diffMins == null || diffMins > OFFLINE_AFTER_MINUTES;
 
-			var currentAddress;
-			if (lat != null && lng != null) {
-				var cachedAddress = this.get_cached_address(lat, lng);
-				if (cachedAddress) {
-					currentAddress = cachedAddress;
-				} else {
-					currentAddress = lat.toFixed(4) + ', ' + lng.toFixed(4);
-					this.enqueue_geocode(lat, lng);
+			var currentAddress = this.resolve_address(lat, lng);
+
+			// Punch location: address at the ping nearest to the punch time, not the
+			// live/current position — a manager needs to see where someone actually
+			// punched in/out, which can be hours (and places) apart from "now".
+			var punchLat = null, punchLng = null;
+			if (latestCheckin && empPings.length) {
+				var punchMs = new Date(latestCheckin.time).getTime();
+				var bestPing = null, bestDiff = Infinity;
+				empPings.forEach((p) => {
+					var diff = Math.abs(new Date(p[FIELD_TIMESTAMP]).getTime() - punchMs);
+					if (diff < bestDiff) { bestDiff = diff; bestPing = p; }
+				});
+				if (bestPing && bestDiff <= 30 * 60000) {
+					punchLat = Number(bestPing.latitude);
+					punchLng = Number(bestPing.longitude);
 				}
-			} else {
-				currentAddress = 'No location data';
 			}
+			var punchAddress = latestCheckin ? this.resolve_address(punchLat, punchLng) : 'No punch record';
 
 			return {
 				employeeId: emp.name,
@@ -868,6 +875,9 @@ class ManagerDashboard {
 				status: status,
 				isPunchedIn: isPunchedIn,
 				punchTime: latestCheckin ? latestCheckin.time : null,
+				punchAddress: punchAddress,
+				punchLatitude: punchLat,
+				punchLongitude: punchLng,
 				lastPing: latestPing ? latestPing[FIELD_TIMESTAMP] : null,
 				diffMins: diffMins,
 				distanceKm: distanceKm,
@@ -885,6 +895,14 @@ class ManagerDashboard {
 	// Cached per rounded coordinate and throttled to respect Nominatim's public
 	// usage policy (max ~1 request/sec), so refreshes reuse resolved addresses
 	// instead of re-geocoding unchanged positions every 10s.
+
+	resolve_address(lat, lng) {
+		if (lat == null || lng == null) return 'No location data';
+		var cached = this.get_cached_address(lat, lng);
+		if (cached) return cached;
+		this.enqueue_geocode(lat, lng);
+		return lat.toFixed(4) + ', ' + lng.toFixed(4);
+	}
 
 	get_cached_address(lat, lng) {
 		return this.geocodeCache.get(geocode_key(lat, lng)) || null;
@@ -925,6 +943,10 @@ class ManagerDashboard {
 				if (e.latitude != null && e.longitude != null) {
 					var cached = this.get_cached_address(e.latitude, e.longitude);
 					if (cached) e.currentAddress = cached;
+				}
+				if (e.punchLatitude != null && e.punchLongitude != null) {
+					var cachedPunch = this.get_cached_address(e.punchLatitude, e.punchLongitude);
+					if (cachedPunch) e.punchAddress = cachedPunch;
 				}
 			});
 			this.render_all_filtered();
@@ -1196,7 +1218,7 @@ class ManagerDashboard {
 		this.$root.find('.md-ov-emp-total').text(this.employees.length);
 		var $body = this.$root.find('.md-ov-emp-body').empty();
 		if (!rows.length) {
-			$body.append('<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:16px;">No data found</td></tr>');
+			$body.append('<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:16px;">No data found</td></tr>');
 			return;
 		}
 		rows.forEach((e) => {
@@ -1210,6 +1232,7 @@ class ManagerDashboard {
 						<span class="md-ov-emp-name">${frappe.utils.escape_html(e.employeeName)}</span>
 					</div></td>
 					<td><span style="color:${punchColor};font-weight:700">${format_punch_label(e.punchTime, e.isPunchedIn)}</span></td>
+					<td>${frappe.utils.escape_html(e.punchAddress)}</td>
 					<td>${frappe.utils.escape_html(e.currentAddress)}<br><span style="color:#94a3b8">${time_ago(e.lastPing)}</span></td>
 				</tr>
 			`);
@@ -1244,12 +1267,13 @@ class ManagerDashboard {
 	}
 
 	export_attendance_csv() {
-		var header = ['Employee', 'Department', 'Punch Status', 'Last Punch', 'Last Location'];
+		var header = ['Employee', 'Department', 'Punch Status', 'Last Punch', 'Punch Location', 'Last Location'];
 		var rows = this.employees.map((e) => [
 			e.employeeName,
 			e.department,
 			e.isPunchedIn ? 'Punched In' : 'Punched Out',
 			format_punch_label(e.punchTime, e.isPunchedIn),
+			e.punchAddress,
 			e.currentAddress,
 		]);
 		var csv = [header].concat(rows).map((r) => r.map((v) => '"' + String(v || '').replace(/"/g, '""') + '"').join(',')).join('\n');

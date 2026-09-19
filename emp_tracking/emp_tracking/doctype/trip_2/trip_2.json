@@ -2,7 +2,8 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
- "creation": "2026-09-17 12:41:26.338014",
+ "creation": "2026-09-19 10:24:40.512866",
+ "default_view": "List",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -87,17 +88,16 @@
    "fieldname": "route_replica",
    "fieldtype": "Geolocation",
    "in_list_view": 1,
-   "label": "Route Replica",
-   "reqd": 1
+   "label": "Route Replica"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 15:45:56.927885",
+ "modified": "2026-09-19 10:24:40.512866",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
- "name": "Trip",
+ "name": "Trip 2",
  "owner": "Administrator",
  "permissions": [
   {
@@ -109,6 +109,7 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "select": 1,
    "share": 1,
    "write": 1
   },
