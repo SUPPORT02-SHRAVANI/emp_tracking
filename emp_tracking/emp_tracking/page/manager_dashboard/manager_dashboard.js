@@ -1638,8 +1638,8 @@ class ManagerDashboard {
 						travelKm += haversine(pings[i - 1].lat, pings[i - 1].lng, pings[i].lat, pings[i].lng) / 1000;
 					}
 				}
-				if (travelKm > 0.02) {
-					var travelMins = Math.round((new Date(ev.time).getTime() - prevTime) / 60000);
+				var travelMins = Math.round((new Date(ev.time).getTime() - prevTime) / 60000);
+				if (travelMins > 0) {
 					$events.append(`<div class="md-tl-travel-row">${ICON_NAV} Travel: ${travelKm.toFixed(2)} KM · ${travelMins} min</div>`);
 				}
 			}
@@ -1648,16 +1648,17 @@ class ManagerDashboard {
 			var gapLabel = idx === 0 ? '' : format_hm_from_minutes((new Date(ev.time) - new Date(events[0].time)) / 60000);
 
 			if (ev.kind === 'halt') {
+				var haltDuration = ev.durationMinutes ? format_hm_from_minutes(ev.durationMinutes) : null;
 				$events.append(`
 					<div class="md-tl-row">
 						<div class="md-tl-num halt">${num}</div>
 						<div class="md-tl-row-body">
 							<div class="md-tl-row-top">
-								<span class="md-tl-row-title halt">${format_time_12h(ev.time)}${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
+								<span class="md-tl-row-title halt">Halted${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
 								${battery_pill(ev.battery)}
 							</div>
 							<div class="md-tl-row-address">${frappe.utils.escape_html(addressText)}</div>
-							${ev.durationMinutes ? '<div class="md-tl-row-sub">Halted for ' + format_hm_from_minutes(ev.durationMinutes) + '</div>' : ''}
+							<div class="md-tl-row-sub">${haltDuration ? '<span class="tag">' + haltDuration + '</span> ' : ''}${format_time_12h(ev.time)}</div>
 						</div>
 					</div>
 				`);
