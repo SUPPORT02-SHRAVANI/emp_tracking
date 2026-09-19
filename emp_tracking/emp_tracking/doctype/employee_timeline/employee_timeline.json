@@ -1,0 +1,122 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2026-09-18 16:37:27.111024",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "date",
+  "attendance_status",
+  "attendance_hours",
+  "time_tracked_hours",
+  "gps_distance_km",
+  "activities_count",
+  "gps_quality",
+  "events_json"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "attendance_status",
+   "fieldtype": "Data",
+   "label": "Attendance Status"
+  },
+  {
+   "fieldname": "attendance_hours",
+   "fieldtype": "Float",
+   "label": "Attendance Hours"
+  },
+  {
+   "fieldname": "time_tracked_hours",
+   "fieldtype": "Float",
+   "label": "Time Tracked Hours"
+  },
+  {
+   "fieldname": "gps_distance_km",
+   "fieldtype": "Float",
+   "label": "GPS Distance (km)"
+  },
+  {
+   "fieldname": "activities_count",
+   "fieldtype": "Int",
+   "label": "Activities Count"
+  },
+  {
+   "fieldname": "gps_quality",
+   "fieldtype": "Data",
+   "label": "GPS Quality"
+  },
+  {
+   "fieldname": "events_json",
+   "fieldtype": "Long Text",
+   "label": "Events JSON"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 16:51:08.000318",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Employee Timeline",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
