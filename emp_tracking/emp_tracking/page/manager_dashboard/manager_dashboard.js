@@ -68,6 +68,7 @@ class ManagerDashboard {
 		this.showSites = true;
 		this.employees = [];
 		this.homeLocations = [];
+		this.everPingedSet = new Set();
 		this.offDuty = [];
 		this.map = null;
 		this.markersLayer = null;
@@ -259,6 +260,14 @@ class ManagerDashboard {
 						box-shadow: 0 0 4px rgba(0,0,0,.4); flex-shrink: 0; }
 					.md-map-name-label { background: #fff; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 700;
 						box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+
+					.md-map-legend { position: absolute; left: 10px; bottom: 10px; z-index: 1000; background: #fff;
+						border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 6px rgba(0,0,0,.25); }
+					.md-map-legend-row { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600;
+						color: #334155; padding: 2px 0; white-space: nowrap; }
+					.md-map-legend-row .sw { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 2px solid #fff;
+						box-shadow: 0 0 0 1px #cbd5e1; }
+					.md-map-legend-row .sw.dashed { border: 2px dashed #fff; box-shadow: 0 0 0 1px #cbd5e1; }
 
 					.md-cardview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 
@@ -508,6 +517,13 @@ class ManagerDashboard {
 								<button class="md-view-btn" data-view="sat">Satellite</button>
 							</div>
 							<div class="md-map" id="md-map"></div>
+							<div class="md-map-legend">
+								<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Moving</div>
+								<div class="md-map-legend-row"><span class="sw" style="background:#f97316"></span>Stopped / Halted</div>
+								<div class="md-map-legend-row"><span class="sw" style="background:#94a3b8"></span>Offline (no recent ping)</div>
+								<div class="md-map-legend-row"><span class="sw" style="background:#2563eb"></span>Home location (Show Sites)</div>
+								<div class="md-map-legend-row"><span class="sw dashed" style="background:#94a3b8"></span>Never tracked (home)</div>
+							</div>
 							<div class="md-drawer">
 								<div class="md-drawer-head"><span>Employees</span><button class="md-drawer-close">&times;</button></div>
 								<div class="md-cardlist"></div>
@@ -774,7 +790,7 @@ class ManagerDashboard {
 			var start = today + ' 00:00:00';
 			var end = today + ' 23:59:59';
 
-			var [employees, checkins, pings, homes, leaves] = await Promise.all([
+			var [employees, checkins, pings, homes, leaves, everPinged] = await Promise.all([
 				frappe.db.get_list('Employee', {
 					fields: ['name', 'employee_name', 'status', 'department', 'cell_number', 'attendance_device_id'],
 					filters: [['status', '=', 'Active']],
@@ -801,10 +817,19 @@ class ManagerDashboard {
 					filters: [['status', '=', 'Approved'], ['from_date', '<=', today], ['to_date', '>=', today]],
 					limit: 500,
 				}).catch(() => []),
+				// Distinct employees who have ever sent a ping (any date) — lets us
+				// tell "offline right now" apart from "never tracked at all" for the
+				// home-location fallback marker.
+				frappe.db.get_list('Location Ping', {
+					fields: ['employee'],
+					group_by: 'employee',
+					limit: 1000,
+				}).catch(() => []),
 			]);
 
 			this.homeLocations = homes || [];
 			this.offDuty = leaves || [];
+			this.everPingedSet = new Set((everPinged || []).map((r) => r.employee));
 			this.employees = this.compute_employees(employees || [], checkins || [], pings || []);
 			this.$root.find('.md-updated-time').text(new Date().toLocaleTimeString());
 			this.render_stats();
@@ -1135,13 +1160,15 @@ class ManagerDashboard {
 			this.homeLocations.forEach((h) => (homesById[h.employee] = h));
 
 			visible.forEach((e) => {
-				var punchColor = e.isPunchedIn ? '#16a34a' : '#dc2626';
 				if (e.latitude != null && e.longitude != null) {
+					// Green = Moving, Orange = Stopped/Halted, Grey = Offline (had a
+					// ping, just a stale one — see STATUS_COLORS).
+					var color = STATUS_COLORS[e.status] || '#94a3b8';
 					var icon = L.divIcon({
 						className: '',
 						html: `<div class="md-map-name-pin">
-								<span class="md-map-name-dot" style="background:${punchColor}"></span>
-								<span class="md-map-name-label" style="color:${punchColor}">${frappe.utils.escape_html(e.employeeName)}</span>
+								<span class="md-map-name-dot" style="background:${color}"></span>
+								<span class="md-map-name-label" style="color:${color}">${frappe.utils.escape_html(e.employeeName)}</span>
 							</div>`,
 						iconSize: [10, 10],
 						iconAnchor: [5, 5],
@@ -1155,17 +1182,27 @@ class ManagerDashboard {
 					bounds.push([e.latitude, e.longitude]);
 				} else if (this.showSites && homesById[e.employeeId]) {
 					var home = homesById[e.employeeId];
+					var neverPinged = !this.everPingedSet.has(e.employeeId);
+					// Grey + dashed white border = never sent a single ping, ever.
+					// Blue = has ping history, just none right now — shown at home
+					// only while the "Show Sites" (home locations) toggle is on.
+					var homeHtml = neverPinged
+						? `<div style="width:14px;height:14px;border-radius:50%;background:#94a3b8;border:2px dashed #fff;box-shadow:0 0 4px rgba(0,0,0,.4);"></div>`
+						: `<div class="md-map-name-pin">
+								<span class="md-map-name-dot" style="background:#2563eb"></span>
+								<span class="md-map-name-label" style="color:#2563eb">${frappe.utils.escape_html(e.employeeName)}</span>
+							</div>`;
 					var offlineIcon = L.divIcon({
 						className: '',
-						html: `<div class="md-map-name-pin">
-								<span class="md-map-name-dot" style="background:${punchColor};opacity:.5"></span>
-								<span class="md-map-name-label" style="color:${punchColor}">${frappe.utils.escape_html(e.employeeName)}</span>
-							</div>`,
-						iconSize: [10, 10],
-						iconAnchor: [5, 5],
+						html: homeHtml,
+						iconSize: [14, 14],
+						iconAnchor: [7, 7],
 					});
 					var m = L.marker([home.latitude, home.longitude], { icon: offlineIcon });
-					m.bindPopup('<b>' + frappe.utils.escape_html(e.employeeName) + '</b><br>OFFLINE — last known (home) location');
+					m.bindPopup(
+						'<b>' + frappe.utils.escape_html(e.employeeName) + '</b><br>' +
+						(neverPinged ? 'Never tracked — home location' : 'OFFLINE — home location')
+					);
 					this.markersLayer.addLayer(m);
 					bounds.push([home.latitude, home.longitude]);
 				}
