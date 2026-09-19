@@ -1396,7 +1396,7 @@ class ManagerDashboard {
 					order_by: 'time asc',
 					limit: 50,
 				}),
-				quiet_get_list('Trip', {
+				quiet_get_list('Trip 2', {
 					fields: ['name', 'start_time', 'end_time', 'total_distance_km', 'total_duration_minutes', 'total_halt_minutes'],
 					filters: [['employee', '=', employeeId], ['start_time', '>=', dayStart], ['start_time', '<=', dayEnd]],
 					order_by: 'start_time asc',
