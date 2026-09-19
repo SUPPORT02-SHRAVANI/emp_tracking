@@ -756,7 +756,7 @@ class ManagerDashboard {
 					limit: 1000,
 				}),
 				frappe.db.get_list('Employee Checkin', {
-					fields: ['employee', 'log_type', 'time'],
+					fields: ['employee', 'log_type', 'time', 'latitude', 'longitude'],
 					filters: [['time', '>=', start], ['time', '<=', end]],
 					order_by: 'time desc',
 					limit: 5000,
@@ -848,11 +848,17 @@ class ManagerDashboard {
 
 			var currentAddress = this.resolve_address(lat, lng);
 
-			// Punch location: address at the ping nearest to the punch time, not the
-			// live/current position — a manager needs to see where someone actually
-			// punched in/out, which can be hours (and places) apart from "now".
+			// Punch location: not the live/current position — a manager needs to see
+			// where someone actually punched in/out, which can be hours (and places)
+			// apart from "now". Employee Checkin (HRMS) captures its own lat/lng via
+			// its "Fetch Geolocation" button, which is the authoritative source when
+			// present; only fall back to the nearest Location Ping if HRMS didn't
+			// capture geolocation for that punch.
 			var punchLat = null, punchLng = null;
-			if (latestCheckin && empPings.length) {
+			if (latestCheckin && latestCheckin.latitude && latestCheckin.longitude) {
+				punchLat = Number(latestCheckin.latitude);
+				punchLng = Number(latestCheckin.longitude);
+			} else if (latestCheckin && empPings.length) {
 				var punchMs = new Date(latestCheckin.time).getTime();
 				var bestPing = null, bestDiff = Infinity;
 				empPings.forEach((p) => {
@@ -1385,7 +1391,7 @@ class ManagerDashboard {
 
 			var [checkins, trips, pings] = await Promise.all([
 				frappe.db.get_list('Employee Checkin', {
-					fields: ['log_type', 'time'],
+					fields: ['log_type', 'time', 'latitude', 'longitude'],
 					filters: [['employee', '=', employeeId], ['time', '>=', dayStart], ['time', '<=', dayEnd]],
 					order_by: 'time asc',
 					limit: 50,
@@ -1463,13 +1469,17 @@ class ManagerDashboard {
 		var events = [];
 		checkins.forEach((c) => {
 			var ping = nearest_ping(c.time);
+			// HRMS's own geolocation on the checkin (captured via its "Fetch
+			// Geolocation" button) is authoritative; the nearest ping is only a
+			// fallback when HRMS didn't capture one for this punch.
+			var hasHrmsGeo = c.latitude && c.longitude;
 			events.push({
 				kind: c.log_type === 'IN' ? 'in' : 'out',
 				time: c.time,
 				battery: ping && ping.battery != null ? ping.battery : null,
 				source: ping ? ping.source : null,
-				lat: ping ? Number(ping.latitude) : null,
-				lng: ping ? Number(ping.longitude) : null,
+				lat: hasHrmsGeo ? Number(c.latitude) : (ping ? Number(ping.latitude) : null),
+				lng: hasHrmsGeo ? Number(c.longitude) : (ping ? Number(ping.longitude) : null),
 			});
 		});
 		halts.forEach((h) => {

@@ -2,6 +2,7 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
+ "autoname": "autoincrement",
  "creation": "2026-09-17 12:58:00.333109",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -80,10 +81,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-19 10:46:13.759872",
+ "modified": "2026-09-19 11:18:52.532564",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Trip Stop",
+ "naming_rule": "Autoincrement",
  "owner": "Administrator",
  "permissions": [
   {
