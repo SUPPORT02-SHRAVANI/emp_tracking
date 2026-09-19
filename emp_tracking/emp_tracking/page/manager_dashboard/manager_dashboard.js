@@ -1727,7 +1727,6 @@ class ManagerDashboard {
 					</div>
 				`);
 			}
-			num++;
 			prevTime = new Date(ev.time).getTime();
 		});
 
