@@ -311,6 +311,10 @@ class ManagerDashboard {
 					.md-tl-num.in { background: #16a34a; }
 					.md-tl-num.out { background: #dc2626; }
 					.md-tl-num.halt { background: #2563eb; }
+					.md-tl-mark { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; margin: 5px 5px 0; border: 2px solid #fff;
+						box-shadow: 0 0 0 1px #e5e7eb; }
+					.md-tl-mark.in { background: #16a34a; }
+					.md-tl-mark.out { background: #dc2626; }
 					.md-tl-row-body { flex: 1; min-width: 0; }
 					.md-tl-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 					.md-tl-row-title { font-size: 13px; font-weight: 800; }
@@ -1627,7 +1631,7 @@ class ManagerDashboard {
 				<span class="md-battery-icon"><span style="width:${level}%;background:currentColor"></span></span>${level}%</span>`;
 		};
 
-		var num = 1;
+		var haltNum = 1;
 		var prevTime = null;
 		events.forEach((ev, idx) => {
 			if (prevTime != null) {
@@ -1651,7 +1655,7 @@ class ManagerDashboard {
 				var haltDuration = ev.durationMinutes ? format_hm_from_minutes(ev.durationMinutes) : null;
 				$events.append(`
 					<div class="md-tl-row">
-						<div class="md-tl-num halt">${num}</div>
+						<div class="md-tl-num halt">${haltNum}</div>
 						<div class="md-tl-row-body">
 							<div class="md-tl-row-top">
 								<span class="md-tl-row-title halt">Halted${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
@@ -1662,11 +1666,12 @@ class ManagerDashboard {
 						</div>
 					</div>
 				`);
+				haltNum++;
 			} else {
 				var isIn = ev.kind === 'in';
 				$events.append(`
 					<div class="md-tl-row">
-						<div class="md-tl-num ${isIn ? 'in' : 'out'}">${num}</div>
+						<div class="md-tl-mark ${isIn ? 'in' : 'out'}"></div>
 						<div class="md-tl-row-body">
 							<div class="md-tl-row-top">
 								<span class="md-tl-row-title ${isIn ? 'in' : 'out'}">${isIn ? 'Punch In' : 'Punch Out'}${gapLabel ? '<span class="md-tl-row-gap">(' + gapLabel + ')</span>' : ''}</span>
@@ -1696,23 +1701,32 @@ class ManagerDashboard {
 			bounds = bounds.concat(latlngs);
 		}
 
-		var num = 1;
+		var haltNum = 1;
 		events.forEach((ev) => {
-			if (ev.lat == null || ev.lng == null) {
-				num++;
-				return;
+			if (ev.lat == null || ev.lng == null) return;
+
+			var icon;
+			if (ev.kind === 'halt') {
+				icon = L.divIcon({
+					className: '',
+					html: `<div style="width:24px;height:24px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;
+							display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);">${haltNum}</div>`,
+					iconSize: [24, 24],
+					iconAnchor: [12, 12],
+				});
+				haltNum++;
+			} else {
+				var color = ev.kind === 'in' ? '#16a34a' : '#dc2626';
+				icon = L.divIcon({
+					className: '',
+					html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;
+							box-shadow:0 0 6px rgba(0,0,0,.4);"></div>`,
+					iconSize: [14, 14],
+					iconAnchor: [7, 7],
+				});
 			}
-			var color = ev.kind === 'in' ? '#16a34a' : ev.kind === 'out' ? '#dc2626' : '#2563eb';
-			var icon = L.divIcon({
-				className: '',
-				html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:800;
-						display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);">${num}</div>`,
-				iconSize: [24, 24],
-				iconAnchor: [12, 12],
-			});
 			L.marker([ev.lat, ev.lng], { icon: icon }).addTo(this.timelineMarkersLayer);
 			bounds.push([ev.lat, ev.lng]);
-			num++;
 		});
 
 		if (bounds.length === 1) this.timelineMap.setView(bounds[0], 14);
