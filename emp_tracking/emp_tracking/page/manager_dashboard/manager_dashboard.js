@@ -69,6 +69,9 @@ class ManagerDashboard {
 		this.employees = [];
 		this.homeLocations = [];
 		this.everPingedSet = new Set();
+		this.hasFittedLiveMap = false;
+		this.hasFittedTimelineMap = false;
+		this.lastTimelineKey = null;
 		this.offDuty = [];
 		this.map = null;
 		this.markersLayer = null;
@@ -568,6 +571,13 @@ class ManagerDashboard {
 									<button class="md-view-btn md-tl-view-btn" data-view="sat">Satellite</button>
 								</div>
 								<div class="md-map" id="md-timeline-map"></div>
+								<div class="md-map-legend">
+									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Route — Moving</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#f97316"></span>Route — Stopped</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#2563eb"></span>Halt stop (numbered)</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Punch In</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#dc2626"></span>Punch Out</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1208,8 +1218,14 @@ class ManagerDashboard {
 				}
 			});
 
-			if (bounds.length === 1) this.map.setView(bounds[0], 14);
-			else if (bounds.length > 1) this.map.fitBounds(bounds, { padding: [30, 30] });
+			// Only auto-fit the view the first time markers show up — after that,
+			// leave the manager's own zoom/pan alone on every refresh instead of
+			// snapping back out to fit everyone every 10 seconds.
+			if (!this.hasFittedLiveMap && bounds.length) {
+				if (bounds.length === 1) this.map.setView(bounds[0], 13);
+				else this.map.fitBounds(bounds, { padding: [30, 30] });
+				this.hasFittedLiveMap = true;
+			}
 			setTimeout(() => this.map.invalidateSize(), 200);
 		}
 
@@ -1437,6 +1453,12 @@ class ManagerDashboard {
 		if (!employeeId) return;
 		this.timelineEmployeeId = employeeId;
 		this.timelineDate = date;
+
+		var timelineKey = employeeId + '|' + date;
+		if (timelineKey !== this.lastTimelineKey) {
+			this.lastTimelineKey = timelineKey;
+			this.hasFittedTimelineMap = false; // switching person/day should re-fit; the auto-refresh on the same one shouldn't
+		}
 
 		var dayStart = date + ' 00:00:00';
 		var dayEnd = date + ' 23:59:59';
@@ -1748,12 +1770,16 @@ class ManagerDashboard {
 		var bounds = [];
 
 		if (pings.length > 1) {
+			// Drop near-duplicate points before drawing (GPS wobble while stationary
+			// draws a messy zigzag even after outlier filtering) — display-only, the
+			// full point list is still what halts/distance/stats are computed from.
+			var displayPings = simplify_for_display(pings, 20);
 			// Colour each leg of the route by movement status at that point —
 			// same green/orange language as the rest of the dashboard — instead of
 			// one flat line for the whole day.
-			for (var i = 1; i < pings.length; i++) {
-				var leg = [[pings[i - 1].lat, pings[i - 1].lng], [pings[i].lat, pings[i].lng]];
-				var legColor = pings[i].speed != null && pings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
+			for (var i = 1; i < displayPings.length; i++) {
+				var leg = [[displayPings[i - 1].lat, displayPings[i - 1].lng], [displayPings[i].lat, displayPings[i].lng]];
+				var legColor = displayPings[i].speed != null && displayPings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
 				L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
 			}
 			bounds = bounds.concat(pings.map((p) => [p.lat, p.lng]));
@@ -1789,8 +1815,13 @@ class ManagerDashboard {
 			bounds.push([ev.lat, ev.lng]);
 		});
 
-		if (bounds.length === 1) this.timelineMap.setView(bounds[0], 14);
-		else if (bounds.length > 1) this.timelineMap.fitBounds(bounds, { padding: [30, 30] });
+		// Same rule as Live Location: fit the view once, then leave it alone —
+		// re-fitting on every auto-refresh would fight the manager's own zoom/pan.
+		if (!this.hasFittedTimelineMap && bounds.length) {
+			if (bounds.length === 1) this.timelineMap.setView(bounds[0], 13);
+			else this.timelineMap.fitBounds(bounds, { padding: [30, 30] });
+			this.hasFittedTimelineMap = true;
+		}
 		setTimeout(() => this.timelineMap.invalidateSize(), 200);
 	}
 }
@@ -1858,7 +1889,7 @@ function detect_halts_from_pings(pings) {
 // glitches / stale fixes that jump miles away for one reading) — otherwise the
 // route polyline zigzags out to that bad point and back, and distance totals
 // get inflated by it. Expects raw Location Ping rows (latitude/longitude/timestamp).
-var GPS_MAX_ACCURACY_METERS = 50;
+var GPS_MAX_ACCURACY_METERS = 30;
 var GPS_MAX_SPEED_MS = 40; // ~144 km/h — a fix implying anything faster is treated as noise
 
 function is_usable_fix(accuracy) {
@@ -1891,6 +1922,23 @@ function filter_ping_outliers(pings) {
 		kept.push(p);
 	}
 	return kept;
+}
+
+// Display-only simplification: drops points that haven't moved at least
+// minMoveM from the last kept point, so a halt cluster's GPS wobble doesn't
+// draw as a messy zigzag. Always keeps the last real point so the line ends
+// in the right place. Does not affect halt/distance/stat calculations.
+function simplify_for_display(pings, minMoveM) {
+	if (pings.length < 3) return pings;
+	var out = [pings[0]];
+	for (var i = 1; i < pings.length; i++) {
+		var last = out[out.length - 1];
+		var d = haversine(last.lat, last.lng, pings[i].lat, pings[i].lng);
+		if (d >= minMoveM) out.push(pings[i]);
+	}
+	var lastReal = pings[pings.length - 1];
+	if (out[out.length - 1] !== lastReal) out.push(lastReal);
+	return out;
 }
 
 function time_ago(iso) {
