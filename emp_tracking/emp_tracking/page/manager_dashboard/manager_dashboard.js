@@ -1530,13 +1530,18 @@ class ManagerDashboard {
 			// Checkin/Trip/Trip Stop/Location Ping again. Today is always recomputed
 			// since its data is still coming in throughout the day.
 			var cachedRows = await frappe.db.get_list('Employee Timeline', {
-				fields: ['name', 'attendance_status', 'attendance_hours', 'time_tracked_hours', 'gps_distance_km', 'activities_count', 'gps_quality', 'events_json'],
+				fields: ['name', 'modified', 'attendance_status', 'attendance_hours', 'time_tracked_hours', 'gps_distance_km', 'activities_count', 'gps_quality', 'events_json'],
 				filters: [['employee', '=', employeeId], ['date', '=', date]],
 				limit: 1,
 			}).catch(() => []);
 			var cached = cachedRows[0] || null;
 
-			if (cached && !isToday && cached.events_json) {
+			// A snapshot saved while the day was still in progress is partial. Only
+			// trust it once it was written after that day ended; otherwise recompute
+			// (and re-save, which finalises it).
+			var dayEnded = cached && cached.modified >= frappe.datetime.add_days(date, 1) + ' 00:00:00';
+
+			if (cached && !isToday && dayEnded && cached.events_json) {
 				try {
 					var parsed = JSON.parse(cached.events_json);
 					this.render_timeline_payload({
@@ -1693,6 +1698,8 @@ class ManagerDashboard {
 	}
 
 	async save_employee_timeline(employeeId, date, payload, existingName) {
+		// An empty result may just be a failed/blocked query — don't freeze it as the day's truth.
+		if (!(payload.events && payload.events.length) && !(payload.pings && payload.pings.length)) return;
 		var values = {
 			employee: employeeId,
 			date: date,
