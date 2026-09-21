@@ -90,6 +90,7 @@ class ManagerDashboard {
 		this.currentTimelinePayload = null;
 		this.timelineEmployeeId = null;
 		this.timelineDate = frappe.datetime.get_today();
+		this.timelineRequestId = 0;
 
 		this.page.set_indicator('Loading…', 'orange');
 
@@ -1522,6 +1523,11 @@ class ManagerDashboard {
 		var dayEnd = date + ' 23:59:59';
 		var isToday = date === frappe.datetime.get_today();
 
+		// Only the latest request may render — a slower earlier one (e.g. today's
+		// heavy load) must not overwrite the day/employee the manager switched to.
+		var requestId = ++this.timelineRequestId;
+		var isCurrent = () => requestId === this.timelineRequestId;
+
 		if (!silent) this.$root.find('.md-tl-events').html('<div class="md-tl-empty">Loading…</div>');
 
 		try {
@@ -1535,6 +1541,7 @@ class ManagerDashboard {
 				limit: 1,
 			}).catch(() => []);
 			var cached = cachedRows[0] || null;
+			if (!isCurrent()) return;
 
 			// A snapshot saved while the day was still in progress is partial. Only
 			// trust it once it was written after that day ended; otherwise recompute
@@ -1544,17 +1551,22 @@ class ManagerDashboard {
 			if (cached && !isToday && dayEnded && cached.events_json) {
 				try {
 					var parsed = JSON.parse(cached.events_json);
-					this.render_timeline_payload({
-						attendanceStatus: cached.attendance_status,
-						attendanceHours: cached.attendance_hours,
-						timeTrackedHours: cached.time_tracked_hours,
-						gpsDistanceKm: cached.gps_distance_km,
-						activitiesCount: cached.activities_count,
-						gpsQuality: cached.gps_quality,
-						events: parsed.events || [],
-						pings: parsed.pings || [],
-					});
-					return;
+					// Snapshots without the current version marker (or with no events)
+					// came from older buggy code that could save empty/partial days —
+					// recompute those instead of trusting them.
+					if (parsed.v === TIMELINE_CACHE_VERSION && (parsed.events || []).length) {
+						this.render_timeline_payload({
+							attendanceStatus: cached.attendance_status,
+							attendanceHours: cached.attendance_hours,
+							timeTrackedHours: cached.time_tracked_hours,
+							gpsDistanceKm: cached.gps_distance_km,
+							activitiesCount: cached.activities_count,
+							gpsQuality: cached.gps_quality,
+							events: parsed.events,
+							pings: parsed.pings || [],
+						});
+						return;
+					}
 				} catch (parseErr) {
 					console.error('Employee Timeline cache was unreadable, recomputing:', parseErr);
 				}
@@ -1594,11 +1606,11 @@ class ManagerDashboard {
 
 			var cleanPings = filter_ping_outliers(pings || []);
 			var payload = this.compute_timeline_payload(checkins || [], trips || [], stops || [], cleanPings);
-			this.render_timeline_payload(payload);
+			if (isCurrent()) this.render_timeline_payload(payload);
 			this.save_employee_timeline(employeeId, date, payload, cached ? cached.name : null);
 		} catch (e) {
 			console.error('Timeline load failed:', e);
-			this.$root.find('.md-tl-events').html('<div class="md-tl-empty">Could not load timeline.</div>');
+			if (isCurrent()) this.$root.find('.md-tl-events').html('<div class="md-tl-empty">Could not load timeline.</div>');
 		}
 	}
 
@@ -1709,7 +1721,7 @@ class ManagerDashboard {
 			gps_distance_km: payload.gpsDistanceKm || 0,
 			activities_count: payload.activitiesCount || 0,
 			gps_quality: payload.gpsQuality || '',
-			events_json: JSON.stringify({ events: payload.events, pings: payload.pings }),
+			events_json: JSON.stringify({ v: TIMELINE_CACHE_VERSION, events: payload.events, pings: payload.pings }),
 		};
 		try {
 			if (existingName) {
@@ -1930,6 +1942,8 @@ class ManagerDashboard {
 }
 
 // ---- small helpers ----------------------------------------------------------
+
+var TIMELINE_CACHE_VERSION = 2; // bump to invalidate every saved Employee Timeline snapshot
 
 function haversine(lat1, lon1, lat2, lon2) {
 	var R = 6371000;
