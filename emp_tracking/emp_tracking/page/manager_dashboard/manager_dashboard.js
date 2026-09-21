@@ -1890,13 +1890,6 @@ class ManagerDashboard {
 					L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
 				}
 			}
-			// Small dots for every real kept ping, so it's visible this is actual
-			// tracked data and not just an abstract connecting line.
-			displayPings.forEach((p) => {
-				L.circleMarker([p.lat, p.lng], {
-					radius: 3, weight: 1, color: '#fff', fillColor: '#334155', fillOpacity: 0.9,
-				}).addTo(this.timelineMarkersLayer);
-			});
 			bounds = bounds.concat(pings.map((p) => [p.lat, p.lng]));
 		}
 
