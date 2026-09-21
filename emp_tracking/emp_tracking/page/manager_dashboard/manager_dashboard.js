@@ -338,6 +338,13 @@ class ManagerDashboard {
 						box-shadow: 0 0 0 1px #e5e7eb; }
 					.md-tl-mark.in { background: #16a34a; }
 					.md-tl-mark.out { background: #dc2626; }
+					.md-tl-end { position: relative; width: 26px; height: 26px; }
+					.md-tl-end-core { position: absolute; inset: 0; border-radius: 50%; background: var(--c); border: 3px solid #fff;
+						box-shadow: 0 0 6px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; }
+					.md-tl-end-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+					.md-tl-end.pulse::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--c);
+						animation: md-tl-pulse 1.6s ease-out infinite; }
+					@keyframes md-tl-pulse { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.6); opacity: 0; } }
 					.md-tl-row-body { flex: 1; min-width: 0; }
 					.md-tl-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 					.md-tl-row-title { font-size: 13px; font-weight: 800; }
@@ -589,6 +596,7 @@ class ManagerDashboard {
 									<div class="md-map-legend-row"><span class="sw" style="background:#f97316"></span>Route — Stopped</div>
 								<div class="md-map-legend-row"><span class="sw" style="background:#94a3b8;border-style:dashed"></span>No ping data (gap)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#2563eb"></span>Halt stop (numbered)</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Route end (arrow = moving)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Punch In</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#dc2626"></span>Punch Out</div>
 								</div>
@@ -1890,6 +1898,33 @@ class ManagerDashboard {
 					L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
 				}
 			}
+			// Where the route ends: an arrow along the last leg when the rider is
+			// moving (pulsing if live), a plain dot when stopped, grey if the last
+			// ping is stale — so the line doesn't just trail off.
+			var lastP = displayPings[displayPings.length - 1];
+			var prevP = displayPings[displayPings.length - 2];
+			var isTodayView = this.timelineDate === frappe.datetime.get_today();
+			var pingAgeMs = Date.now() - new Date(lastP.t).getTime();
+			var endStale = isTodayView && pingAgeMs > OFFLINE_AFTER_MINUTES * 60000;
+			var endMoving = lastP.speed != null && lastP.speed > 1;
+			var endColor = endStale ? STATUS_COLORS.OFFLINE : endMoving ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
+			var endPulse = isTodayView && !endStale && endMoving;
+			var endInner = endMoving && prevP
+				? `<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" style="transform:rotate(${bearing_deg(prevP.lat, prevP.lng, lastP.lat, lastP.lng)}deg)"><path d="M12 2L4.5 20.3 12 16.5l7.5 3.8z"/></svg>`
+				: '<span class="md-tl-end-dot"></span>';
+			var endLabel = !isTodayView
+				? 'Route end · ' + format_time_12h(lastP.t)
+				: endStale ? 'Last seen ' + time_ago(lastP.t)
+				: (endMoving ? 'Moving' : 'Stopped') + ' · ' + time_ago(lastP.t);
+			L.marker([lastP.lat, lastP.lng], {
+				icon: L.divIcon({
+					className: '',
+					html: `<div class="md-tl-end${endPulse ? ' pulse' : ''}" style="--c:${endColor}"><div class="md-tl-end-core">${endInner}</div></div>`,
+					iconSize: [26, 26],
+					iconAnchor: [13, 13],
+				}),
+				zIndexOffset: 500,
+			}).bindTooltip(endLabel, { direction: 'top', offset: [0, -12] }).addTo(this.timelineMarkersLayer);
 			bounds = bounds.concat(pings.map((p) => [p.lat, p.lng]));
 		}
 
@@ -1919,7 +1954,7 @@ class ManagerDashboard {
 					iconAnchor: [7, 7],
 				});
 			}
-			L.marker([ev.lat, ev.lng], { icon: icon }).addTo(this.timelineMarkersLayer);
+			L.marker([ev.lat, ev.lng], { icon: icon, zIndexOffset: 1000 }).addTo(this.timelineMarkersLayer);
 			bounds.push([ev.lat, ev.lng]);
 		});
 
@@ -1937,6 +1972,14 @@ class ManagerDashboard {
 // ---- small helpers ----------------------------------------------------------
 
 var TIMELINE_CACHE_VERSION = 2; // bump to invalidate every saved Employee Timeline snapshot
+
+function bearing_deg(lat1, lng1, lat2, lng2) {
+	var toRad = (d) => (d * Math.PI) / 180;
+	var dLng = toRad(lng2 - lng1);
+	var y = Math.sin(dLng) * Math.cos(toRad(lat2));
+	var x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+	return Math.round(((Math.atan2(y, x) * 180) / Math.PI + 360) % 360);
+}
 
 function haversine(lat1, lon1, lat2, lon2) {
 	var R = 6371000;
