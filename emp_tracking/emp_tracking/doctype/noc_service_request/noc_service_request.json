@@ -1,0 +1,456 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "format:NOC-{#####}",
+ "creation": "2026-09-22 14:53:33.193820",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sr_no",
+  "month",
+  "noc_executive",
+  "column_break_intake",
+  "sr_generation",
+  "sr_received",
+  "section_link_details",
+  "link_id",
+  "node_name",
+  "complaint_code",
+  "company",
+  "link_type",
+  "column_break_link",
+  "company_tt",
+  "link_name",
+  "maintain_by",
+  "ageing",
+  "link_status",
+  "assigned_call",
+  "tl",
+  "section_splicer",
+  "splicer",
+  "splicer_1",
+  "column_break_splicer",
+  "call_accepted_by_splicer",
+  "etr_by_splicer",
+  "splicer_photo_video",
+  "section_rider",
+  "rider",
+  "rider_1",
+  "column_break_rider",
+  "rider_photo_video",
+  "section_fiber",
+  "fiber_pulling_required",
+  "cable_team",
+  "core",
+  "column_break_fiber",
+  "length",
+  "cable_team_photo_video",
+  "latitude",
+  "longitude",
+  "section_closing",
+  "team_sr_closing_request",
+  "waiting_for_request",
+  "complaint_status",
+  "column_break_closing",
+  "team_sr_closed",
+  "team_sr_closed_date",
+  "company_sr_closed",
+  "company_sr_closed_date",
+  "noc_executive_tt_closed",
+  "section_sla",
+  "team_mttr",
+  "team_sla",
+  "column_break_sla",
+  "actual_mttr",
+  "actual_sla",
+  "section_rfo",
+  "rfo",
+  "rfo_type_description",
+  "remark",
+  "delay_reason_for_team_align"
+ ],
+ "fields": [
+  {
+   "fieldname": "sr_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SR No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Data",
+   "label": "Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "noc_executive",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "NOC Executive",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_intake",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sr_generation",
+   "fieldtype": "Datetime",
+   "label": "SR Generation"
+  },
+  {
+   "fieldname": "sr_received",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "SR Received"
+  },
+  {
+   "fieldname": "section_link_details",
+   "fieldtype": "Section Break",
+   "label": "Link / Node Details"
+  },
+  {
+   "fieldname": "link_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Link ID"
+  },
+  {
+   "fieldname": "node_name",
+   "fieldtype": "Data",
+   "label": "Node Name"
+  },
+  {
+   "fieldname": "complaint_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Complaint Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company"
+  },
+  {
+   "fieldname": "link_type",
+   "fieldtype": "Data",
+   "label": "Link Type"
+  },
+  {
+   "fieldname": "column_break_link",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company_tt",
+   "fieldtype": "Data",
+   "label": "Company TT"
+  },
+  {
+   "fieldname": "link_name",
+   "fieldtype": "Data",
+   "label": "Link Name"
+  },
+  {
+   "fieldname": "maintain_by",
+   "fieldtype": "Data",
+   "label": "Maintain By"
+  },
+  {
+   "fieldname": "ageing",
+   "fieldtype": "Duration",
+   "label": "Ageing",
+   "read_only": 1
+  },
+  {
+   "fieldname": "link_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Link Status",
+   "options": "Up\nDown\nDegraded"
+  },
+  {
+   "fieldname": "assigned_call",
+   "fieldtype": "Data",
+   "label": "Assigned Call"
+  },
+  {
+   "fieldname": "tl",
+   "fieldtype": "Link",
+   "label": "TL (Team Leader)",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "section_splicer",
+   "fieldtype": "Section Break",
+   "label": "Splicer Team"
+  },
+  {
+   "fieldname": "splicer",
+   "fieldtype": "Link",
+   "label": "Splicer",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "splicer_1",
+   "fieldtype": "Link",
+   "label": "Splicer 1",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_splicer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "call_accepted_by_splicer",
+   "fieldtype": "Datetime",
+   "label": "Call Accepted By Splicer"
+  },
+  {
+   "fieldname": "etr_by_splicer",
+   "fieldtype": "Datetime",
+   "label": "ETR By Splicer"
+  },
+  {
+   "fieldname": "splicer_photo_video",
+   "fieldtype": "Attach",
+   "label": "Splicer Photo / Video"
+  },
+  {
+   "fieldname": "section_rider",
+   "fieldtype": "Section Break",
+   "label": "Rider Team"
+  },
+  {
+   "fieldname": "rider",
+   "fieldtype": "Link",
+   "label": "Rider",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "rider_1",
+   "fieldtype": "Link",
+   "label": "Rider 1",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_rider",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rider_photo_video",
+   "fieldtype": "Attach",
+   "label": "Rider Photo / Video"
+  },
+  {
+   "fieldname": "section_fiber",
+   "fieldtype": "Section Break",
+   "label": "Fiber / Cable Team"
+  },
+  {
+   "default": "0",
+   "fieldname": "fiber_pulling_required",
+   "fieldtype": "Check",
+   "label": "Fiber Pulling Required"
+  },
+  {
+   "fieldname": "cable_team",
+   "fieldtype": "Data",
+   "label": "Cable Team"
+  },
+  {
+   "fieldname": "core",
+   "fieldtype": "Data",
+   "label": "Core"
+  },
+  {
+   "fieldname": "column_break_fiber",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "length",
+   "fieldtype": "Float",
+   "label": "Length (m)"
+  },
+  {
+   "fieldname": "cable_team_photo_video",
+   "fieldtype": "Attach",
+   "label": "Cable Team Photo / Video"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "8"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "8"
+  },
+  {
+   "fieldname": "section_closing",
+   "fieldtype": "Section Break",
+   "label": "Closing (NOC Executive)"
+  },
+  {
+   "fieldname": "team_sr_closing_request",
+   "fieldtype": "Datetime",
+   "label": "Team SR Closing Request"
+  },
+  {
+   "fieldname": "waiting_for_request",
+   "fieldtype": "Duration",
+   "label": "Waiting For Request",
+   "read_only": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "complaint_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Complaint Status",
+   "options": "Open\nIn Progress\nClosed\nOn Hold"
+  },
+  {
+   "fieldname": "column_break_closing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "team_sr_closed",
+   "fieldtype": "Check",
+   "label": "Team SR Closed"
+  },
+  {
+   "fieldname": "team_sr_closed_date",
+   "fieldtype": "Datetime",
+   "label": "Team SR Closed Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "company_sr_closed",
+   "fieldtype": "Check",
+   "label": "Company SR Closed"
+  },
+  {
+   "fieldname": "company_sr_closed_date",
+   "fieldtype": "Datetime",
+   "label": "Company SR Closed Date"
+  },
+  {
+   "fieldname": "noc_executive_tt_closed",
+   "fieldtype": "Datetime",
+   "label": "NOC Executive TT Closed"
+  },
+  {
+   "fieldname": "section_sla",
+   "fieldtype": "Section Break",
+   "label": "SLA / MTTR"
+  },
+  {
+   "fieldname": "team_mttr",
+   "fieldtype": "Duration",
+   "label": "Team MTTR",
+   "read_only": 1
+  },
+  {
+   "fieldname": "team_sla",
+   "fieldtype": "Duration",
+   "label": "Team SLA",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "actual_mttr",
+   "fieldtype": "Duration",
+   "label": "Actual MTTR",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actual_sla",
+   "fieldtype": "Duration",
+   "label": "Actual SLA",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_rfo",
+   "fieldtype": "Section Break",
+   "label": "RFO & Remarks"
+  },
+  {
+   "fieldname": "rfo",
+   "fieldtype": "Data",
+   "label": "RFO"
+  },
+  {
+   "fieldname": "rfo_type_description",
+   "fieldtype": "Small Text",
+   "label": "RFO Type (Description)"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "Remark"
+  },
+  {
+   "fieldname": "delay_reason_for_team_align",
+   "fieldtype": "Small Text",
+   "label": "Delay Reason For Team Align"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-22 15:25:31.523711",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "NOC Service Request",
+ "naming_rule": "Expression (old style)",
+ "owner": "support02@softworld.co.in",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
