@@ -36,6 +36,8 @@ var STATUS_COLORS = {
 	OFFLINE: '#94a3b8',
 };
 
+var ROUTE_COLOR = '#7c3aed';
+
 var AVATAR_PALETTE = ['#2563eb', '#0d9488', '#9333ea', '#ea580c', '#0891b2', '#4f46e5', '#be185d', '#16803d'];
 
 // ---- inline icons (kept currentColor-friendly, unlike emoji) --------------
@@ -592,8 +594,7 @@ class ManagerDashboard {
 								</div>
 								<div class="md-map" id="md-timeline-map"></div>
 								<div class="md-map-legend">
-									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Route — Moving</div>
-									<div class="md-map-legend-row"><span class="sw" style="background:#f97316"></span>Route — Stopped</div>
+									<div class="md-map-legend-row"><span class="sw" style="background:#7c3aed"></span>Route</div>
 								<div class="md-map-legend-row"><span class="sw" style="background:#94a3b8;border-style:dashed"></span>No ping data (gap)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#2563eb"></span>Halt stop (numbered)</div>
 									<div class="md-map-legend-row"><span class="sw" style="background:#16a34a"></span>Route end (arrow = moving)</div>
@@ -1894,8 +1895,7 @@ class ManagerDashboard {
 				if (gapMin > GAP_MINUTES) {
 					L.polyline(leg, { color: '#94a3b8', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(this.timelineMarkersLayer);
 				} else {
-					var legColor = displayPings[i].speed != null && displayPings[i].speed > 1 ? STATUS_COLORS.MOVING : STATUS_COLORS.STOPPED;
-					L.polyline(leg, { color: legColor, weight: 3, opacity: 0.8 }).addTo(this.timelineMarkersLayer);
+					L.polyline(leg, { color: ROUTE_COLOR, weight: 6, opacity: 0.9 }).addTo(this.timelineMarkersLayer);
 				}
 			}
 			// Where the route ends: an arrow along the last leg when the rider is
@@ -1938,10 +1938,10 @@ class ManagerDashboard {
 				var circleColor = ev.kind === 'halt' ? '#2563eb' : ev.kind === 'in' ? '#16a34a' : '#dc2626';
 				icon = L.divIcon({
 					className: '',
-					html: `<div style="width:24px;height:24px;border-radius:50%;background:${circleColor};color:#fff;font-size:11px;font-weight:800;
+					html: `<div style="width:32px;height:32px;border-radius:50%;background:${circleColor};color:#fff;font-size:14px;font-weight:800;
 							display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.4);">${stopNum}</div>`,
-					iconSize: [24, 24],
-					iconAnchor: [12, 12],
+					iconSize: [32, 32],
+					iconAnchor: [16, 16],
 				});
 				stopNum++;
 			} else {
