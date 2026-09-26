@@ -1,0 +1,44 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-17 16:17:01.683827",
+  "name": "Reject",
+  "workflow_action_name": "Reject"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-26 12:13:27.844365",
+  "name": "Start Verification",
+  "workflow_action_name": "Start Verification"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-26 12:13:27.853346",
+  "name": "Assign to Area Manager",
+  "workflow_action_name": "Assign to Area Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-26 12:13:27.855682",
+  "name": "Assign Maintenance Team",
+  "workflow_action_name": "Assign Maintenance Team"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-26 12:13:27.857979",
+  "name": "Accept",
+  "workflow_action_name": "Accept"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-26 12:13:27.860769",
+  "name": "Reassign",
+  "workflow_action_name": "Reassign"
+ }
+]

@@ -1,0 +1,110 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2026-09-17 16:17:01.625259",
+  "name": "Rejected",
+  "style": "Danger",
+  "workflow_state_name": "Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.776027",
+  "name": "New",
+  "style": "",
+  "workflow_state_name": "New"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.798026",
+  "name": "NOC Verification",
+  "style": "",
+  "workflow_state_name": "NOC Verification"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.800757",
+  "name": "Assigned to Area Manager",
+  "style": "",
+  "workflow_state_name": "Assigned to Area Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.812309",
+  "name": "Assigned to Maintenance Team",
+  "style": "",
+  "workflow_state_name": "Assigned to Maintenance Team"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.814873",
+  "name": "Accepted",
+  "style": "",
+  "workflow_state_name": "Accepted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.817748",
+  "name": "In Progress",
+  "style": "",
+  "workflow_state_name": "In Progress"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.820201",
+  "name": "Restoration",
+  "style": "",
+  "workflow_state_name": "Restoration"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.822719",
+  "name": "Fiber Restored",
+  "style": "",
+  "workflow_state_name": "Fiber Restored"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.825186",
+  "name": "Awaiting Operator Confirmation",
+  "style": "",
+  "workflow_state_name": "Awaiting Operator Confirmation"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.827696",
+  "name": "Resolved",
+  "style": "",
+  "workflow_state_name": "Resolved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.830123",
+  "name": "Closed",
+  "style": "",
+  "workflow_state_name": "Closed"
+ }
+]

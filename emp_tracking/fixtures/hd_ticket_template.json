@@ -1,0 +1,76 @@
+[
+ {
+  "about": null,
+  "description_template": null,
+  "docstatus": 0,
+  "doctype": "HD Ticket Template",
+  "fields": [
+   {
+    "fieldname": "custom_operatorcustomer",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_incident_number",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_complaint_date_and_time",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_received_via",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_complaint_type",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_section",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 0,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_society_name",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 0,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_linkid",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 0,
+    "url_method": null
+   },
+   {
+    "fieldname": "custom_complaint_details",
+    "hide_from_customer": 0,
+    "placeholder": null,
+    "required": 1,
+    "url_method": null
+   }
+  ],
+  "modified": "2026-09-26 12:24:22.620349",
+  "name": "Default",
+  "template_name": "Default"
+ }
+]

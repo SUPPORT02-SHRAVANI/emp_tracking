@@ -262,3 +262,24 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+# Fixtures
+# --------
+# HD Ticket "Complaint Information" custom fields and the Default ticket template rows
+# that expose them in the Helpdesk UI. Exported to emp_tracking/fixtures/ so they are
+# stored in git and re-created on any install/migrate.
+fixtures = [
+    {"dt": "Custom Field", "filters": [["dt", "=", "HD Ticket"], ["fieldname", "in", ["workflow_state"]]]},
+    {"dt": "Custom Field", "filters": [["dt", "=", "HD Ticket"], ["fieldname", "like", "custom_%"]]},
+    {"dt": "HD Ticket Template", "filters": [["name", "=", "Default"]]},
+    {"dt": "Role", "filters": [["name", "in", ["NOC Head", "Area Manager", "Maintenance Agent"]]]},
+    {"dt": "Workflow State", "filters": [["name", "in", [
+        "New", "NOC Verification", "Assigned to Area Manager", "Assigned to Maintenance Team", "Accepted",
+        "Rejected", "In Progress", "Restoration", "Fiber Restored", "Awaiting Operator Confirmation",
+        "Resolved", "Closed"]]]},
+    {"dt": "Workflow Action Master", "filters": [["name", "in", [
+        "Start Verification", "Assign to Area Manager", "Assign Maintenance Team", "Accept", "Reject", "Reassign"]]]},
+    {"dt": "Workflow", "filters": [["name", "=", "OHP Maintenance Workflow"]]},
+    {"dt": "Workspace Sidebar", "filters": [["name", "=", "Helpdesk NOC"]]},
+    {"dt": "Desktop Icon", "filters": [["name", "=", "Helpdesk NOC"]]},
+]

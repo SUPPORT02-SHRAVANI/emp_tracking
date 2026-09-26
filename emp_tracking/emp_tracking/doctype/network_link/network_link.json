@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "field:linkid",
+ "creation": "2026-09-26 11:26:11.098535",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_section",
+  "linkid",
+  "network_type",
+  "status",
+  "operator",
+  "location_section",
+  "section",
+  "society_building",
+  "area",
+  "column_break_loc",
+  "location",
+  "latitude",
+  "longitude",
+  "maintenance_section",
+  "maintenance_responsibility",
+  "maintenance_team",
+  "mapped_vendor"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Network Identification"
+  },
+  {
+   "fieldname": "linkid",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "LINKID",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "network_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Network Type",
+   "options": "Backbone\nFTTH",
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Link Status",
+   "options": "Active\nInactive\nUnder Maintenance\nDown",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Operator",
+   "options": "Airtel\nVI",
+   "reqd": 1
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location / Network Identification"
+  },
+  {
+   "depends_on": "eval:doc.network_type=='Backbone'",
+   "fieldname": "section",
+   "fieldtype": "Data",
+   "label": "Section",
+   "mandatory_depends_on": "eval:doc.network_type=='Backbone'"
+  },
+  {
+   "depends_on": "eval:doc.network_type=='FTTH'",
+   "fieldname": "society_building",
+   "fieldtype": "Data",
+   "label": "Society / Building",
+   "mandatory_depends_on": "eval:doc.network_type=='FTTH'"
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Area",
+   "options": "Area",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_loc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "6"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "6"
+  },
+  {
+   "fieldname": "maintenance_section",
+   "fieldtype": "Section Break",
+   "label": "Maintenance Ownership"
+  },
+  {
+   "fieldname": "maintenance_responsibility",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Maintenance Responsibility",
+   "options": "EVisions\nVendor",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.maintenance_responsibility=='EVisions'",
+   "fieldname": "maintenance_team",
+   "fieldtype": "Link",
+   "label": "Maintenance Team",
+   "mandatory_depends_on": "eval:doc.maintenance_responsibility=='EVisions'",
+   "options": "Maintenance Team"
+  },
+  {
+   "depends_on": "eval:doc.maintenance_responsibility=='Vendor'",
+   "fieldname": "mapped_vendor",
+   "fieldtype": "Link",
+   "label": "Mapped Vendor",
+   "mandatory_depends_on": "eval:doc.maintenance_responsibility=='Vendor'",
+   "options": "Maintenance Vendor"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-26 13:35:30.415381",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Network Link",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "linkid,area,operator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

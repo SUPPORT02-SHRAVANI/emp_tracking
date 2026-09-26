@@ -1,0 +1,40 @@
+[
+ {
+  "app": "emp_tracking",
+  "bg_color": "blue",
+  "docstatus": 0,
+  "doctype": "Desktop Icon",
+  "hidden": 0,
+  "icon": "support",
+  "icon_image": null,
+  "icon_type": "Link",
+  "label": "Helpdesk NOC",
+  "link": null,
+  "link_to": "Helpdesk NOC",
+  "link_type": "Workspace Sidebar",
+  "logo_url": null,
+  "modified": "2026-09-26 12:27:41.794204",
+  "name": "Helpdesk NOC",
+  "parent_icon": null,
+  "restrict_removal": 0,
+  "roles": [
+   {
+    "role": "NOC Head"
+   },
+   {
+    "role": "Area Manager"
+   },
+   {
+    "role": "Maintenance Agent"
+   },
+   {
+    "role": "Agent"
+   },
+   {
+    "role": "System Manager"
+   }
+  ],
+  "sidebar": "Helpdesk NOC",
+  "standard": 0
+ }
+]
