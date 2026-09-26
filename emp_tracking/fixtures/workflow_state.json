@@ -21,15 +21,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-09-26 12:13:27.798026",
-  "name": "NOC Verification",
-  "style": "",
-  "workflow_state_name": "NOC Verification"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-09-26 12:13:27.800757",
   "name": "Assigned to Area Manager",
   "style": "",
@@ -106,5 +97,14 @@
   "name": "Closed",
   "style": "",
   "workflow_state_name": "Closed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-26 12:13:27.798026",
+  "name": "NOC Verification",
+  "style": "",
+  "workflow_state_name": "NOC Verification"
  }
 ]

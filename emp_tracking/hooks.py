@@ -269,9 +269,6 @@ app_license = "mit"
 # that expose them in the Helpdesk UI. Exported to emp_tracking/fixtures/ so they are
 # stored in git and re-created on any install/migrate.
 fixtures = [
-    {"dt": "Custom Field", "filters": [["dt", "=", "HD Ticket"], ["fieldname", "in", ["workflow_state"]]]},
-    {"dt": "Custom Field", "filters": [["dt", "=", "HD Ticket"], ["fieldname", "like", "custom_%"]]},
-    {"dt": "HD Ticket Template", "filters": [["name", "=", "Default"]]},
     {"dt": "Role", "filters": [["name", "in", ["NOC Head", "Area Manager", "Maintenance Agent"]]]},
     {"dt": "Workflow State", "filters": [["name", "in", [
         "New", "NOC Verification", "Assigned to Area Manager", "Assigned to Maintenance Team", "Accepted",
