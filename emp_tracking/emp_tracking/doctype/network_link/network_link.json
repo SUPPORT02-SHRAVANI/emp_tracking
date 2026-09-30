@@ -10,6 +10,7 @@
  "field_order": [
   "basic_section",
   "linkid",
+  "operator_link_id",
   "network_type",
   "status",
   "operator",
@@ -21,6 +22,12 @@
   "location",
   "latitude",
   "longitude",
+  "node_section",
+  "node_id",
+  "gis_node_id",
+  "node_a",
+  "node_cb",
+  "node_b",
   "maintenance_section",
   "maintenance_responsibility",
   "maintenance_team",
@@ -65,7 +72,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Operator",
-   "options": "Airtel\nVI",
+   "options": "Airtel\nVodafone\nRailtel",
    "reqd": 1
   },
   {
@@ -144,12 +151,57 @@
    "label": "Mapped Vendor",
    "mandatory_depends_on": "eval:doc.maintenance_responsibility=='Vendor'",
    "options": "Maintenance Vendor"
+  },
+  {
+   "description": "Number the operator uses for this link, e.g. Railtel 3861, Airtel Unique ID, VI Site Name",
+   "fieldname": "operator_link_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Operator Link ID"
+  },
+  {
+   "fieldname": "node_section",
+   "fieldtype": "Section Break",
+   "label": "Node Information"
+  },
+  {
+   "fieldname": "gis_node_id",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "GIS Node ID"
+  },
+  {
+   "description": "Node / site where the link starts",
+   "fieldname": "node_a",
+   "fieldtype": "Data",
+   "label": "A-End Node"
+  },
+  {
+   "fieldname": "node_cb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Node / site where the link ends",
+   "fieldname": "node_b",
+   "fieldtype": "Data",
+   "label": "B-End Node"
+  },
+  {
+   "description": "3-character node code used in Airtel FTTH messages, e.g. MPJ, MRP, S1B",
+   "fieldname": "node_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Node ID",
+   "length": 3,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-26 13:35:30.415381",
+ "modified": "2026-09-30 10:28:19.817181",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Network Link",
@@ -166,11 +218,47 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "NOC Head",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Agent",
+   "share": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "linkid,area,operator",
+ "search_fields": "node_id,operator_link_id,gis_node_id,node_a,node_b,section,society_building,location,area,operator",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],

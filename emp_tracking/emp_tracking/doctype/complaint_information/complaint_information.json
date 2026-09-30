@@ -7,28 +7,51 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "sec_source",
+  "sec_operator",
   "operatorcustomer",
+  "cb_operator",
+  "sec_paste",
+  "paste_message",
+  "cb_paste",
+  "message_attachment",
+  "sec_source",
   "incident_number",
   "cb_source",
   "complaint_date_and_time",
   "received_via",
+  "priority",
+  "link_as_reported",
+  "node_id",
+  "customers_affected",
   "sec_type",
   "complaint_type",
   "section",
   "society_name",
+  "sec_vi",
+  "operator_site_name",
+  "fault_reported",
+  "operator_district",
+  "cb_vi",
+  "operator_latitude",
+  "operator_longitude",
+  "operator_due_date",
   "sec_network",
   "linkid",
   "location",
   "latitude",
   "cb_network",
   "area",
+  "area_manager",
   "maintenance_responsibility",
   "longitude",
+  "sec_node",
+  "gis_node_id",
+  "node_a",
+  "cb_node",
+  "node_b",
   "sec_details",
   "complaint_details",
   "sec_assignment",
-  "area_manager",
   "maintenance_team",
   "mapped_vendor",
   "cb_assignment",
@@ -41,44 +64,49 @@
  ],
  "fields": [
   {
+   "description": "Choose the operator first. The paste box below then shows what to paste for that operator.",
    "fieldname": "operatorcustomer",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Operator",
-   "options": "Airtel\nVI\nVodafone\nRailtail",
+   "options": "Airtel\nVodafone\nRailtel",
    "reqd": 1
   },
   {
+   "depends_on": "eval:doc.operatorcustomer=='Airtel'",
+   "description": "Airtel's incident number (INC\u2026). Not used for Vodafone or Railtel.",
    "fieldname": "incident_number",
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Operator Incident No.",
-   "reqd": 1
+   "label": "Airtel INC No.",
+   "mandatory_depends_on": "eval:doc.operatorcustomer=='Airtel'"
   },
   {
+   "depends_on": "eval:doc.operatorcustomer && doc.operatorcustomer!='Railtel'",
+   "description": "Airtel: Backbone or FTTH. Vodafone: Backbone or Small Cell. Railtel: not used.",
    "fieldname": "complaint_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Complaint Type",
-   "options": "\nBackbone\nFTTH",
-   "reqd": 1
+   "mandatory_depends_on": "eval:doc.operatorcustomer && doc.operatorcustomer!='Railtel'",
+   "options": "\nBackbone\nFTTH\nSmall Cell"
   },
   {
    "depends_on": "eval:doc.complaint_type=='Backbone'",
    "fieldname": "section",
    "fieldtype": "Data",
    "label": "Section",
-   "mandatory_depends_on": "eval:doc.complaint_type=='Backbone'"
+   "mandatory_depends_on": "eval:doc.operatorcustomer=='Airtel' && doc.complaint_type=='Backbone'"
   },
   {
    "depends_on": "eval:doc.complaint_type=='FTTH'",
    "fieldname": "society_name",
    "fieldtype": "Data",
    "label": "Society / Building",
-   "mandatory_depends_on": "eval:doc.complaint_type=='FTTH'"
+   "mandatory_depends_on": "eval:doc.operatorcustomer=='Airtel' && doc.complaint_type=='FTTH'"
   },
   {
    "default": "Now",
@@ -200,11 +228,14 @@
    "label": "Assignment"
   },
   {
+   "description": "Filled from the Area. NOC can change it before assigning.",
+   "fetch_from": "area.area_manager",
+   "fetch_if_empty": 1,
    "fieldname": "area_manager",
    "fieldtype": "Link",
    "label": "Area Manager",
    "options": "User",
-   "read_only_depends_on": "eval:!(frappe.user_roles.includes('Area Manager')||frappe.user_roles.includes('System Manager'))"
+   "read_only_depends_on": "eval:!(frappe.user_roles.includes('NOC Head')||frappe.user_roles.includes('Area Manager')||frappe.user_roles.includes('System Manager'))"
   },
   {
    "fieldname": "cb_assignment",
@@ -255,12 +286,146 @@
    "no_copy": 1,
    "options": "Workflow State",
    "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.operatorcustomer && (doc.__islocal || doc.paste_message || doc.message_attachment)",
+   "fieldname": "sec_paste",
+   "fieldtype": "Section Break",
+   "label": "Paste Message or Attach Screenshot"
+  },
+  {
+   "description": "Paste the operator's message here. Incident No., operator, section, down time and priority fill automatically.",
+   "fieldname": "paste_message",
+   "fieldtype": "Small Text",
+   "label": "Paste Message"
+  },
+  {
+   "fieldname": "cb_paste",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The text in the image is read automatically and fills the form. Always check the result.",
+   "fieldname": "message_attachment",
+   "fieldtype": "Attach Image",
+   "label": "Or Attach Screenshot"
+  },
+  {
+   "depends_on": "eval:doc.operatorcustomer!='Railtel'",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "\nCritical\nHigh\nMedium\nLow"
+  },
+  {
+   "fieldname": "sec_operator",
+   "fieldtype": "Section Break",
+   "label": "Operator"
+  },
+  {
+   "fieldname": "cb_operator",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Link name exactly as the operator wrote it (e.g. 'SBI Zonal to SBI East street 3861', 'Karve road 3 to BMCC ROAD')",
+   "fieldname": "link_as_reported",
+   "fieldtype": "Data",
+   "label": "Link as Reported"
+  },
+  {
+   "depends_on": "eval:doc.operatorcustomer=='Vodafone'",
+   "fieldname": "sec_vi",
+   "fieldtype": "Section Break",
+   "label": "Vodafone Ticket Details"
+  },
+  {
+   "fieldname": "operator_site_name",
+   "fieldtype": "Data",
+   "label": "Site Name / Affected CI"
+  },
+  {
+   "description": "Operator's own fault type, e.g. Fibre Cut. The field team confirms the real fault later.",
+   "fieldname": "fault_reported",
+   "fieldtype": "Data",
+   "label": "Fault Reported (Task Type)"
+  },
+  {
+   "fieldname": "operator_district",
+   "fieldtype": "Data",
+   "label": "District"
+  },
+  {
+   "fieldname": "cb_vi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "operator_latitude",
+   "fieldtype": "Float",
+   "label": "Operator Latitude",
+   "precision": "6"
+  },
+  {
+   "fieldname": "operator_longitude",
+   "fieldtype": "Float",
+   "label": "Operator Longitude",
+   "precision": "6"
+  },
+  {
+   "description": "Vodafone's own restoration deadline (Due Date on the HPSM ticket)",
+   "fieldname": "operator_due_date",
+   "fieldtype": "Datetime",
+   "label": "Operator Due Date"
+  },
+  {
+   "depends_on": "eval:doc.linkid",
+   "fieldname": "sec_node",
+   "fieldtype": "Section Break",
+   "label": "Node Information"
+  },
+  {
+   "fetch_from": "linkid.gis_node_id",
+   "fieldname": "gis_node_id",
+   "fieldtype": "Data",
+   "label": "GIS Node ID",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "linkid.node_a",
+   "fieldname": "node_a",
+   "fieldtype": "Data",
+   "label": "A-End Node",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_node",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "linkid.node_b",
+   "fieldname": "node_b",
+   "fieldtype": "Data",
+   "label": "B-End Node",
+   "read_only": 1
+  },
+  {
+   "description": "How many customers' service is down",
+   "fieldname": "customers_affected",
+   "fieldtype": "Int",
+   "label": "Customers Affected"
+  },
+  {
+   "description": "3-character node from the Airtel FTTH message (e.g. MPJ). LINKID must be a link on this node.",
+   "fieldname": "node_id",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Node ID",
+   "length": 3
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-26 13:58:31.361975",
+ "modified": "2026-09-30 10:28:21.027127",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Complaint Information",
