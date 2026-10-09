@@ -30,6 +30,10 @@ Change log:
 	            so a Frappe Cloud deploy shows the menu without running apply_access by hand.
 	            It also creates the dashboards' custom fields (Task, Employee, Employee Checkin,
 	            Expense Claim); without them the dashboard says "not installed yet".
+	2026-10-09  OverHead-only users (OH_ROLES) see only our tiles: restrict_desktop_icons limits
+	            the other tiles to roles outside STAFF_ROLES and OH_ROLES (and rewrites icons
+	            restricted before). grant_oh_link_permissions lets the OH roles pick Customer,
+	            Company, Employee, Area, Teams, Vendors, Network Link, Node and Site.
 	2026-10-09  One fixed order on every tile: Dashboards, New Project, Complaints, Network (Nodes,
 	            Network Links, Sites), Masters.
 """
@@ -105,8 +109,6 @@ def install():
 
 
 # Date: 2026-10-09
-# Re-applies roles, permissions, the two desk tiles/sidebars, home pages and staff restrictions.
-# Date: 2026-10-09
 def after_migrate():
 	"""Runs after every `bench migrate` (hooks.py), also on Frappe Cloud where nobody can run
 	`bench execute`: makes the dashboards' custom fields and the roles, and rebuilds the desk
@@ -119,6 +121,7 @@ def after_migrate():
 			{dt: fields for dt, fields in CUSTOM_FIELDS.items() if frappe.db.exists("DocType", dt)}, update=True
 		)
 		make_roles()
+		grant_oh_link_permissions()
 		make_navigation()
 		frappe.clear_cache()
 	except Exception:
@@ -126,6 +129,8 @@ def after_migrate():
 		frappe.log_error(title="emp_tracking: rebuilding the desk menu after migrate failed")
 
 
+# Date: 2026-10-09
+# Re-applies roles, permissions, the desk tiles/sidebars, home pages and staff restrictions.
 @frappe.whitelist(methods=["POST"])
 def apply_access():
 	"""Roles, desk permissions, sidebar and landing page. Safe to re-run after any change here."""
@@ -134,6 +139,7 @@ def apply_access():
 	import_page()
 	make_roles()
 	grant_permissions()
+	grant_oh_link_permissions()
 	grant_demo_roles()
 	make_navigation()
 	make_home_pages()
@@ -162,6 +168,11 @@ STAFF_ROLES = {
 STAFF_PROFILE = "Workforce Staff"
 STAFF_MODULES = ("Emp Tracking",)  # modules staff keep
 STAFF_ICONS = (DASHBOARD_SIDEBAR, SIDEBAR, "Leaves", "Expenses")  # self service: dashboard, workforce menu, apply leave, petrol claims
+
+# 2026-10-09: OverHead roles. A user whose roles are only these and STAFF_ROLES sees only the
+# OverHead tiles (Dashboard, OverHead Project, Helpdesk NOC) on the desk, not ERPNext's.
+# Accounts User is left out on purpose: accountants need the Accounting tiles.
+OH_ROLES = {"Project Head", "Area Manager", "Fiber Team", "Splicing Team", "NOC Head", "Maintenance Agent"}
 
 
 # Date: 2026-10-09
@@ -204,24 +215,35 @@ RESTRICTED_ICONS_KEY = "workforce_restricted_desktop_icons"
 
 # Date: 2026-10-09
 def restrict_desktop_icons():
-	"""Limit every open desktop icon (except the self-service ones) to non-staff roles."""
+	"""Limit every open desktop icon (except ours) to roles outside STAFF_ROLES and OH_ROLES.
+
+	2026-10-09: OverHead-only users (Project Head, Area Manager, Fiber / Splicing Team, NOC)
+	now see only our tiles too. Icons restricted on an earlier run get their roles rewritten,
+	so the new rule also reaches them. Only icons that had no roles of their own are touched.
+	"""
 	import json
 
+	ours = set(STAFF_ICONS) | {NOC_SIDEBAR}
+	icons = set(frappe.get_all("Desktop Icon", pluck="name"))
+	earlier = set(json.loads(frappe.db.get_default(RESTRICTED_ICONS_KEY) or "[]")) & icons
 	open_icons = [
-		name for name in frappe.get_all("Desktop Icon", pluck="name")
-		if name not in STAFF_ICONS and not frappe.db.exists("Has Role", {"parenttype": "Desktop Icon", "parent": name})
+		name for name in icons
+		if name not in ours and not frappe.db.exists("Has Role", {"parenttype": "Desktop Icon", "parent": name})
 	]
-	roles = [r for r in frappe.get_all("Role", filters={"disabled": 0}, pluck="name") if r not in STAFF_ROLES]
-	for name in open_icons:
+	targets = sorted((earlier | set(open_icons)) - ours)
+	limited_to = STAFF_ROLES | OH_ROLES
+	roles = [r for r in frappe.get_all("Role", filters={"disabled": 0}, pluck="name") if r not in limited_to]
+	for name in targets:
 		# Rows are written directly: saving a standard icon in developer mode would rewrite the
 		# owning app's JSON files (hrms, erpnext, ...), which we must not touch.
+		frappe.db.delete("Has Role", {"parenttype": "Desktop Icon", "parent": name})
 		for idx, role in enumerate(roles, 1):
 			frappe.get_doc({
 				"doctype": "Has Role", "name": frappe.generate_hash(length=10), "parent": name,
 				"parenttype": "Desktop Icon", "parentfield": "roles", "role": role, "idx": idx,
 			}).db_insert()
 
-	done = set(json.loads(frappe.db.get_default(RESTRICTED_ICONS_KEY) or "[]")) | set(open_icons)
+	done = earlier | set(targets)
 	frappe.db.set_default(RESTRICTED_ICONS_KEY, json.dumps(sorted(done)))
 	frappe.cache.delete_key("desktop_icons")
 	frappe.cache.delete_key("bootinfo")
@@ -267,6 +289,41 @@ TEAM_LEAD_PERMS = {
 	"Location Ping": ("read", "report"),
 	"Vehicles": ("read",),
 }
+
+
+# What the OverHead roles may do on the lists their forms link to (2026-10-09). Without these a
+# Project Head could not pick a Customer, Area, Team or Vendor on New Project ("no permission").
+# Employee / Customer / Company only get "select": enough to pick one, without opening the record.
+OH_LINK_PERMS = {
+	"Customer": ("select",),
+	"Company": ("select",),
+	"Employee": ("select",),
+	"Area": ("select", "read"),
+	"Maintenance Team": ("select", "read"),
+	"Maintenance Vendor": ("select", "read"),
+	"Fiber Pulling Team": ("select", "read"),
+	"Network Link": ("select", "read"),
+	"Node": ("select", "read"),
+	"Site": ("select", "read"),
+}
+
+
+# Date: 2026-10-09
+# Gives every OverHead role (OH_ROLES) the OH_LINK_PERMS rights, adding a permission rule where
+# the role has none yet. Doctypes this site does not have are skipped.
+def grant_oh_link_permissions():
+	from frappe.permissions import add_permission, update_permission_property
+
+	for doctype, ptypes in OH_LINK_PERMS.items():
+		if not frappe.db.exists("DocType", doctype):
+			continue
+		for role in OH_ROLES:
+			if not frappe.db.exists("Role", role):
+				continue
+			if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 0}):
+				add_permission(doctype, role, 0)
+			for ptype in ptypes:
+				update_permission_property(doctype, role, 0, ptype, 1, validate=False)
 
 
 # Date: 2026-10-09
