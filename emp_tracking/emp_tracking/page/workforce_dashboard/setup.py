@@ -26,6 +26,8 @@ Change log:
 	            while moving between them. Tiles also shown to the OH and NOC roles (TILE_ROLES).
 	2026-10-09  Menu keeps only OverHead screens: Dashboards, OH Project, Complaints, Masters. The
 	            workforce lists (tasks, attendance, leave, claims, trips, employees) were removed.
+	2026-10-09  after_migrate() (hooks.py) rebuilds the roles, tiles and menu after every migrate,
+	            so a Frappe Cloud deploy shows the menu without running apply_access by hand.
 	2026-10-09  One fixed order on every tile: Dashboards, New Project, Complaints, Network (Nodes,
 	            Network Links, Sites), Masters.
 """
@@ -102,6 +104,21 @@ def install():
 
 # Date: 2026-10-09
 # Re-applies roles, permissions, the two desk tiles/sidebars, home pages and staff restrictions.
+# Date: 2026-10-09
+def after_migrate():
+	"""Runs after every `bench migrate` (hooks.py), also on Frappe Cloud where nobody can run
+	`bench execute`: makes the roles and rebuilds the desk tiles and the one OverHead menu.
+	The heavier staff restrictions stay in apply_access(), run by hand when needed.
+	"""
+	try:
+		make_roles()
+		make_navigation()
+		frappe.clear_cache()
+	except Exception:
+		# A menu problem must never fail a deploy; it is listed in the Error Log instead.
+		frappe.log_error(title="emp_tracking: rebuilding the desk menu after migrate failed")
+
+
 @frappe.whitelist(methods=["POST"])
 def apply_access():
 	"""Roles, desk permissions, sidebar and landing page. Safe to re-run after any change here."""

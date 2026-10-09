@@ -173,6 +173,10 @@ app_license = "mit"
 # 	],
 # }
 
+# 2026-10-09: after every migrate (also on Frappe Cloud) rebuild the roles, desk tiles and the
+# OverHead menu, so nobody has to run apply_access by hand after a deploy.
+after_migrate = ["emp_tracking.emp_tracking.page.workforce_dashboard.setup.after_migrate"]
+
 # 2026-10-09: refresh the Aging of open complaints every hour.
 scheduler_events = {
 	"hourly": [
