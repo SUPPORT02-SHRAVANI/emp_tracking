@@ -173,6 +173,13 @@ app_license = "mit"
 # 	],
 # }
 
+# 2026-10-09: refresh the Aging of open complaints every hour.
+scheduler_events = {
+	"hourly": [
+		"emp_tracking.emp_tracking.doctype.complaint_information.complaint_information.update_open_aging"
+	],
+}
+
 # Testing
 # -------
 
@@ -269,13 +276,16 @@ app_license = "mit"
 # that expose them in the Helpdesk UI. Exported to emp_tracking/fixtures/ so they are
 # stored in git and re-created on any install/migrate.
 fixtures = [
-    {"dt": "Role", "filters": [["name", "in", ["NOC Head", "Area Manager", "Maintenance Agent"]]]},
+    {"dt": "Role", "filters": [["name", "in", ["NOC Head", "Area Manager", "Maintenance Agent", "Project Head", "Fiber Team",
+        "Splicing Team"]]]},
     {"dt": "Workflow State", "filters": [["name", "in", [
         "New", "NOC Verification", "Assigned to Area Manager", "Assigned to Maintenance Team", "Accepted",
         "Rejected", "In Progress", "Restoration", "Fiber Restored", "Awaiting Operator Confirmation",
         "Resolved", "Closed"]]]},
     {"dt": "Workflow Action Master", "filters": [["name", "in", [
-        "Start Verification", "Assign to Area Manager", "Assign Maintenance Team", "Accept", "Reject", "Reassign"]]]},
+        "Start Verification", "Assign to Area Manager", "Assign Maintenance Team", "Accept", "Reject", "Reassign",
+        # 2026-10-09: restoration and closure steps.
+        "Start Work", "Fiber Restored", "Inform Operator", "Confirm Restored", "Not Restored", "Close"]]]},
     {"dt": "Workflow", "filters": [["name", "=", "OHP Maintenance Workflow"]]},
     {"dt": "Workspace Sidebar", "filters": [["name", "=", "Helpdesk NOC"]]},
     {"dt": "Desktop Icon", "filters": [["name", "=", "Helpdesk NOC"]]},

@@ -1,0 +1,1739 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "autoname": "format:PRJ-{YYYY}-{#####}",
+ "creation": "2026-10-07 12:40:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "project_details_tab",
+  "stage",
+  "site_status",
+  "paste_message_section",
+  "wo_message",
+  "extract_data",
+  "work_order_section",
+  "company",
+  "customer",
+  "link_type",
+  "project_type",
+  "city",
+  "months",
+  "wo_received_mode",
+  "wo_received_date",
+  "column_break_wo",
+  "wo",
+  "wo_date",
+  "hp",
+  "link_id",
+  "unique_id",
+  "feasibility",
+  "pre_work_remark",
+  "end_location_section",
+  "end_location_name",
+  "column_break_end_location",
+  "end_location_lat_long",
+  "ibd_customer_section",
+  "ibd_team",
+  "ibd_team_no",
+  "column_break_customer",
+  "cust_name",
+  "cust_contact_no",
+  "gis_area_section",
+  "gis",
+  "area",
+  "column_break_company_engg",
+  "company_engg",
+  "company_engg_no",
+  "survey_section",
+  "survey_start_location_received_by_planning",
+  "survey_start_location_received_by_planning_lat_long",
+  "column_break_survey",
+  "survey_distance_received_by_planning",
+  "airtel_wo_section",
+  "wo_type",
+  "bts_type",
+  "pop_id",
+  "wo_core",
+  "port_required",
+  "port_availability",
+  "column_break_wo_details_1",
+  "feeder",
+  "feeder_partner",
+  "b_point",
+  "wo_distance",
+  "connect_from_primary",
+  "connect_from_secondary",
+  "column_break_wo_details_2",
+  "nearest_odf",
+  "wo_remarks",
+  "marketing_bde",
+  "marketing_tm",
+  "sales_tsm",
+  "airtel_engineer_section",
+  "deployment_engineer",
+  "column_break_airtel_engineer",
+  "at_engineer",
+  "team_section",
+  "ownership",
+  "evision_team",
+  "project_vendor",
+  "supervisor_name",
+  "column_break_ownership",
+  "manager",
+  "column_break_team",
+  "team",
+  "column_break_area_manager",
+  "area_manager",
+  "survey_tab",
+  "area_manager_survey_section",
+  "survey_date",
+  "survey_type",
+  "survey_done_by",
+  "survey_a_end_done_by_area_manager",
+  "survey_b_end_done_by_area_manager",
+  "survey_distance_done_by_area_manager",
+  "fiber_type",
+  "column_break_area_manager_survey",
+  "b_end_issue_or_distance_issue",
+  "new_b_end_location",
+  "survey_distance_from_new_b_end",
+  "site_access_section",
+  "permission_status",
+  "column_break_site_access",
+  "building_access",
+  "fiber_team_section",
+  "vendor_name",
+  "column_break_vendor",
+  "evision_distance",
+  "fiber_pulling_team",
+  "fiber_team",
+  "planning_approval_tab",
+  "planning_approval_section",
+  "b_end_status",
+  "send_mail_to_planning",
+  "mail_sent_to_planning_date",
+  "mail_sent_to_planning_snap",
+  "column_break_planning_approval",
+  "planning_approval_date",
+  "planning_approval_snap",
+  "mail_approval_snap",
+  "fiber_work_tab",
+  "fiber_work_section",
+  "fiber_id_and_reading_a_end_snap",
+  "column_break_fiber_work",
+  "fiber_id_and_reading_b_end_snap",
+  "column_break_fiber_video",
+  "total_route_tentative_video",
+  "fiber_dates_section",
+  "work_start_date",
+  "site_issues_cleared_date",
+  "column_break_fiber_dates",
+  "fiber_work_completed_date",
+  "permanent_semi_permanent",
+  "column_break_pop_access",
+  "pop_access",
+  "splicing_team_tab",
+  "splicing_team_section",
+  "splicing_team_required_no",
+  "splicing_team",
+  "splicing_work_tab",
+  "splicing_work_section",
+  "splicing_snap_a_end",
+  "column_break_splicing_work",
+  "splicing_snap_b_end",
+  "termination_section",
+  "termination_completed_date",
+  "final_details_tab",
+  "final_section",
+  "final_distance",
+  "distance_shared_to_airtel",
+  "distance_difference",
+  "column_break_final",
+  "kmz",
+  "column_break_rfs",
+  "rfs_status",
+  "rfs_date",
+  "rfs_month",
+  "odf_no",
+  "total_cable_at_rfs",
+  "completion_section",
+  "work_completed_date",
+  "supervisor_available",
+  "rework_required",
+  "column_break_remark",
+  "remark",
+  "suggestion_for_future",
+  "column_break_rework",
+  "rework_required_date",
+  "rework_required_date_2",
+  "rework_cable_length",
+  "cancel_section",
+  "is_cancelled",
+  "column_break_cancel",
+  "cancel_reason",
+  "at_hoto_tab",
+  "at_section",
+  "at_status",
+  "column_break_at",
+  "at_paper_status",
+  "hoto_section",
+  "hoto_no",
+  "hoto_date",
+  "column_break_hoto",
+  "hoto_distance",
+  "hoto_signature_status",
+  "column_break_network_link",
+  "network_link",
+  "billing_tab",
+  "billing_po_section",
+  "billing_status",
+  "po_no",
+  "po_date",
+  "column_break_billing_po",
+  "invoice_no",
+  "invoice_date",
+  "invoice_sent",
+  "column_break_billing_ref",
+  "arn",
+  "airtel_approver",
+  "billing_amount_section",
+  "base_amount",
+  "gst_amount",
+  "final_amount",
+  "column_break_payment",
+  "payment_due_date",
+  "payment_status",
+  "column_break_billing_remark",
+  "billing_remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "project_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Project Details"
+  },
+  {
+   "description": "Whose turn it is. Updates by itself as each part is filled.",
+   "fieldname": "stage",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Stage",
+   "options": "Survey by Area Manager\nB End Approval by Project Head\nFiber Team Assignment by Area Manager\nFiber Work by Fiber Team\nSplicer Assignment by Area Manager\nSplicing by Splicing Team\nFinal Details by Project Head\nAT & HOTO by Project Head\nBilling by Accounts\nClosed\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "site_status",
+   "fieldtype": "Select",
+   "label": "Site Status",
+   "options": "WIP\nCompleted\nCancelled",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "description": "Paste the MWO text message here and click Extract & Fill",
+   "fieldname": "paste_message_section",
+   "fieldtype": "Section Break",
+   "label": "Paste WO Message"
+  },
+  {
+   "fieldname": "wo_message",
+   "fieldtype": "Long Text",
+   "label": "WO Message",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "extract_data",
+   "fieldtype": "Button",
+   "label": "Extract & Fill",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "work_order_section",
+   "fieldtype": "Section Break",
+   "label": "Work Order"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company (Our Company)",
+   "options": "Company",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "in_standard_filter": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "link_type",
+   "fieldtype": "Select",
+   "label": "Link Type",
+   "options": "\nBackbone\nFTTH\nSmall Cell\nILL\nLMC",
+   "in_standard_filter": 1,
+   "permlevel": 1,
+   "description": "Backbone also covers Transport links"
+  },
+  {
+   "fieldname": "project_type",
+   "fieldtype": "Select",
+   "label": "Project Type",
+   "options": "\nODN\nTransport\nIBD",
+   "in_standard_filter": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "months",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Months",
+   "description": "Billing month: 21st to 20th cycle, set from WO Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "wo_received_mode",
+   "fieldtype": "Select",
+   "label": "WO Received Mode",
+   "permlevel": 1,
+   "options": "\nTelegram\nEmail\nWhatsApp\nOther"
+  },
+  {
+   "fieldname": "wo_received_date",
+   "fieldtype": "Date",
+   "label": "WO Received Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_wo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "wo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WO",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "wo_date",
+   "fieldtype": "Date",
+   "label": "WO Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "hp",
+   "fieldtype": "Data",
+   "label": "HP",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "link_id",
+   "fieldtype": "Data",
+   "label": "Link ID (EVisions)",
+   "in_standard_filter": 1,
+   "permlevel": 1,
+   "description": "Made automatically from the Survey Date: YYYYMM + running number of that month, e.g. 202610001"
+  },
+  {
+   "fieldname": "unique_id",
+   "fieldtype": "Data",
+   "label": "Unique ID",
+   "description": "e.g. PUN17035",
+   "in_standard_filter": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "feasibility",
+   "fieldtype": "Small Text",
+   "label": "Feasibility",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "pre_work_remark",
+   "fieldtype": "Small Text",
+   "label": "Pre Work Remark",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "end_location_section",
+   "fieldtype": "Section Break",
+   "label": "End Location"
+  },
+  {
+   "fieldname": "end_location_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "End Location Name",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_end_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "end_location_lat_long",
+   "fieldtype": "Data",
+   "label": "End Location Lat Long",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "ibd_customer_section",
+   "fieldtype": "Section Break",
+   "label": "IBD Team & Customer"
+  },
+  {
+   "fieldname": "ibd_team",
+   "fieldtype": "Data",
+   "label": "IBD Team",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "ibd_team_no",
+   "fieldtype": "Data",
+   "label": "IBD Team No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_customer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cust_name",
+   "fieldtype": "Data",
+   "label": "Cust Name",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "cust_contact_no",
+   "fieldtype": "Data",
+   "label": "Cust Contact No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "gis_area_section",
+   "fieldtype": "Section Break",
+   "label": "GIS, Area & Company Engineer"
+  },
+  {
+   "fieldname": "gis",
+   "fieldtype": "Data",
+   "label": "GIS",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Area",
+   "options": "Area",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_company_engg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company_engg",
+   "fieldtype": "Data",
+   "label": "Company Engg",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "company_engg_no",
+   "fieldtype": "Data",
+   "label": "Company Engg No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "survey_section",
+   "fieldtype": "Section Break",
+   "label": "Survey (Received by Planning)"
+  },
+  {
+   "fieldname": "survey_start_location_received_by_planning",
+   "fieldtype": "Data",
+   "label": "Survey Start Location Received by Planning",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "survey_start_location_received_by_planning_lat_long",
+   "fieldtype": "Data",
+   "label": "Survey Start Location Received by Planning Lat Long",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_survey",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "survey_distance_received_by_planning",
+   "fieldtype": "Float",
+   "label": "Survey Distance Received by Planning",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "airtel_wo_section",
+   "fieldtype": "Section Break",
+   "label": "WO Details (from the work order message)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "wo_type",
+   "fieldtype": "Data",
+   "label": "WO Type",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "bts_type",
+   "fieldtype": "Data",
+   "label": "BTS Type",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "pop_id",
+   "fieldtype": "Data",
+   "label": "POP ID",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "wo_core",
+   "fieldtype": "Data",
+   "label": "Core (WO)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "port_required",
+   "fieldtype": "Data",
+   "label": "Port Required",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "port_availability",
+   "fieldtype": "Data",
+   "label": "Port Availability",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_wo_details_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "feeder",
+   "fieldtype": "Data",
+   "label": "Feeder (IP1/OWN)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "feeder_partner",
+   "fieldtype": "Data",
+   "label": "Feeder Partner",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "b_point",
+   "fieldtype": "Data",
+   "label": "B Point",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "wo_distance",
+   "fieldtype": "Float",
+   "label": "Work Order Distance (Feeder Length, m)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "connect_from_primary",
+   "fieldtype": "Data",
+   "label": "Connect From Primary",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "connect_from_secondary",
+   "fieldtype": "Data",
+   "label": "Connect From Secondary",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_wo_details_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nearest_odf",
+   "fieldtype": "Small Text",
+   "label": "Nearest ODF No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "wo_remarks",
+   "fieldtype": "Small Text",
+   "label": "WO Remarks",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "marketing_bde",
+   "fieldtype": "Data",
+   "label": "Marketing BDE",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "marketing_tm",
+   "fieldtype": "Data",
+   "label": "Marketing TM",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "sales_tsm",
+   "fieldtype": "Data",
+   "label": "Sales TSM",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "airtel_engineer_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Engineers"
+  },
+  {
+   "fieldname": "deployment_engineer",
+   "fieldtype": "Data",
+   "label": "Deployment Engineer (Airtel)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_airtel_engineer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "at_engineer",
+   "fieldtype": "Data",
+   "label": "AT Engineer (Airtel)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "team_section",
+   "fieldtype": "Section Break",
+   "label": "Team"
+  },
+  {
+   "fieldname": "ownership",
+   "fieldtype": "Select",
+   "label": "Ownership",
+   "options": "\nEVisions\nVendor",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "evision_team",
+   "fieldtype": "Link",
+   "label": "EVisions Team",
+   "options": "Maintenance Team",
+   "depends_on": "eval:doc.ownership=='EVisions'",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "project_vendor",
+   "fieldtype": "Link",
+   "label": "Vendor",
+   "options": "Maintenance Vendor",
+   "depends_on": "eval:doc.ownership=='Vendor'",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "supervisor_name",
+   "fieldtype": "Data",
+   "label": "Supervisor (Area Manager)",
+   "read_only": 1,
+   "permlevel": 1,
+   "description": "The Area Manager is the supervisor"
+  },
+  {
+   "fieldname": "column_break_ownership",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manager",
+   "fieldtype": "Data",
+   "label": "Manager",
+   "permlevel": 1,
+   "read_only": 1,
+   "description": "Set from the EVisions Team's manager"
+  },
+  {
+   "fieldname": "column_break_team",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "label": "Team",
+   "permlevel": 1,
+   "read_only": 1,
+   "description": "Set from EVisions Team / Vendor below"
+  },
+  {
+   "fieldname": "column_break_area_manager",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "area.area_manager",
+   "fetch_if_empty": 1,
+   "fieldname": "area_manager",
+   "fieldtype": "Link",
+   "label": "Area Manager (Supervisor)",
+   "options": "User",
+   "permlevel": 1,
+   "description": "Filled from the EVisions Team leader when empty"
+  },
+  {
+   "fieldname": "survey_tab",
+   "fieldtype": "Tab Break",
+   "label": "Survey & Fiber Team"
+  },
+  {
+   "description": "Filled by the Area Manager after the site survey",
+   "fieldname": "area_manager_survey_section",
+   "fieldtype": "Section Break",
+   "label": "Survey by Area Manager"
+  },
+  {
+   "fieldname": "survey_date",
+   "fieldtype": "Date",
+   "label": "Survey Date",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_type",
+   "fieldtype": "Select",
+   "label": "Survey Type",
+   "options": "\nPhysical Survey\nDesktop Survey",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_done_by",
+   "fieldtype": "Data",
+   "label": "Survey Done By",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_a_end_done_by_area_manager",
+   "fieldtype": "Data",
+   "label": "Survey A End Done By Area Manager",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_b_end_done_by_area_manager",
+   "fieldtype": "Data",
+   "label": "Survey B End Done By Area Manager",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_distance_done_by_area_manager",
+   "fieldtype": "Float",
+   "label": "Survey Distance Done By Area Manager",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "fiber_type",
+   "fieldtype": "Data",
+   "label": "Fiber Type",
+   "description": "Fiber core count, e.g. 24",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_area_manager_survey",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "b_end_issue_or_distance_issue",
+   "fieldtype": "Small Text",
+   "label": "B End Issue or Distance Issue",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "new_b_end_location",
+   "fieldtype": "Data",
+   "label": "New B End Location",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "survey_distance_from_new_b_end",
+   "fieldtype": "Float",
+   "label": "Survey Distance from New B End",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "site_access_section",
+   "fieldtype": "Section Break",
+   "label": "Site Access"
+  },
+  {
+   "fieldname": "permission_status",
+   "fieldtype": "Select",
+   "label": "Start Location Permission Status",
+   "options": "\nReceived\nNot Received",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_site_access",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "building_access",
+   "fieldtype": "Select",
+   "label": "Building Access",
+   "options": "\nYes\nNo",
+   "permlevel": 2
+  },
+  {
+   "description": "The Area Manager adds the employees who make up the Fiber Team.",
+   "fieldname": "fiber_team_section",
+   "fieldtype": "Section Break",
+   "label": "Fiber Team"
+  },
+  {
+   "fieldname": "vendor_name",
+   "fieldtype": "Data",
+   "label": "Vendor Name",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_vendor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "evision_distance",
+   "fieldtype": "Float",
+   "label": "Evision Distance",
+   "description": "Distance done by Evision",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "fiber_pulling_team",
+   "fieldtype": "Link",
+   "label": "Fiber Pulling Team",
+   "options": "Fiber Pulling Team",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "fiber_team",
+   "fieldtype": "Table",
+   "label": "Fiber Team",
+   "options": "Project Fiber Team Member",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "planning_approval_tab",
+   "fieldtype": "Tab Break",
+   "label": "Planning Approval"
+  },
+  {
+   "depends_on": "eval:doc.b_end_issue_or_distance_issue",
+   "description": "The Area Manager reported a B End / distance issue. The Project Head mails Planning and records the approval here.",
+   "fieldname": "planning_approval_section",
+   "fieldtype": "Section Break",
+   "label": "B End Issue: Planning Approval"
+  },
+  {
+   "fieldname": "b_end_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "B End Status",
+   "options": "\nPending with Project Head\nMail Sent to Planning\nApproved",
+   "read_only": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "send_mail_to_planning",
+   "fieldtype": "Button",
+   "label": "Send Mail to Planning",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "mail_sent_to_planning_date",
+   "fieldtype": "Date",
+   "label": "Mail Sent to Planning Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "mail_sent_to_planning_snap",
+   "fieldtype": "Attach Image",
+   "label": "Mail Sent to Planning Snap",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_planning_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "planning_approval_date",
+   "fieldtype": "Date",
+   "label": "Approval Date by Planning or Deployment Team",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "planning_approval_snap",
+   "fieldtype": "Attach Image",
+   "label": "Approval Snap by Planning or Deployment Team",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "mail_approval_snap",
+   "fieldtype": "Attach Image",
+   "label": "Mail Approval Snap",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "fiber_work_tab",
+   "fieldtype": "Tab Break",
+   "label": "Fiber Work"
+  },
+  {
+   "description": "Filled by the Fiber Team",
+   "fieldname": "fiber_work_section",
+   "fieldtype": "Section Break",
+   "label": "Fiber Work"
+  },
+  {
+   "fieldname": "fiber_id_and_reading_a_end_snap",
+   "fieldtype": "Attach Image",
+   "label": "Fiber ID and Reading A End Snap",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "column_break_fiber_work",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiber_id_and_reading_b_end_snap",
+   "fieldtype": "Attach Image",
+   "label": "Fiber ID and Reading B End Snap",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "column_break_fiber_video",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_route_tentative_video",
+   "fieldtype": "Attach",
+   "label": "Total Route Tentative Video",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "fiber_dates_section",
+   "fieldtype": "Section Break",
+   "label": "Fiber Work Dates"
+  },
+  {
+   "fieldname": "work_start_date",
+   "fieldtype": "Date",
+   "label": "Work Start Date",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "site_issues_cleared_date",
+   "fieldtype": "Date",
+   "label": "Site Issues Cleared Date",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "column_break_fiber_dates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiber_work_completed_date",
+   "fieldtype": "Date",
+   "label": "Fiber Work Completed Date",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "permanent_semi_permanent",
+   "fieldtype": "Select",
+   "label": "Permanent / Semi Permanent",
+   "options": "\nPermanent\nSemi Permanent",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "column_break_pop_access",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pop_access",
+   "fieldtype": "Select",
+   "label": "POP Access",
+   "options": "\nYes\nNo",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "splicing_team_tab",
+   "fieldtype": "Tab Break",
+   "label": "Splicing Team"
+  },
+  {
+   "description": "The Area Manager assigns the Rider and Splicer for the splicing work.",
+   "fieldname": "splicing_team_section",
+   "fieldtype": "Section Break",
+   "label": "Splicing Team"
+  },
+  {
+   "fieldname": "splicing_team_required_no",
+   "fieldtype": "Int",
+   "label": "Splicing Team Required No",
+   "permlevel": 2,
+   "description": "Number of Rider + Splicer pairs. Enter it and that many rows appear below."
+  },
+  {
+   "fieldname": "splicing_team",
+   "fieldtype": "Table",
+   "label": "Splicing Team (Rider + Splicer)",
+   "options": "Project Splicing Team Member",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "splicing_work_tab",
+   "fieldtype": "Tab Break",
+   "label": "Splicing Work"
+  },
+  {
+   "description": "Filled by the Splicing Team: Power, OTDR, Pigtail or Splicing Completed snap",
+   "fieldname": "splicing_work_section",
+   "fieldtype": "Section Break",
+   "label": "Splicing Work"
+  },
+  {
+   "fieldname": "splicing_snap_a_end",
+   "fieldtype": "Attach Image",
+   "label": "Power / OTDR / Pigtail / Splicing Completed Snap A End",
+   "permlevel": 4
+  },
+  {
+   "fieldname": "column_break_splicing_work",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "splicing_snap_b_end",
+   "fieldtype": "Attach Image",
+   "label": "Power / OTDR / Pigtail / Splicing Completed Snap B End",
+   "permlevel": 4
+  },
+  {
+   "fieldname": "termination_section",
+   "fieldtype": "Section Break",
+   "label": "Termination"
+  },
+  {
+   "fieldname": "termination_completed_date",
+   "fieldtype": "Date",
+   "label": "Termination Completed Date",
+   "permlevel": 4
+  },
+  {
+   "fieldname": "final_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Final Details"
+  },
+  {
+   "description": "Filled by the Project Head",
+   "fieldname": "final_section",
+   "fieldtype": "Section Break",
+   "label": "Final Details"
+  },
+  {
+   "fieldname": "final_distance",
+   "fieldtype": "Float",
+   "label": "Final Distance (Actual Field Distance, m)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "distance_shared_to_airtel",
+   "fieldtype": "Float",
+   "label": "Distance Shared to Airtel",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "distance_difference",
+   "fieldtype": "Float",
+   "label": "Difference in Distance (m)",
+   "read_only": 1,
+   "description": "Final Distance minus Survey Distance Done By Area Manager",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_final",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "kmz",
+   "fieldtype": "Attach",
+   "label": "KMZ",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_rfs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rfs_status",
+   "fieldtype": "Data",
+   "label": "RFS Status",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "rfs_date",
+   "fieldtype": "Date",
+   "label": "RFS Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "rfs_month",
+   "fieldtype": "Data",
+   "label": "RFS Month",
+   "read_only": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "odf_no",
+   "fieldtype": "Data",
+   "label": "ODF No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "total_cable_at_rfs",
+   "fieldtype": "Float",
+   "label": "Total Cable Required at RFS (m)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "completion_section",
+   "fieldtype": "Section Break",
+   "label": "Completion & Re-work"
+  },
+  {
+   "fieldname": "work_completed_date",
+   "fieldtype": "Date",
+   "label": "Work Completed Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "supervisor_available",
+   "fieldtype": "Select",
+   "label": "Supervisor Available",
+   "options": "\nYes\nNo",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "rework_required",
+   "fieldtype": "Select",
+   "label": "Re-work Required",
+   "options": "\nYes\nNo",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_remark",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "Remark",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "suggestion_for_future",
+   "fieldtype": "Small Text",
+   "label": "Suggestion for Future",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_rework",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rework_required_date",
+   "fieldtype": "Date",
+   "label": "Re-work Required Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "rework_required_date_2",
+   "fieldtype": "Date",
+   "label": "Re-work Required Date 2",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "rework_cable_length",
+   "fieldtype": "Float",
+   "label": "Re-work Cable Length (m)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "cancel_section",
+   "fieldtype": "Section Break",
+   "label": "Cancel Project",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "is_cancelled",
+   "fieldtype": "Check",
+   "label": "Project Cancelled",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_cancel",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cancel_reason",
+   "fieldtype": "Small Text",
+   "label": "Cancel Reason",
+   "mandatory_depends_on": "eval:doc.is_cancelled",
+   "depends_on": "eval:doc.is_cancelled",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "at_hoto_tab",
+   "fieldtype": "Tab Break",
+   "label": "AT & HOTO"
+  },
+  {
+   "fieldname": "at_section",
+   "fieldtype": "Section Break",
+   "label": "Acceptance Test (AT)"
+  },
+  {
+   "fieldname": "at_status",
+   "fieldtype": "Select",
+   "label": "AT Status",
+   "options": "\nPending\nDone",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_at",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "at_paper_status",
+   "fieldtype": "Select",
+   "label": "AT Paper Status",
+   "options": "\nPending\nDone",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "hoto_section",
+   "fieldtype": "Section Break",
+   "label": "Hand Over Take Over (HOTO)"
+  },
+  {
+   "fieldname": "hoto_no",
+   "fieldtype": "Data",
+   "label": "HOTO No",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "hoto_date",
+   "fieldtype": "Date",
+   "label": "HOTO Date",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_hoto",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hoto_distance",
+   "fieldtype": "Float",
+   "label": "HOTO Distance (m)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "hoto_signature_status",
+   "fieldtype": "Select",
+   "label": "HOTO Signature Status",
+   "options": "\nPending\nDone",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_network_link",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "network_link",
+   "fieldtype": "Link",
+   "label": "Network Link (Maintenance)",
+   "options": "Network Link",
+   "read_only": 1,
+   "description": "Created automatically on the HOTO Date, so the link moves to maintenance",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "billing_tab",
+   "fieldtype": "Tab Break",
+   "label": "Billing"
+  },
+  {
+   "fieldname": "billing_po_section",
+   "fieldtype": "Section Break",
+   "label": "Customer PO & Invoice"
+  },
+  {
+   "fieldname": "billing_status",
+   "fieldtype": "Select",
+   "label": "Billing Status",
+   "options": "\nPending\nDone",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "po_no",
+   "fieldtype": "Data",
+   "label": "PO No",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "po_date",
+   "fieldtype": "Date",
+   "label": "PO Date",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "column_break_billing_po",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_no",
+   "fieldtype": "Data",
+   "label": "Invoice No",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "invoice_date",
+   "fieldtype": "Date",
+   "label": "Invoice Date",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "invoice_sent",
+   "fieldtype": "Select",
+   "label": "Invoice Sent",
+   "options": "\nYes\nNo",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "column_break_billing_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "arn",
+   "fieldtype": "Data",
+   "label": "Airtel Reference No (ARN)",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "airtel_approver",
+   "fieldtype": "Data",
+   "label": "Airtel Approver Name",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "billing_amount_section",
+   "fieldtype": "Section Break",
+   "label": "Amount & Payment"
+  },
+  {
+   "fieldname": "base_amount",
+   "fieldtype": "Currency",
+   "label": "Base Amount",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "gst_amount",
+   "fieldtype": "Currency",
+   "label": "GST Amount",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "final_amount",
+   "fieldtype": "Currency",
+   "label": "Final Amount",
+   "read_only": 1,
+   "description": "Base Amount + GST Amount",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_due_date",
+   "fieldtype": "Date",
+   "label": "Payment Due Date",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "Payment Status",
+   "options": "\nNot Received\nAwaiting Payment\nPartially Received\nFully Received\nOverdue\nCancelled/ Written Off",
+   "permlevel": 5
+  },
+  {
+   "fieldname": "column_break_billing_remark",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "billing_remark",
+   "fieldtype": "Small Text",
+   "label": "Final Remark (Billing Related)",
+   "permlevel": 5
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-09 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "New Project",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Project Head",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Project Head",
+   "write": 1
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Project Head"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Project Head"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Project Head"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Area Manager"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Area Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Area Manager"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Area Manager"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Fiber Team",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Fiber Team"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Fiber Team"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Fiber Team",
+   "write": 1
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Fiber Team"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Splicing Team",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Splicing Team"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Splicing Team"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Splicing Team"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Splicing Team",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "NOC Head",
+   "share": 1,
+   "email": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "NOC Head"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "NOC Head"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "NOC Head"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "NOC Head"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Agent",
+   "share": 1,
+   "email": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Maintenance Agent"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Maintenance Agent"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Maintenance Agent"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Maintenance Agent"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "Area Manager"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "Fiber Team"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "Maintenance Agent"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "NOC Head"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "Project Head"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "Splicing Team"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Accounts User"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Accounts User"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Accounts User"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Accounts User"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "write": 1,
+   "role": "Accounts User"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "permlevel": 2,
+   "read": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "permlevel": 4,
+   "read": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "permlevel": 5,
+   "read": 1,
+   "write": 1,
+   "role": "Accounts Manager"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

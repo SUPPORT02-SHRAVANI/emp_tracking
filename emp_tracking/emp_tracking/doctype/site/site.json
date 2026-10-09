@@ -1,82 +1,80 @@
 {
  "actions": [],
  "allow_bulk_edit": 1,
+ "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:team_name",
- "creation": "2026-09-26 11:26:10.543265",
+ "autoname": "format:SITE-{#####}",
+ "creation": "2026-10-07 15:30:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "team_name",
-  "team_type",
-  "area",
-  "team_leader",
-  "team_leader_name",
-  "manager_name",
-  "status"
+  "site_name",
+  "node",
+  "etipl_code",
+  "column_break_site",
+  "b_location",
+  "vendor_name",
+  "month"
  ],
  "fields": [
   {
-   "fieldname": "team_name",
+   "fieldname": "site_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Team Name",
+   "in_standard_filter": 1,
+   "label": "Site Name",
+   "reqd": 1
+  },
+  {
+   "description": "The node (GIS code) this site is on. One node has many sites.",
+   "fieldname": "node",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Node (GIS)",
+   "options": "Node",
    "reqd": 1,
-   "unique": 1
+   "search_index": 1
   },
   {
-   "fieldname": "team_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Team Type",
-   "options": "EVisions\nVendor",
-   "reqd": 1
-  },
-  {
-   "fieldname": "area",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Area",
-   "options": "Area"
-  },
-  {
-   "fieldname": "team_leader",
-   "fieldtype": "Link",
-   "ignore_user_permissions": 1,
-   "label": "Team Leader",
-   "options": "Employee"
-  },
-  {
-   "fieldname": "team_leader_name",
+   "fieldname": "etipl_code",
    "fieldtype": "Data",
-   "label": "Team Leader / Supervisor Name"
-  },
-  {
-   "fieldname": "manager_name",
-   "fieldtype": "Data",
-   "label": "Manager Name"
-  },
-  {
-   "default": "Active",
-   "fieldname": "status",
-   "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Status",
-   "options": "Active\nInactive",
-   "reqd": 1
+   "label": "ETIPL Code",
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_site",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Where this site is fed from: the node itself or another site",
+   "fieldname": "b_location",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "B Location"
+  },
+  {
+   "fieldname": "vendor_name",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Vendor Name"
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Data",
+   "label": "Month"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-09 12:00:00.000000",
+ "modified": "2026-10-07 15:30:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
- "name": "Maintenance Team",
+ "name": "Site",
  "owner": "Administrator",
  "permissions": [
   {
@@ -130,8 +128,10 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
+ "search_fields": "site_name,node,etipl_code",
+ "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "title_field": "team_name"
+ "title_field": "site_name"
 }

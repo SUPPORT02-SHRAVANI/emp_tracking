@@ -40,5 +40,47 @@
   "modified": "2026-09-26 12:13:27.860769",
   "name": "Reassign",
   "workflow_action_name": "Reassign"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Start Work",
+  "workflow_action_name": "Start Work"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Fiber Restored",
+  "workflow_action_name": "Fiber Restored"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Inform Operator",
+  "workflow_action_name": "Inform Operator"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Confirm Restored",
+  "workflow_action_name": "Confirm Restored"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Not Restored",
+  "workflow_action_name": "Not Restored"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 15:00:00.000000",
+  "name": "Close",
+  "workflow_action_name": "Close"
  }
 ]

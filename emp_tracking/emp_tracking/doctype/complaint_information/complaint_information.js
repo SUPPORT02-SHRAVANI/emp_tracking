@@ -1,8 +1,44 @@
 // Copyright (c) 2026, Frappe Technologies and contributors
 // For license information, please see license.txt
 
+// ---------------------------------------------------------------------------------------------
+// Complaint Information: form script
+//
+// How this file works
+//   NOC logs an operator's complaint (Airtel, Vodafone or Railtel) on this form.
+//     1. NOC picks the operator, then pastes the operator's message or attaches a screenshot.
+//        A screenshot is read to text in the browser (Tesseract.js) and treated as pasted text.
+//     2. parse_complaint_message() pulls out the incident number, priority, complaint type,
+//        section, down time, node and so on, and the form fields are filled from it.
+//     3. The LINKID (Network Link) is found from the node or from the link name in the message;
+//        area, location, team and vendor then come from that link.
+//     4. For FTTH, NOC picks the Node (from the Node master), then the Society / Building (a Site
+//        from the Site master); only that node's buildings are listed.
+//     5. Before saving, open complaints with the same incident number or LINKID are shown so a
+//        follow-up message is not logged as a new complaint.
+//
+// Change log
+//   2026-09-26  File created with the doctype.
+//   2026-09-30  Complaint form logic added (operator types, paste/screenshot parsing, LINKID
+//               matching, duplicate check). Date taken from the git commit "complaint type added".
+//   2026-10-07  Site picker added: filtered by Node ID, fills Society / Building and Node ID.
+//   2026-10-07  Added this header, a description on every function, and a date on each.
+//   2026-10-08  Node ID is now a link to the Node master. The Site field is the Society /
+//               Building field; the old free-text name is hidden and copied from the Site.
+//   2026-10-08  Airtel PON TT messages: port, society and customer count read in any order
+//               (e.g. node 24W from "24W-G1/1/15" placed before the count).
+//   2026-10-09  OH maintenance flow: ILL / LMC / Transport types for Airtel and Vodafone; other
+//               operators (Gazon, Jio, ...) get every link type. Resolved complaints no longer
+//               count as open in the duplicate check. Restoration, RFO, MTTR and SLA fields are
+//               on the form (worked out by the server).
+//   2026-10-09  Transport removed from the link types: it is the same as Backbone.
+// ---------------------------------------------------------------------------------------------
+
 // Workflow states after which a complaint no longer counts as open (for the duplicate check).
-const CLOSED_STATES = ["Closed"];
+const CLOSED_STATES = ["Resolved", "Closed"];
+
+// Every link type, for operators without their own list (2026-10-09).
+const ALL_TYPES = ["Backbone", "FTTH", "Small Cell", "ILL", "LMC"];
 
 // What NOC should paste, per operator.
 const PASTE_HINTS = {
@@ -14,17 +50,24 @@ const PASTE_HINTS = {
 // Complaint types per operator (the server enforces the same rule). Railtel has none,
 // and only Airtel gives an incident number.
 const OPERATOR_TYPES = {
-	Airtel: ["Backbone", "FTTH"],
-	Vodafone: ["Backbone", "Small Cell"],
+	Airtel: ["Backbone", "FTTH", "ILL", "LMC"],
+	Vodafone: ["Backbone", "Small Cell", "ILL", "LMC"],
 	Railtel: [],
 };
 
 frappe.ui.form.on("Complaint Information", {
+	// Date: 2026-09-30
+	// Runs once when the form is built: set which LINKIDs and Sites can be picked.
 	setup(frm) {
 		// With a Node ID, only links on that node can be picked as LINKID.
 		frm.set_query("linkid", () => (frm.doc.node_id ? { filters: { node_id: frm.doc.node_id } } : {}));
+		// 2026-10-07: added with the Site master.
+		// One node has many sites: with a Node ID, only that node's sites can be picked.
+		frm.set_query("site", () => (frm.doc.node_id ? { filters: { node: frm.doc.node_id } } : {}));
 	},
 
+	// Date: 2026-09-30
+	// Form opened or reloaded: set the paste hint and type options for the chosen operator.
 	refresh(frm) {
 		set_paste_hint(frm);
 		set_type_options(frm);
@@ -33,12 +76,16 @@ frappe.ui.form.on("Complaint Information", {
 		}
 	},
 
+	// Date: 2026-09-30
+	// Operator changed: update the paste hint and type options; only Airtel keeps an INC number.
 	operatorcustomer(frm) {
 		set_paste_hint(frm);
 		set_type_options(frm);
 		if (frm.doc.operatorcustomer !== "Airtel" && frm.doc.incident_number) frm.set_value("incident_number", "");
 	},
 
+	// Date: 2026-09-30
+	// Message pasted: parse it, fill the fields it contains, find the LINKID, check for duplicates.
 	paste_message(frm) {
 		const text = (frm.doc.paste_message || "").trim();
 		if (!text) return;
@@ -69,20 +116,31 @@ frappe.ui.form.on("Complaint Information", {
 			indicator: filled.length ? "green" : "orange",
 		});
 
+		// 2026-10-08: Node ID is a link now; a node missing from the Node master is dropped.
+		if (p.node_id) {
+			frappe.db.exists("Node", p.node_id).then((found) => {
+				if (!found) frappe.msgprint(__("Node {0} from the message is not in the Node master. Add it there, or pick the node by hand.", [p.node_id]));
+			});
+		}
 		if (p.node_id && !frm.doc.linkid) pick_link_by_node(frm, p.node_id);
 		else if (p.link_hint && !frm.doc.linkid) suggest_link(frm, p.link_hint);
 		check_duplicates(frm, false);
 	},
 
+	// Date: 2026-09-30
 	// A screenshot was attached: read its text into the paste box, which then fills the form.
 	message_attachment(frm) {
 		if (frm.doc.message_attachment && frm.is_new()) read_screenshot_text(frm);
 	},
 
+	// Date: 2026-09-30
+	// Incident number changed: warn if an open complaint already has it.
 	incident_number(frm) {
 		check_duplicates(frm, false);
 	},
 
+	// Date: 2026-09-30
+	// Node ID changed: upper-case it, drop a Site or LINKID from another node, pick the node's link.
 	node_id(frm) {
 		const node = (frm.doc.node_id || "").trim().toUpperCase();
 		if (node !== frm.doc.node_id) {
@@ -90,6 +148,13 @@ frappe.ui.form.on("Complaint Information", {
 			return;
 		}
 		if (!node) return;
+		// 2026-10-07: clear the Site when the Node ID changes to a different node.
+		if (frm.doc.site) {
+			// A site from another node is no longer valid.
+			frappe.db.get_value("Site", frm.doc.site, "node").then((r) => {
+				if ((r.message || {}).node !== node) frm.set_value("site", "");
+			});
+		}
 		if (frm.doc.linkid) {
 			// A LINKID from another node is no longer valid.
 			frappe.db.get_value("Network Link", frm.doc.linkid, "node_id").then((r) => {
@@ -100,6 +165,22 @@ frappe.ui.form.on("Complaint Information", {
 		}
 	},
 
+	// Date: 2026-10-07
+	// Society / Building (Site) picked: copy its name, and fill the Node ID if empty.
+	async site(frm) {
+		if (!frm.doc.site) {
+			frm.set_value("society_name", "");
+			return;
+		}
+		// ETIPL Code and B Location arrive through fetch_from. Here: the node and society name.
+		const site = await frappe.db.get_value("Site", frm.doc.site, ["site_name", "node"]);
+		const s = site?.message || {};
+		if (!frm.doc.node_id && s.node) await frm.set_value("node_id", s.node);
+		if (s.site_name && frm.doc.society_name !== s.site_name) await frm.set_value("society_name", s.site_name);
+	},
+
+	// Date: 2026-09-30
+	// LINKID picked: fill node, type, section, society and Area Manager from the Network Link.
 	async linkid(frm) {
 		check_duplicates(frm, false);
 		if (!frm.doc.linkid) return;
@@ -125,6 +206,8 @@ frappe.ui.form.on("Complaint Information", {
 		}
 	},
 
+	// Date: 2026-09-30
+	// Before save: if an open complaint matches, ask NOC to confirm before saving a new one.
 	async validate(frm) {
 		if (frm.__duplicate_ok) return;
 		const dups = await find_duplicates(frm);
@@ -152,6 +235,8 @@ const DEFAULT_LABELS = { complaint_date_and_time: "Complaint Received On" };
 // leaves the NOC's computer. The library and its English data (~10 MB) download on first use.
 const TESSERACT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
 
+// Date: 2026-09-30
+// Loads the Tesseract.js text-reading library once; resolves when it is ready to use.
 function load_tesseract() {
 	if (window.Tesseract) return Promise.resolve();
 	return new Promise((resolve, reject) => {
@@ -163,6 +248,7 @@ function load_tesseract() {
 	});
 }
 
+// Date: 2026-09-30
 // Small or phone-photo screenshots read far better when enlarged and greyscaled first.
 async function prepare_image(url) {
 	const blob = await (await fetch(url, { credentials: "same-origin" })).blob();
@@ -177,6 +263,8 @@ async function prepare_image(url) {
 	return canvas;
 }
 
+// Date: 2026-09-30
+// Reads the text of the attached screenshot and puts it in the paste box, which fills the form.
 async function read_screenshot_text(frm) {
 	frappe.dom.freeze(__("Reading text from the screenshot…"));
 	try {
@@ -201,13 +289,17 @@ async function read_screenshot_text(frm) {
 	}
 }
 
+// Date: 2026-09-30
+// Limits Complaint Type to the types the chosen operator uses, clearing a type that no longer fits.
+// 2026-10-09: operators without their own list (Gazon, Jio, ...) get every type.
 function set_type_options(frm) {
-	const types = OPERATOR_TYPES[frm.doc.operatorcustomer];
-	if (!types) return;
+	const types = OPERATOR_TYPES[frm.doc.operatorcustomer] || ALL_TYPES;
 	frm.set_df_property("complaint_type", "options", ["", ...types].join("\n"));
 	if (frm.doc.complaint_type && !types.includes(frm.doc.complaint_type)) frm.set_value("complaint_type", "");
 }
 
+// Date: 2026-09-30
+// Sets the paste box label and hint, and the date field's label, for the chosen operator.
 function set_paste_hint(frm) {
 	const op = frm.doc.operatorcustomer;
 	frm.set_df_property("paste_message", "description", PASTE_HINTS[op] || "");
@@ -216,6 +308,8 @@ function set_paste_hint(frm) {
 	for (const [field, label] of Object.entries(labels)) frm.set_df_property(field, "label", __(label));
 }
 
+// Date: 2026-09-30
+// Returns open complaints (other than this one) with the same incident number or LINKID.
 async function find_duplicates(frm) {
 	const or_filters = [];
 	if (frm.doc.incident_number) or_filters.push(["incident_number", "=", frm.doc.incident_number]);
@@ -231,11 +325,15 @@ async function find_duplicates(frm) {
 	});
 }
 
+// Date: 2026-09-30
+// Shows an "Already open" message when find_duplicates() finds any.
 async function check_duplicates(frm) {
 	const dups = await find_duplicates(frm);
 	if (dups.length) frappe.msgprint({ title: __("Already open"), indicator: "orange", message: duplicate_message(dups) });
 }
 
+// Date: 2026-09-30
+// Builds the HTML list of duplicate complaints shown to NOC.
 function duplicate_message(dups) {
 	const rows = dups
 		.map(
@@ -249,6 +347,7 @@ function duplicate_message(dups) {
 		__("If this is a follow-up (\"share ETR\", \"expedite\"), update that complaint instead.");
 }
 
+// Date: 2026-09-30
 // Airtel FTTH: the LINKID is the Network Link on the message's node (e.g. MPJ).
 async function pick_link_by_node(frm, node) {
 	const links = await frappe.db.get_list("Network Link", { filters: { node_id: node }, fields: ["name"], limit: 5 });
@@ -262,6 +361,8 @@ async function pick_link_by_node(frm, node) {
 	}
 }
 
+// Date: 2026-09-30
+// Looks for a Network Link matching the link name/number from the message; sets it if exactly one matches.
 async function suggest_link(frm, hint) {
 	const like = `%${hint}%`;
 	const links = await frappe.db.get_list("Network Link", {
@@ -287,6 +388,7 @@ async function suggest_link(frm, hint) {
 	}
 }
 
+// Date: 2026-09-30
 // Parses operator WhatsApp/Telegram messages. Kept as a pure function so it can be tested on its own.
 window.emp_tracking = window.emp_tracking || {};
 emp_tracking.parse_complaint_message = function (text, operator) {
@@ -367,6 +469,8 @@ emp_tracking.parse_complaint_message = function (text, operator) {
 	// used; PON ports and society names are ignored:
 	//   S1B / 2 (customers down) / 9/9/2026 4:22:39 PM (down time)          -> node S1B
 	//   PON TT / 17 / MPJ-H1/5/3 / PLANET MILLENNIUM ... / [down time]      -> node MPJ
+	//   PON TT / 24W-G1/1/15 / VRUNDAVAN SANKUL,SHIVANE / 16 / [down time]   -> node 24W
+	// 2026-10-08: after "PON TT" the port, society and customer count can come in any order.
 	if (inc && !sec) {
 		const lines = text.split(/\n/).map((l) => l.trim().replace(/,$/, "").trim()).filter(Boolean);
 		const i = lines.findIndex((l) => /^INC\d{6,}\b/i.test(l));
@@ -376,19 +480,24 @@ emp_tracking.parse_complaint_message = function (text, operator) {
 			if (is_pon_tt) rest = rest.slice(1);
 			let node = null;
 			if (!is_pon_tt && /^[A-Z0-9]{3}$/i.test(rest[0] || "") && !/^\d+$/.test(rest[0])) node = rest.shift();   // S1B
-			if (/^\d{1,5}$/.test(rest[0] || "")) {
-				out.complaint_type = "FTTH";
-				out.customers_affected = parseInt(rest.shift(), 10);
-				for (const l of rest) {
-					if (/^\d{1,2}:\d{2}\s*(?:am|pm)?$/i.test(l)) continue;   // WhatsApp's own "5:17 PM"
-					const t = parse_date_time(l);
-					if (t) {
-						out.down_time = t;
-						break;
-					}
-					const port = l.match(/^([A-Z0-9]{3})-[A-Z0-9]{1,4}(?:\/\d{1,3}){1,3}$/i);   // MPJ-H1/5/3 -> MPJ
-					if (port && !node) node = port[1];
+			let customers = null;
+			for (const l of rest) {
+				if (/^\d{1,2}:\d{2}\s*(?:am|pm)?$/i.test(l)) continue;   // WhatsApp's own "5:17 PM"
+				const t = parse_date_time(l);
+				if (t) {
+					out.down_time = t;
+					break;
 				}
+				if (customers === null && /^\d{1,5}$/.test(l)) {
+					customers = parseInt(l, 10);
+					continue;
+				}
+				const port = l.match(/^([A-Z0-9]{3})-[A-Z0-9]{1,4}(?:\/\d{1,3}){1,3}$/i);   // MPJ-H1/5/3 -> MPJ
+				if (port && !node) node = port[1];
+			}
+			if (is_pon_tt || node || customers !== null) {
+				out.complaint_type = "FTTH";
+				if (customers !== null) out.customers_affected = customers;
 				if (node) out.node_id = node.toUpperCase();
 			}
 		}

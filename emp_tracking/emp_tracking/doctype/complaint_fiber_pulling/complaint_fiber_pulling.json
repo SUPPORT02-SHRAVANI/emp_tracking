@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-09 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "fiber_pulling_team",
+  "fibre_core",
+  "fibre_length",
+  "latitude",
+  "longitude"
+ ],
+ "fields": [
+  {
+   "fieldname": "fiber_pulling_team",
+   "fieldtype": "Link",
+   "label": "Fiber Pulling Team",
+   "options": "Fiber Pulling Team",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "fibre_core",
+   "fieldtype": "Select",
+   "label": "Fibre Core",
+   "options": "\n2\n6\n12\n24\n36\n48\n96",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "fibre_length",
+   "fieldtype": "Float",
+   "label": "Length of Fibre (m)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "in_list_view": 1,
+   "precision": "6"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "in_list_view": 1,
+   "precision": "6"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-09 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Complaint Fiber Pulling",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

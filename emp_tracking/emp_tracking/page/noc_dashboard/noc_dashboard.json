@@ -1,0 +1,24 @@
+{
+ "content": null,
+ "creation": "2026-10-01 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "icon": "octicon octicon-graph",
+ "idx": 0,
+ "modified": "2026-10-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "noc-dashboard",
+ "owner": "Administrator",
+ "page_name": "noc-dashboard",
+ "restrict_to_domain": null,
+ "roles": [
+  { "role": "NOC Head" },
+  { "role": "Area Manager" },
+  { "role": "Maintenance Agent" },
+  { "role": "System Manager" }
+ ],
+ "standard": "Yes",
+ "system_page": 0,
+ "title": "NOC Dashboard"
+}

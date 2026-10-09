@@ -1,38 +1,31 @@
 {
  "actions": [],
  "allow_bulk_edit": 1,
+ "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:team_name",
- "creation": "2026-09-26 11:26:10.543265",
+ "autoname": "field:node_id",
+ "creation": "2026-10-07 15:30:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "team_name",
-  "team_type",
+  "node_id",
   "area",
-  "team_leader",
-  "team_leader_name",
-  "manager_name",
-  "status"
+  "status",
+  "site_diagram_section",
+  "site_diagram"
  ],
  "fields": [
   {
-   "fieldname": "team_name",
+   "description": "3-character node / GIS code, e.g. 04N, V0N, MPJ",
+   "fieldname": "node_id",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Team Name",
+   "in_standard_filter": 1,
+   "label": "Node ID",
+   "length": 3,
    "reqd": 1,
    "unique": 1
-  },
-  {
-   "fieldname": "team_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Team Type",
-   "options": "EVisions\nVendor",
-   "reqd": 1
   },
   {
    "fieldname": "area",
@@ -43,23 +36,6 @@
    "options": "Area"
   },
   {
-   "fieldname": "team_leader",
-   "fieldtype": "Link",
-   "ignore_user_permissions": 1,
-   "label": "Team Leader",
-   "options": "Employee"
-  },
-  {
-   "fieldname": "team_leader_name",
-   "fieldtype": "Data",
-   "label": "Team Leader / Supervisor Name"
-  },
-  {
-   "fieldname": "manager_name",
-   "fieldtype": "Data",
-   "label": "Manager Name"
-  },
-  {
    "default": "Active",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -68,15 +44,31 @@
    "label": "Status",
    "options": "Active\nInactive",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "site_diagram_section",
+   "fieldtype": "Section Break",
+   "label": "Site Diagram"
+  },
+  {
+   "fieldname": "site_diagram",
+   "fieldtype": "HTML",
+   "label": "Site Diagram"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-10-09 12:00:00.000000",
+ "links": [
+  {
+   "link_doctype": "Site",
+   "link_fieldname": "node"
+  }
+ ],
+ "modified": "2026-10-07 16:30:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
- "name": "Maintenance Team",
+ "name": "Node",
  "owner": "Administrator",
  "permissions": [
   {
@@ -133,5 +125,5 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "title_field": "team_name"
+ "title_field": "node_id"
 }

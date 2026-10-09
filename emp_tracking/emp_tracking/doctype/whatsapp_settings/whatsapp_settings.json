@@ -1,0 +1,175 @@
+{
+ "actions": [],
+ "creation": "2026-10-08 17:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "test_section",
+  "test_mode",
+  "test_mobile_number",
+  "column_break_test",
+  "send_test_message",
+  "api_section",
+  "phone_number_id",
+  "access_token",
+  "column_break_api",
+  "api_version",
+  "default_country_code",
+  "template_section",
+  "project_stage_template",
+  "column_break_template",
+  "template_language",
+  "webhook_section",
+  "webhook_url",
+  "verify_token",
+  "column_break_webhook",
+  "app_secret"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "Tick to start sending WhatsApp messages. While unticked, nothing is sent.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "test_section",
+   "fieldtype": "Section Break",
+   "label": "Testing"
+  },
+  {
+   "default": "1",
+   "fieldname": "test_mode",
+   "fieldtype": "Check",
+   "label": "Test Mode",
+   "description": "While ticked, every message goes only to the Test Mobile Number instead of the real people."
+  },
+  {
+   "default": "+91 72760 12155",
+   "fieldname": "test_mobile_number",
+   "fieldtype": "Data",
+   "label": "Test Mobile Number",
+   "mandatory_depends_on": "test_mode"
+  },
+  {
+   "fieldname": "column_break_test",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "send_test_message",
+   "fieldtype": "Button",
+   "label": "Send Test Message",
+   "description": "Save first. Sends the stage template with sample values to the Test Mobile Number."
+  },
+  {
+   "fieldname": "api_section",
+   "fieldtype": "Section Break",
+   "label": "Meta WhatsApp Cloud API"
+  },
+  {
+   "description": "From Meta Business > WhatsApp > API Setup: \"Phone number ID\" (not the phone number itself).",
+   "fieldname": "phone_number_id",
+   "fieldtype": "Data",
+   "label": "Phone Number ID",
+   "mandatory_depends_on": "enabled"
+  },
+  {
+   "description": "A permanent System User access token with the whatsapp_business_messaging permission.",
+   "fieldname": "access_token",
+   "fieldtype": "Password",
+   "label": "Access Token",
+   "length": 1000,
+   "mandatory_depends_on": "enabled"
+  },
+  {
+   "fieldname": "column_break_api",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "v21.0",
+   "fieldname": "api_version",
+   "fieldtype": "Data",
+   "label": "Graph API Version"
+  },
+  {
+   "default": "91",
+   "description": "Added in front of 10-digit mobile numbers.",
+   "fieldname": "default_country_code",
+   "fieldtype": "Data",
+   "label": "Default Country Code"
+  },
+  {
+   "fieldname": "template_section",
+   "fieldtype": "Section Break",
+   "label": "Message Templates"
+  },
+  {
+   "default": "project_stage_update",
+   "description": "Approved template with 4 body variables: {{1}} project, {{2}} site, {{3}} completed stage, {{4}} next stage.",
+   "fieldname": "project_stage_template",
+   "fieldtype": "Data",
+   "label": "New Project Stage Template"
+  },
+  {
+   "fieldname": "column_break_template",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "en",
+   "description": "Language code the template was approved in, e.g. en or en_US.",
+   "fieldname": "template_language",
+   "fieldtype": "Data",
+   "label": "Template Language"
+  },
+  {
+   "fieldname": "webhook_section",
+   "fieldtype": "Section Break",
+   "label": "Receiving Replies (Webhook)",
+   "description": "In Meta: WhatsApp > Configuration > Webhook. Paste the Callback URL and Verify Token below, then subscribe to the \"messages\" field."
+  },
+  {
+   "fieldname": "webhook_url",
+   "fieldtype": "Data",
+   "label": "Callback URL",
+   "read_only": 1,
+   "is_virtual": 1
+  },
+  {
+   "fieldname": "verify_token",
+   "fieldtype": "Data",
+   "label": "Verify Token",
+   "description": "Made automatically on save. Paste the same text into Meta."
+  },
+  {
+   "fieldname": "column_break_webhook",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_secret",
+   "fieldtype": "Password",
+   "label": "App Secret",
+   "description": "Meta App > Settings > Basic > App Secret. Replies are refused until this is set, so nobody can fake them."
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-08 18:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "WhatsApp Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

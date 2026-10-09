@@ -1,0 +1,28 @@
+{
+ "content": null,
+ "creation": "2026-10-01 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "icon": "octicon octicon-graph",
+ "idx": 0,
+ "modified": "2026-10-01 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "workforce-dashboard",
+ "owner": "Administrator",
+ "page_name": "workforce-dashboard",
+ "restrict_to_domain": null,
+ "roles": [
+  { "role": "Employee" },
+  { "role": "Team Lead" },
+  { "role": "HR Manager" },
+  { "role": "HR User" },
+  { "role": "Finance Manager" },
+  { "role": "Accounts Manager" },
+  { "role": "Management" },
+  { "role": "System Manager" }
+ ],
+ "standard": "Yes",
+ "system_page": 0,
+ "title": "EVision Dashboards"
+}
