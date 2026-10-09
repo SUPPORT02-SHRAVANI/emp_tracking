@@ -28,6 +28,8 @@ Change log:
 	            workforce lists (tasks, attendance, leave, claims, trips, employees) were removed.
 	2026-10-09  after_migrate() (hooks.py) rebuilds the roles, tiles and menu after every migrate,
 	            so a Frappe Cloud deploy shows the menu without running apply_access by hand.
+	            It also creates the dashboards' custom fields (Task, Employee, Employee Checkin,
+	            Expense Claim); without them the dashboard says "not installed yet".
 	2026-10-09  One fixed order on every tile: Dashboards, New Project, Complaints, Network (Nodes,
 	            Network Links, Sites), Masters.
 """
@@ -107,10 +109,15 @@ def install():
 # Date: 2026-10-09
 def after_migrate():
 	"""Runs after every `bench migrate` (hooks.py), also on Frappe Cloud where nobody can run
-	`bench execute`: makes the roles and rebuilds the desk tiles and the one OverHead menu.
-	The heavier staff restrictions stay in apply_access(), run by hand when needed.
+	`bench execute`: makes the dashboards' custom fields and the roles, and rebuilds the desk
+	tiles and the one OverHead menu. The heavier staff restrictions stay in apply_access(),
+	run by hand when needed.
 	"""
 	try:
+		# Only for doctypes this site has (Task / Expense Claim come from ERPNext / HRMS).
+		create_custom_fields(
+			{dt: fields for dt, fields in CUSTOM_FIELDS.items() if frappe.db.exists("DocType", dt)}, update=True
+		)
 		make_roles()
 		make_navigation()
 		frappe.clear_cache()
