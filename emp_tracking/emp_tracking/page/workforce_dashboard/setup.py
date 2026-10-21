@@ -39,6 +39,9 @@ Change log:
 	2026-10-21  Employee custom field "Punch-In Location" (custom_punch_in_location): Home or Office /
 	            Home Only / Office Only / Anywhere. Shown in the Employee list; the mobile app enforces it
 	            on punch IN. Created with the other CUSTOM_FIELDS on every migrate.
+	2026-10-21  Mobile-app fields that existed only on the cloud site are now made here too: Employee
+	            Photos Needed?, Employee Type, Photo Required at Punch, Expo Push Token; Employee Checkin
+	            Photo and Punch Address. Employee Home Location and Employee Ticket are now app doctypes.
 """
 
 import os
@@ -87,10 +90,25 @@ CUSTOM_FIELDS = {
 			"description": "Where this employee may punch IN from in the mobile app. Home: the manager-approved "
 				"Employee Home Location. Office: the Shift Location. Blank: field employees home or office, "
 				"others the shift location."},
+		# 2026-10-21: fields the mobile app needs, until now made by hand only on the cloud site. Same
+		# fieldnames / options as there, so update=True just keeps the existing cloud fields as they are.
+		{"fieldname": "custom_photos_needed", "label": "Photos Needed?", "fieldtype": "Select", "options": "YES\nNO",
+			"insert_after": "employee"},
+		{"fieldname": "custom_employee_type", "label": "Employee Type", "fieldtype": "Select",
+			"options": "Field Employee\nOffice Employee", "insert_after": "custom_photos_needed", "in_standard_filter": 1},
+		{"fieldname": "custom_photo_required", "label": "Photo Required at Punch", "fieldtype": "Check",
+			"insert_after": "custom_employee_type"},
+		{"fieldname": "custom_expo_push_token", "label": "Expo Push Token", "fieldtype": "Data", "read_only": 1,
+			"insert_after": "user_id", "description": "Set by the mobile app; used to send it push notifications."},
 	],
 	"Employee Checkin": [
 		{"fieldname": "custom_work_mode", "label": "Work Mode", "fieldtype": "Select", "options": "\nOffice\nField",
 			"insert_after": "log_type", "in_list_view": 1},
+		# 2026-10-21: written by the mobile app on every punch. "photo" keeps the cloud site's existing
+		# fieldname (no custom_ prefix) because the app already saves into it.
+		{"fieldname": "photo", "label": "Photo", "fieldtype": "Attach Image", "insert_after": "custom_work_mode"},
+		{"fieldname": "custom_address", "label": "Punch Address", "fieldtype": "Small Text", "insert_after": "photo",
+			"description": "Address / real GPS position sent by the mobile app."},
 	],
 	"Expense Claim": [
 		{"fieldname": "custom_petrol_section", "label": "Petrol / KM Details", "fieldtype": "Section Break", "insert_after": "expenses"},
