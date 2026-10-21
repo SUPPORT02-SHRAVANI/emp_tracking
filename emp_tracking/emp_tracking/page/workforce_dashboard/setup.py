@@ -36,6 +36,9 @@ Change log:
 	            Company, Employee, Area, Teams, Vendors, Network Link, Node and Site.
 	2026-10-09  One fixed order on every tile: Dashboards, New Project, Complaints, Network (Nodes,
 	            Network Links, Sites), Masters.
+	2026-10-21  Employee custom field "Punch-In Location" (custom_punch_in_location): Home or Office /
+	            Home Only / Office Only / Anywhere. Shown in the Employee list; the mobile app enforces it
+	            on punch IN. Created with the other CUSTOM_FIELDS on every migrate.
 """
 
 import os
@@ -76,6 +79,14 @@ CUSTOM_FIELDS = {
 			"insert_after": "designation", "in_standard_filter": 1,
 			"description": "Field: every working hour counts as field hours. Office: every working hour counts as office hours. "
 				"Blank: decided from GPS trips in the last 30 days."},
+		# 2026-10-21: read by the mobile app (validatePunchAllowed) to decide where this employee may
+		# punch IN from. Option strings must match PUNCH_IN_LOCATION_RULES in the app's src/api/config.ts.
+		{"fieldname": "custom_punch_in_location", "label": "Punch-In Location", "fieldtype": "Select",
+			"options": "\nHome or Office\nHome Only\nOffice Only\nAnywhere",
+			"insert_after": "custom_work_type", "in_list_view": 1, "in_standard_filter": 1,
+			"description": "Where this employee may punch IN from in the mobile app. Home: the manager-approved "
+				"Employee Home Location. Office: the Shift Location. Blank: field employees home or office, "
+				"others the shift location."},
 	],
 	"Employee Checkin": [
 		{"fieldname": "custom_work_mode", "label": "Work Mode", "fieldtype": "Select", "options": "\nOffice\nField",
