@@ -10,3 +10,11 @@ emp_tracking.patches.oh_maintenance_masters
 emp_tracking.patches.splicing_team_rows
 emp_tracking.patches.transport_is_backbone
 emp_tracking.patches.oh_people_masters
+emp_tracking.patches.merge_node_into_gis_node
+emp_tracking.patches.import_staff_performance
+emp_tracking.patches.import_fiber_register
+emp_tracking.patches.backfill_kmz_path
+emp_tracking.patches.leaderboard_call_defaults
+emp_tracking.patches.kmz_map_settings_defaults
+emp_tracking.patches.import_03y_sites
+emp_tracking.patches.remove_new_project

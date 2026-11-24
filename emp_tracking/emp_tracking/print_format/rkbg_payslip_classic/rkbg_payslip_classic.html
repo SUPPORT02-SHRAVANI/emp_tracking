@@ -1,0 +1,156 @@
+{#-
+	RKBG Payslip Classic: payslip print format for HRMS Salary Slip, laid out like the payslip
+	Excel sheet (one bordered box: logo + company header, employee details, "Payslip for the month
+	of ...", Earnings | Deductions, totals, Net Pay, amount in words; company stamp under the box).
+	Created: 2026-11-24
+
+	- Standard Print Format in the Emp Tracking module, so Frappe reads it from this file and it
+	  ships with the app (same as "RKBG Salary Slip", which stays available as the modern layout).
+	- The whole slip is ONE table on a 5-column grid (the sheet's columns B-F), so every border lines
+	  up like the Excel cells. Tables only, no flexbox: PDFs are made with wkhtmltopdf 0.12.6.
+	- Company name: Company > "Name on Payslip" (custom_payslip_name, e.g. RKBG IPTECH PVT. LTD.),
+	  else the Company name. Logo: Company > Company Logo. Address: the first Address linked to the
+	  Company. Stamp: Company > "Company Stamp" (custom_company_stamp). Fields are created by
+	  emp_tracking/payslip_print.py. Anything not filled in is simply left out.
+	- Only rows that make up pay are listed. Rows marked "Do not include in total" or "Statistical"
+	  (PF Employer, ESIC Employer, Bonus, Net CTC Cost ...) are left out, as in the Excel sheet.
+	- Amounts are rounded to whole rupees and printed as 52543.00 (no thousands separator), like the
+	  sheet. Print only: the slip keeps its exact amounts.
+
+	Change log:
+		2026-11-24  Created from the user's Excel payslip screenshot.
+		2026-11-24  Address printed in the sheet's two lines (line 1 / line 2, city;pincode).
+-#}
+{%- set emp = frappe.db.get_value("Employee", doc.employee,
+	["custom_employee_code", "pan_number", "provident_fund_account", "custom_esic_no",
+	 "bank_name", "bank_ac_no", "date_of_joining"], as_dict=True) or {} -%}
+{%- set co = frappe.db.get_value("Company", doc.company,
+	["company_name", "company_logo", "custom_payslip_name", "custom_company_stamp"], as_dict=True) or {} -%}
+{#- First Address linked to the Company (Address > Links), if any -#}
+{%- set addr_name = frappe.db.get_value("Dynamic Link", {"link_doctype": "Company", "link_name": doc.company, "parenttype": "Address"}, "parent") -%}
+{%- set addr = frappe.db.get_value("Address", addr_name, ["address_line1", "address_line2", "city", "state", "pincode"], as_dict=True) if addr_name else None -%}
+{%- set cur = doc.currency or "INR" -%}
+
+{%- macro amt(v) -%}{{ "%.2f"|format(frappe.utils.rounded(v or 0)) }}{%- endmacro -%}
+
+{#- Short labels used on the Excel payslip. Components not listed print their own name. -#}
+{%- set labels = {
+	"Basic + DA": "Earned Basic + D.A.",
+	"House Rent Allowance": "H.R.A",
+	"Conveyance Allowance": "Local Conv.",
+	"Provident Fund": "Prov. Fund",
+	"Professional Tax": "P. Tax",
+	"Labour Welfare Fund": "MLWF",
+} -%}
+
+{#- Net pay: rounded total unless rounding is switched off in Payroll Settings -#}
+{%- set use_rounded = doc.rounded_total and not frappe.db.get_single_value("Payroll Settings", "disable_rounded_total") -%}
+{%- set net = doc.rounded_total if use_rounded else doc.net_pay -%}
+{#- total_in_words is "INR Fifty Thousand, One Hundred And Forty Seven only."; the sheet prints
+	"Fifty Thousand One Hundred Forty Seven Only." (no currency, commas or "And") -#}
+{%- set words = (doc.total_in_words or "")|replace(cur ~ " ", "", 1)|replace(",", "")|replace(" And ", " ")|replace(" only.", " Only.") -%}
+
+{%- set earn = [] -%}{%- set ded = [] -%}
+{%- for d in doc.earnings -%}
+	{%- if not d.do_not_include_in_total and not d.statistical_component -%}{%- set _ = earn.append(d) -%}{%- endif -%}
+{%- endfor -%}
+{%- for d in doc.deductions -%}
+	{%- if not d.do_not_include_in_total and not d.statistical_component -%}{%- set _ = ded.append(d) -%}{%- endif -%}
+{%- endfor -%}
+{#- Two empty rows under the longest list, like the sheet -#}
+{%- set nrows = [earn|length, ded|length]|max + 2 -%}
+
+<style>
+	.pc { font-family: Arial, "DejaVu Sans", Helvetica, sans-serif; color: #000; font-size: 11px; }
+	.pc table.box { width: 100%; border-collapse: collapse; border: 1.5px solid #000; table-layout: fixed; }
+	.pc .box td { border: 1px solid #000; padding: 2px 4px; height: 16px; vertical-align: middle; }
+	.pc .r { text-align: right; white-space: nowrap; }
+	.pc .c { text-align: center; }
+	.pc .b { font-weight: bold; }
+	.pc .v { font-size: 12px; }
+	/* header cell: logo + name/address, no inner borders */
+	.pc .head { padding: 14px 10px !important; }
+	.pc .head table { width: 100%; border-collapse: collapse; }
+	.pc .head td { border: none !important; padding: 0 !important; vertical-align: middle; }
+	.pc .head img { max-height: 70px; max-width: 160px; }
+	.pc .co { font-size: 16px; font-weight: bold; }
+	.pc .addr { font-size: 13px; line-height: 1.35; }
+	.pc .nb-r { border-right: none !important; }
+	.pc .nb-l { border-left: none !important; }
+	.pc .stamp { text-align: center; margin-top: 18px; }
+	.pc .stamp img { max-height: 130px; max-width: 160px; }
+</style>
+
+<div class="pc">
+<table class="box">
+	{#- Column widths of the sheet: B, C, D, E, F -#}
+	<colgroup>
+		<col style="width: 17%;"><col style="width: 17%;"><col style="width: 21%;"><col style="width: 25%;"><col style="width: 20%;">
+	</colgroup>
+
+	{#- ===== Company header ===== -#}
+	<tr><td colspan="5" class="head">
+		<table><tr>
+			{%- if co.company_logo %}<td style="width: 34%; text-align: center;"><img src="{{ co.company_logo }}"></td>{% endif %}
+			<td>
+				<div class="co">{{ co.custom_payslip_name or co.company_name or doc.company }}</div>
+				{%- if addr %}
+				{#- 2026-11-24: two lines as on the sheet: "Swasti Apartment, 2nd Floor, Opp SNDT" /
+					"Karve Road, Erandwane, Pune;411004" (state left out, like the sheet) -#}
+				<div class="addr">{{ addr.address_line1 or "" }}</div>
+				<div class="addr">{% if addr.address_line2 %}{{ addr.address_line2 }}, {% endif %}{{ addr.city or "" }}{% if addr.pincode %};{{ addr.pincode }}{% endif %}</div>
+				{%- endif %}
+			</td>
+		</tr></table>
+	</td></tr>
+
+	{#- ===== Employee details: label | value (C+D) | label | value ===== -#}
+	<tr><td>Name</td><td colspan="2" class="v">{{ doc.employee_name }}</td>
+		<td>Emp Code</td><td class="v">{{ emp.custom_employee_code or doc.employee }}</td></tr>
+	<tr><td>Date of Joining</td><td colspan="2">{{ frappe.utils.formatdate(emp.date_of_joining, "dd-MMM-yy") if emp.date_of_joining else "" }}</td>
+		<td>Bank Name</td><td class="v">{{ doc.bank_name or emp.bank_name or "" }}</td></tr>
+	<tr><td>Designation</td><td colspan="2" class="v">{{ doc.designation or "" }}</td>
+		<td>Account No.</td><td class="v">{{ doc.bank_account_no or emp.bank_ac_no or "" }}</td></tr>
+	<tr><td>Location</td><td colspan="2" class="v">{{ doc.branch or "" }}</td>
+		<td>PF No.</td><td class="v">{{ emp.provident_fund_account or "" }}</td></tr>
+	<tr><td></td><td colspan="2"></td>
+		<td>ESIC No.</td><td class="v">{{ emp.custom_esic_no or "-" }}</td></tr>
+	<tr><td>Present Days</td><td colspan="2" class="v">{{ frappe.utils.flt(doc.payment_days, 1)|string|replace(".0", "") }} Days</td>
+		<td>PAN</td><td>{{ emp.pan_number or "" }}</td></tr>
+
+	{#- ===== Title ===== -#}
+	<tr><td colspan="5" class="c b">Payslip for the month of {{ frappe.utils.formatdate(doc.start_date, "MMMM - yyyy") }}</td></tr>
+
+	{#- ===== Earnings (B+C, D) | Deductions (E, F) ===== -#}
+	<tr>
+		<td colspan="2" class="b">Earning &amp; Reimbursements...</td><td></td>
+		<td class="b">Deduction &amp; Recoveries....</td><td class="c b">Amount</td>
+	</tr>
+	{%- for i in range(nrows) %}
+	{%- set e = earn[i] if i < earn|length else None %}
+	{%- set d = ded[i] if i < ded|length else None %}
+	<tr>
+		<td colspan="2">{{ labels.get(e.salary_component, e.salary_component) if e else "" }}</td>
+		<td class="r">{{ amt(e.amount) if e else "" }}</td>
+		<td>{{ labels.get(d.salary_component, d.salary_component) if d else "" }}</td>
+		<td class="r">{{ amt(d.amount) if d else "" }}</td>
+	</tr>
+	{%- endfor %}
+
+	{#- ===== Totals and Net Pay ===== -#}
+	<tr>
+		<td colspan="2" class="b">Total Earnings</td><td class="r b">{{ amt(doc.gross_pay) }}</td>
+		<td class="r b">Total Deduction</td><td class="r b">{{ amt(doc.total_deduction) }}</td>
+	</tr>
+	<tr>
+		<td colspan="3" class="nb-r"></td>
+		<td class="r b nb-l">Net Pay</td><td class="r b">{{ amt(net) }}</td>
+	</tr>
+	<tr><td colspan="5" class="c b">Amount In Words:- {{ words }}</td></tr>
+</table>
+
+{#- ===== Company stamp (outside the box, as on the sheet) ===== -#}
+{%- if co.custom_company_stamp %}
+<div class="stamp"><img src="{{ co.custom_company_stamp }}"></div>
+{%- endif %}
+</div>

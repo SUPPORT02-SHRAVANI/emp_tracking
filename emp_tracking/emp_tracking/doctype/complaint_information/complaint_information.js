@@ -12,7 +12,7 @@
 //        section, down time, node and so on, and the form fields are filled from it.
 //     3. The LINKID (Network Link) is found from the node or from the link name in the message;
 //        area, location, team and vendor then come from that link.
-//     4. For FTTH, NOC picks the Node (from the Node master), then the Society / Building (a Site
+//     4. For FTTH, NOC picks the Node (from the GIS Node master), then the Society / Building (a Site
 //        from the Site master); only that node's buildings are listed.
 //     5. Before saving, open complaints with the same incident number or LINKID are shown so a
 //        follow-up message is not logged as a new complaint.
@@ -32,10 +32,72 @@
 //               count as open in the duplicate check. Restoration, RFO, MTTR and SLA fields are
 //               on the form (worked out by the server).
 //   2026-10-09  Transport removed from the link types: it is the same as Backbone.
+//   2026-10-24  Node ID links to the GIS Node master (FTTH Tracker); the separate Node master
+//               was merged into it.
+//   2026-11-02  Workflow stage tracker at the top of the form (complaint_stage_tracker, drawn by
+//               evision.stepper from public/js/evision.js).
+//   2026-11-02  Card layout for the form (evision.form_style).
 // ---------------------------------------------------------------------------------------------
 
 // Workflow states after which a complaint no longer counts as open (for the duplicate check).
 const CLOSED_STATES = ["Resolved", "Closed"];
+
+// Date: 2026-11-02
+// The OHP Maintenance Workflow's main path (fixtures/workflow.json), with short tracker labels.
+// "Rejected" is not on the path: the Maintenance Team sent it back and the Area Manager reassigns
+// it, so the tracker shows it at the Maintenance Team step in the stopped (red) style.
+const COMPLAINT_STEPS = [
+	{ key: "New", label: "New" },
+	{ key: "NOC Verification", label: "NOC Verification" },
+	{ key: "Assigned to Area Manager", label: "Area Manager" },
+	{ key: "Assigned to Maintenance Team", label: "Maintenance Team" },
+	{ key: "Accepted", label: "Accepted" },
+	{ key: "In Progress", label: "In Progress" },
+	{ key: "Fiber Restored", label: "Fiber Restored" },
+	{ key: "Awaiting Operator Confirmation", label: "Operator Confirmation" },
+	{ key: "Resolved", label: "Resolved" },
+	{ key: "Closed", label: "Closed" },
+];
+
+// Date: 2026-11-02
+// Draws the stage tracker for the complaint's workflow state. Who acts at a step is read from the
+// workflow's own transitions (the roles allowed to move a record out of that state), so the
+// tracker follows any later change to the workflow without editing this file.
+function complaint_stage_tracker(frm) {
+	if (!window.evision || frm.is_new()) return;
+	const state = frm.doc.workflow_state;
+	if (!state) return;
+	let transitions = [];
+	try {
+		transitions = frappe.workflow.get_all_transitions(frm.doctype) || [];
+	} catch (e) {
+		transitions = []; // no workflow loaded: the tracker just shows no owner
+	}
+	const roles_from = (s) => [...new Set(transitions.filter((t) => t.state === s).map((t) => t.allowed))];
+	const steps = COMPLAINT_STEPS.map((s) => Object.assign({ title: s.key, owner: roles_from(s.key).join(" / ") }, s));
+	const roles = roles_from(state);
+	const owner = roles.join(" / ") || null;
+
+	if (state === "Rejected") {
+		evision.stepper(frm, {
+			steps,
+			current: "Assigned to Maintenance Team",
+			state: "stopped",
+			state_label: __("Rejected by Maintenance Team"),
+			owner,
+			roles,
+		});
+		return;
+	}
+	if (!steps.some((s) => s.key === state)) return;
+	evision.stepper(frm, {
+		steps,
+		current: state,
+		state: state === "Closed" ? "finished" : "active",
+		owner: state === "Closed" ? null : owner,
+		roles,
+	});
+}
 
 // Every link type, for operators without their own list (2026-10-09).
 const ALL_TYPES = ["Backbone", "FTTH", "Small Cell", "ILL", "LMC"];
@@ -68,7 +130,11 @@ frappe.ui.form.on("Complaint Information", {
 
 	// Date: 2026-09-30
 	// Form opened or reloaded: set the paste hint and type options for the chosen operator.
+	// 2026-11-02: also draws the workflow stage tracker.
 	refresh(frm) {
+		// 2026-11-02: card layout for the form (evision.css section 5)
+		if (window.evision) evision.form_style(frm);
+		complaint_stage_tracker(frm);
 		set_paste_hint(frm);
 		set_type_options(frm);
 		if (frm.is_new() && frm.doc.message_attachment) {
@@ -116,10 +182,11 @@ frappe.ui.form.on("Complaint Information", {
 			indicator: filled.length ? "green" : "orange",
 		});
 
-		// 2026-10-08: Node ID is a link now; a node missing from the Node master is dropped.
+		// 2026-10-08: Node ID is a link now; a node missing from the master is dropped.
+		// 2026-10-24: the master is GIS Node (Node was merged into it).
 		if (p.node_id) {
-			frappe.db.exists("Node", p.node_id).then((found) => {
-				if (!found) frappe.msgprint(__("Node {0} from the message is not in the Node master. Add it there, or pick the node by hand.", [p.node_id]));
+			frappe.db.exists("GIS Node", p.node_id).then((found) => {
+				if (!found) frappe.msgprint(__("Node {0} from the message is not in the GIS Node master. Add it there, or pick the node by hand.", [p.node_id]));
 			});
 		}
 		if (p.node_id && !frm.doc.linkid) pick_link_by_node(frm, p.node_id);

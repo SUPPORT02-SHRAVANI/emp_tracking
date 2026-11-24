@@ -6,11 +6,13 @@
 #
 # How this file works
 #   Each team has a Team Leader (Employee) who is also the supervisor on projects, and a
-#   Manager. New Project copies "Team Leader / Supervisor Name" and "Manager Name" from here.
+#   Manager. Complaints and Network Links name the team that maintains a link.
 #   On save, the leader's name is filled from the chosen Employee.
 #
 # Change log
 #   2026-10-09  Added Team Leader / Supervisor Name and Manager Name; leader name from Employee.
+#   2026-10-31  Header: New Project (which copied the leader / manager names) was merged into
+#               FTTH Work Order; a work order's Network Link takes the team named in its Team field.
 # ---------------------------------------------------------------------------------------------
 
 import frappe

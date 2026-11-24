@@ -1,0 +1,228 @@
+{
+ "actions": [],
+ "autoname": "format:KMZ-UP-{#####}",
+ "creation": "2026-10-26 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "description": "Upload a whole KMZ: its routes and pins become KMZ Routes / KMZ Points, matched to GIS Nodes by node name and building name. Created 2026-10-26.",
+ "field_order": [
+  "kmz_file",
+  "status",
+  "cb_1",
+  "started_at",
+  "finished_at",
+  "sb_result",
+  "placemarks",
+  "routes_created",
+  "points_created",
+  "already_existed",
+  "polygons_skipped",
+  "cb_2",
+  "matched_by_node",
+  "matched_by_building",
+  "matched_by_folder",
+  "unmatched",
+  "cb_3",
+  "nodes_found",
+  "sites_linked",
+  "sb_unmatched",
+  "unmatched_list",
+  "sb_log",
+  "log"
+ ],
+ "fields": [
+  {
+   "fieldname": "kmz_file",
+   "fieldtype": "Attach",
+   "label": "KMZ File",
+   "reqd": 1,
+   "description": "The whole KMZ / KML (e.g. KMZ Till 16.09.2026 Part 8). Routes and pins are matched to GIS Nodes by node name, then by building name."
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nQueued\nRunning\nCompleted\nFailed",
+   "default": "Draft",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finished_at",
+   "fieldtype": "Datetime",
+   "label": "Finished At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_result",
+   "fieldtype": "Section Break",
+   "label": "Result",
+   "depends_on": "eval:doc.status!='Draft'"
+  },
+  {
+   "fieldname": "placemarks",
+   "fieldtype": "Int",
+   "label": "Placemarks in File",
+   "read_only": 1
+  },
+  {
+   "fieldname": "routes_created",
+   "fieldtype": "Int",
+   "label": "KMZ Routes Created",
+   "read_only": 1
+  },
+  {
+   "fieldname": "points_created",
+   "fieldtype": "Int",
+   "label": "KMZ Points Created",
+   "read_only": 1
+  },
+  {
+   "fieldname": "already_existed",
+   "fieldtype": "Int",
+   "label": "Already Imported (node filled in if blank)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "polygons_skipped",
+   "fieldtype": "Int",
+   "label": "Polygons Skipped",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "matched_by_node",
+   "fieldtype": "Int",
+   "label": "Matched by Node Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "description": "Folder or pin named with the GIS code (B1V, B1V05)"
+  },
+  {
+   "fieldname": "matched_by_building",
+   "fieldtype": "Int",
+   "label": "Matched by Building Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "description": "Route end / pin name equal to a Site or Node Site name"
+  },
+  {
+   "fieldname": "matched_by_folder",
+   "fieldtype": "Int",
+   "label": "Matched by Same Folder",
+   "read_only": 1,
+   "description": "In the same folder as a matched building"
+  },
+  {
+   "fieldname": "unmatched",
+   "fieldtype": "Int",
+   "label": "Not Matched",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nodes_found",
+   "fieldtype": "Int",
+   "label": "GIS Nodes Found",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sites_linked",
+   "fieldtype": "Int",
+   "label": "Sites Linked",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_unmatched",
+   "fieldtype": "Section Break",
+   "label": "Not matched",
+   "collapsible": 1,
+   "depends_on": "eval:doc.unmatched"
+  },
+  {
+   "fieldname": "unmatched_list",
+   "fieldtype": "Long Text",
+   "label": "Not Matched Placemarks",
+   "read_only": 1,
+   "description": "Folder / name of every placemark with no node (first 1000). Rename the folder to the GIS code or the pin to the Site name and upload again."
+  },
+  {
+   "fieldname": "sb_log",
+   "fieldtype": "Section Break",
+   "label": "Log",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "log",
+   "fieldtype": "Long Text",
+   "label": "Log",
+   "read_only": 1
+  }
+ ],
+ "istable": 0,
+ "links": [],
+ "modified": "2026-10-26 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "KMZ Upload",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Project Head",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "NOC Head",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Area Manager",
+   "read": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

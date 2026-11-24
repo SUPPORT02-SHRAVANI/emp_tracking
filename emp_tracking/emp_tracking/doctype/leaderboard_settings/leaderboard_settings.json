@@ -1,0 +1,196 @@
+{
+ "actions": [],
+ "creation": "2026-10-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "description": "Point values for the Performance Leaderboard report. Created 2026-10-24.",
+ "field_order": [
+  "earn_section",
+  "pts_rfs",
+  "pts_per_100m",
+  "pts_per_hp",
+  "column_break_earn",
+  "pts_on_time",
+  "rfs_target_days",
+  "pts_clean",
+  "penalty_section",
+  "pts_missing_proof",
+  "column_break_penalty",
+  "pts_rework",
+  "calls_section",
+  "pts_call",
+  "pts_assist_call",
+  "pts_sup_in_sla",
+  "pts_sup_out_sla",
+  "column_break_calls",
+  "pts_spl_in_sla",
+  "pts_spl_out_sla"
+ ],
+ "fields": [
+  {
+   "fieldname": "earn_section",
+   "fieldtype": "Section Break",
+   "label": "Points earned per completed project (RFS Date in the period)"
+  },
+  {
+   "fieldname": "pts_rfs",
+   "fieldtype": "Int",
+   "label": "Points per RFS",
+   "default": "100",
+   "description": "Every project that reached RFS.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "pts_per_100m",
+   "fieldtype": "Int",
+   "label": "Points per 100 m Fiber",
+   "default": "10",
+   "description": "Per 100 m of Final Distance (or Survey / WO distance when Final is blank).",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "pts_per_hp",
+   "fieldtype": "Int",
+   "label": "Points per Home Pass",
+   "default": "1",
+   "description": "Per HP on the project.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_earn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pts_on_time",
+   "fieldtype": "Int",
+   "label": "On-Time Bonus",
+   "default": "50",
+   "description": "When WO Received Date to RFS Date is within the target below.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "rfs_target_days",
+   "fieldtype": "Int",
+   "label": "RFS Target (days)",
+   "default": "7",
+   "description": "Also used for the Speedster badge (average days).",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "pts_clean",
+   "fieldtype": "Int",
+   "label": "Clean Job Bonus",
+   "default": "20",
+   "description": "All four snaps (fiber ID A/B, splicing A/B) attached and no re-work.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "penalty_section",
+   "fieldtype": "Section Break",
+   "label": "Points taken off"
+  },
+  {
+   "fieldname": "pts_missing_proof",
+   "fieldtype": "Int",
+   "label": "Missing Snap Penalty",
+   "default": "20",
+   "description": "A completed project without all four fiber / splicing snaps.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_penalty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pts_rework",
+   "fieldtype": "Int",
+   "label": "Re-work Penalty",
+   "default": "30",
+   "description": "Re-work Required is Yes or a Re-work Required Date is set.",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "calls_section",
+   "fieldtype": "Section Break",
+   "label": "Maintenance Calls",
+   "description": "Points for each person-month in Staff Monthly Performance. Defaults are the weights of the FY 2025-26 sheets."
+  },
+  {
+   "fieldname": "pts_call",
+   "fieldtype": "Float",
+   "label": "Per Call (Supervisor / as Splicer)",
+   "default": "1"
+  },
+  {
+   "fieldname": "pts_assist_call",
+   "fieldtype": "Float",
+   "label": "Per Call as Assistant Splicer",
+   "default": "0.5"
+  },
+  {
+   "fieldname": "pts_sup_in_sla",
+   "fieldtype": "Float",
+   "label": "Supervisor: Per Call In SLA",
+   "default": "0.5"
+  },
+  {
+   "fieldname": "pts_sup_out_sla",
+   "fieldtype": "Float",
+   "label": "Supervisor: Deducted per Call Out of SLA",
+   "default": "0.5"
+  },
+  {
+   "fieldname": "column_break_calls",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pts_spl_in_sla",
+   "fieldtype": "Float",
+   "label": "Splicer / Rider: Per Call In SLA",
+   "default": "0.25"
+  },
+  {
+   "fieldname": "pts_spl_out_sla",
+   "fieldtype": "Float",
+   "label": "Splicer / Rider: Deducted per Call Out of SLA",
+   "default": "0.25"
+  }
+ ],
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-10-24 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Leaderboard Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Project Head",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Area Manager",
+   "read": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

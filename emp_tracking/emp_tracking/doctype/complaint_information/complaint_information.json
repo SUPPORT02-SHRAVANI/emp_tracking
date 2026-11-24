@@ -12,6 +12,8 @@
   "request_type",
   "cb_operator",
   "registered_by",
+  "noc_sheet_no",
+  "complaint_code",
   "link_status",
   "sec_paste",
   "paste_message",
@@ -536,6 +538,22 @@
    "read_only": 1
   },
   {
+   "description": "Row NO of the NOC Master Data sheet this complaint was imported from (empty for complaints entered here).",
+   "fieldname": "noc_sheet_no",
+   "fieldtype": "Int",
+   "label": "NOC Sheet No.",
+   "no_copy": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "complaint_code",
+   "fieldtype": "Data",
+   "label": "Complaint Code",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "link_status",
    "fieldtype": "Select",
    "label": "Link Status",
@@ -631,12 +649,12 @@
    "label": "Customers Affected"
   },
   {
-   "description": "Node from the Node master (e.g. MPJ). LINKID must be a link on this node.",
+   "description": "Node from the GIS Node master (e.g. MPJ). LINKID must be a link on this node.",
    "fieldname": "node_id",
    "fieldtype": "Link",
    "in_standard_filter": 1,
    "label": "Node ID",
-   "options": "Node"
+   "options": "GIS Node"
   },
   {
    "depends_on": "eval:doc.complaint_type=='FTTH'",
@@ -668,7 +686,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-09 18:00:00.000000",
+ "modified": "2026-10-27 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Complaint Information",

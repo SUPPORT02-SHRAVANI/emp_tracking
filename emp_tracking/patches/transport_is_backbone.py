@@ -12,6 +12,7 @@
 #
 # Change log
 #   2026-10-09  Created.
+#   2026-10-31  Skips a doctype whose table no longer exists (New Project was removed).
 # ---------------------------------------------------------------------------------------------
 
 import frappe
@@ -38,7 +39,8 @@ def execute():
 			where network_type = 'Transport' and ifnull(section, '') = ''"""
 		)
 	for doctype, field in LINK_TYPE_FIELDS.items():
-		if frappe.db.has_column(doctype, field):
+		# 2026-10-31: table_exists first: New Project's table is gone (merged into FTTH Work Order)
+		if frappe.db.table_exists(doctype) and frappe.db.has_column(doctype, field):
 			frappe.db.sql(
 				f"update `tab{doctype}` set `{field}` = 'Backbone' where `{field}` = 'Transport'"  # nosemgrep: fixed names
 			)

@@ -1,0 +1,546 @@
+/* ---------------------------------------------------------------------------------------------
+ * EVision design layer: one look for every Evision desk page and form.
+ * Created 2026-11-02.
+ *
+ * How it works
+ *   Loaded on every desk page through app_include_css in hooks.py (a plain file, no bench build).
+ *   Styling follows Frappe's own "Espresso" design system (the same one frappe-ui and the
+ *   Sketch app use): neutral grays, quiet borders, medium-weight type, colour only for meaning.
+ *
+ *   1. Tokens. The pages (workforce, manager, NOC, employee performance, KMZ, network topology)
+ *      use the --ev-* variables below instead of hard-coded hex colours. Each --ev-* points at a
+ *      Frappe Espresso variable (--surface-*, --ink-*, --outline-*), so light and dark mode both
+ *      work and a Frappe upgrade that retunes its palette carries through. The fallbacks after
+ *      the comma are used only if a future Frappe drops a variable.
+ *   2. Shared states: .ev-loading (and the pages' own *-loading boxes) shows a shimmering
+ *      skeleton instead of a "Loading…" line; the pages' *-empty boxes get an icon and centred
+ *      layout, as in Sketch's empty feed.
+ *   3. .ev-stepper: the stage tracker drawn by public/js/evision.js on FTTH Work Order and
+ *      Complaint Information forms, with its optional summary header (.ev-hero).
+ *   5. .ev-form: form look for the forms that call evision.form_style() (FTTH Work Order,
+ *      Complaint Information): flat sections, calmer labels, read-only values as plain text.
+ *   6. FTTH dashboard workspace (FTTH Tracker): rounder, calmer number cards and charts.
+ *   Everything is scoped to ev-* classes or to the Evision pages' own class prefixes (wd-, md-,
+ *   noc-, ep-), so standard desk pages are not restyled.
+ *
+ * Change log
+ *   2026-11-02  Created: tokens, skeleton loading, empty states, stage stepper.
+ *   2026-11-02  FTTH Work Order list: stage pipeline strip, warning flag, muted dash (section 4).
+ *   2026-11-02  Stepper summary header (.ev-hero, .ev-badge, .ev-fact); form card layout
+ *               (section 5); FTTH dashboard workspace polish (section 6).
+ *   2026-11-02  Stage pipeline strip styles (.ev-pipeline / .ev-pipe) removed with the strip.
+ *   2026-11-02  Tracker and form restyled to the look the user chose: header + step card with a
+ *               status bar and notices (sections 3, 3b); flat form sections instead of cards (5).
+ * --------------------------------------------------------------------------------------------- */
+
+/* ---- 1. Tokens ------------------------------------------------------------------------------ */
+:root {
+	--ev-card: var(--surface-cards, var(--card-bg, #fff));
+	--ev-subtle: var(--surface-gray-1, #f8f8f8);
+	--ev-muted: var(--surface-gray-2, #f3f3f3);
+	--ev-muted-2: var(--surface-gray-3, #ededed);
+	--ev-solid: var(--ink-gray-9, #171717);
+	--ev-border: var(--outline-gray-1, #ededed);
+	--ev-border-strong: var(--outline-gray-2, #e2e2e2);
+
+	--ev-text: var(--ink-gray-9, #171717);
+	--ev-text-2: var(--ink-gray-8, #383838);
+	--ev-text-3: var(--ink-gray-7, #525252);
+	--ev-text-4: var(--ink-gray-5, #7c7c7c);
+	--ev-text-5: var(--ink-gray-4, #999);
+	--ev-text-6: var(--ink-gray-3, #c7c7c7);
+
+	--ev-accent: var(--ink-blue-3, #007be0);
+	--ev-accent-bg: var(--surface-blue-2, #e6f4ff);
+	--ev-accent-border: var(--outline-blue-1, #a7d7fd);
+	--ev-ok: var(--ink-green-3, #278f5e);
+	--ev-ok-bg: var(--surface-green-2, #e4faeb);
+	--ev-ok-border: var(--outline-green-1, #a6efc0);
+	--ev-warn: var(--ink-amber-3, #db7706);
+	--ev-warn-bg: var(--surface-amber-2, #fff7d3);
+	--ev-warn-border: var(--outline-amber-1, #fbdb73);
+	--ev-bad: var(--ink-red-3, #e03636);
+	--ev-bad-bg: var(--surface-red-2, #ffe7e7);
+	--ev-bad-border: var(--outline-red-1, #fdc2c2);
+	--ev-violet: var(--ink-violet-1, #6846e3);
+	--ev-violet-bg: var(--surface-violet-1, #f0ebff);
+	--ev-cyan: #0891b2;
+
+	--ev-radius: 12px;
+	--ev-shimmer: rgba(255, 255, 255, 0.6);
+}
+
+/* Dark mode: Espresso's dark "-3" inks are pale (good as text, weak behind white button text),
+   so solid accents use the deeper "-2" inks; cyan has no deep Espresso ink, hence the hex. */
+[data-theme="dark"] {
+	--ev-accent: var(--ink-blue-2, #3294e3);
+	--ev-ok: var(--ink-green-2, #1ba964);
+	--ev-warn: var(--ink-amber-2, #e37d00);
+	--ev-bad: var(--ink-red-3, #e43838);
+	--ev-cyan: #3cb8dc;
+	--ev-shimmer: rgba(255, 255, 255, 0.06);
+}
+
+/* ---- 2a. Skeleton loading ------------------------------------------------------------------- */
+/* "body" raises specificity over the pages' own *-loading rules (inline <style>, loaded later). */
+body .ev-loading,
+body .wd-loading,
+body .noc-loading {
+	position: relative;
+	overflow: hidden;
+	min-height: 150px;
+	margin: 4px 0;
+	padding: 0 !important;
+	color: transparent !important;
+	text-align: left;
+	user-select: none;
+	background:
+		linear-gradient(var(--ev-muted) 0 0) 0 0 / 34% 14px no-repeat,
+		linear-gradient(var(--ev-muted) 0 0) 0 26px / 20% 10px no-repeat,
+		linear-gradient(var(--ev-muted) 0 0) 0 56px / 100% 90px no-repeat;
+	border-radius: 6px;
+}
+body .wd-loading,
+body .noc-loading {
+	min-height: 240px;
+	background:
+		linear-gradient(var(--ev-muted) 0 0) 0 0 / 30% 16px no-repeat,
+		linear-gradient(var(--ev-muted) 0 0) 0 28px / 18% 11px no-repeat,
+		linear-gradient(var(--ev-muted) 0 0) 0 64px / 100% 74px no-repeat,
+		linear-gradient(var(--ev-muted) 0 0) 0 152px / 100% 88px no-repeat;
+}
+body .ev-loading::after,
+body .wd-loading::after,
+body .noc-loading::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent, var(--ev-shimmer), transparent);
+	animation: ev-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes ev-shimmer {
+	to {
+		transform: translateX(100%);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	body .ev-loading::after,
+	body .wd-loading::after,
+	body .noc-loading::after {
+		animation: none;
+	}
+}
+
+/* ---- 2b. Empty states ----------------------------------------------------------------------- */
+/* Icon in a soft circle above the message (lucide "inbox"), like Sketch's empty feed. */
+body .wd-empty,
+body .noc-empty,
+body .md-empty,
+body .md-tl-empty:not(.ev-loading),
+body .ep-empty:not(.ev-loading) {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	color: var(--ev-text-4);
+	line-height: 1.5;
+}
+body .wd-empty::before,
+body .noc-empty::before,
+body .md-empty::before,
+body .md-tl-empty:not(.ev-loading)::before,
+body .ep-empty:not(.ev-loading)::before {
+	content: "";
+	width: 40px;
+	height: 40px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--ev-muted)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-6l-2 3h-4l-2-3H2'/%3E%3Cpath d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/%3E%3C/svg%3E")
+		center / 18px no-repeat;
+}
+/* A table row's empty cell stays a single line. */
+body td.wd-empty::before,
+body td.noc-empty::before {
+	display: none;
+}
+
+/* ---- 2c. Tab icons (replace the old emoji) -------------------------------------------------- */
+.ev-tab-icon {
+	display: inline-flex;
+	opacity: 0.75;
+}
+.ev-tab-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+/* ---- 3. Stage tracker (evision.stepper) ------------------------------------------------------ */
+/* 2026-11-02: the look the user chose: header, then a card with neutral step circles (done = dark
+   tick, current = ringed, upcoming = grey) and a status bar; notices under it. */
+.form-dashboard-section.ev-stepper-section {
+	border-bottom: 0;
+}
+.form-dashboard-section.ev-stepper-section .section-body {
+	padding-bottom: 4px;
+}
+.ev-track {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-top: 4px;
+}
+.ev-stepper {
+	background: var(--ev-card);
+	border: 1px solid var(--ev-border);
+	border-radius: var(--ev-radius);
+	padding: 18px 16px 16px;
+}
+.ev-steps {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0 0 2px;
+	overflow-x: auto;
+	scrollbar-width: thin;
+}
+.ev-step {
+	flex: 1 0 84px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	min-width: 84px;
+}
+/* The line joining this step to the previous one. */
+.ev-step + .ev-step::before {
+	content: "";
+	position: absolute;
+	top: 11px;
+	right: 50%;
+	left: -50%;
+	height: 1px;
+	background: var(--ev-muted-2);
+}
+.ev-step.done + .ev-step::before {
+	background: var(--ev-text-3);
+}
+.ev-step .mark {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ev-text-4);
+	background: var(--ev-muted);
+	position: relative;
+	z-index: 1;
+}
+.ev-step .mark svg {
+	width: 13px;
+	height: 13px;
+}
+.ev-step.done .mark {
+	color: var(--ev-card);
+	background: var(--ev-text-3);
+}
+.ev-step.current .mark {
+	color: var(--ev-text);
+	background: var(--ev-card);
+	box-shadow: 0 0 0 2px var(--ev-text-3);
+}
+.ev-step .name {
+	margin-top: 8px;
+	padding: 0 4px;
+	font-size: 12px;
+	color: var(--ev-text-4);
+	line-height: 1.3;
+}
+.ev-step.done .name {
+	color: var(--ev-text-3);
+}
+.ev-step.current .name {
+	color: var(--ev-text);
+	font-weight: 600;
+}
+.ev-step .who {
+	margin-top: 2px;
+	font-size: 11px;
+	color: var(--ev-text-4);
+}
+/* Status bar under the steps */
+.ev-now {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 16px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	font-size: 13px;
+	color: var(--ev-text-3);
+	background: var(--ev-subtle);
+}
+.ev-now svg {
+	width: 16px;
+	height: 16px;
+	flex: none;
+}
+.ev-now b {
+	font-weight: 600;
+}
+.ev-now.mine {
+	color: var(--ev-warn);
+	background: var(--ev-warn-bg);
+}
+.ev-now.finished {
+	color: var(--ev-ok);
+	background: var(--ev-ok-bg);
+}
+.ev-now.stopped {
+	color: var(--ev-bad);
+	background: var(--ev-bad-bg);
+}
+/* Stopped flows (Cancelled / Rejected): greyed steps, red cross on the step it stopped at. */
+.ev-stepper.stopped .ev-step.done .mark {
+	background: var(--ev-text-5);
+}
+.ev-stepper.stopped .ev-step.current .mark {
+	color: var(--ev-bad);
+	box-shadow: 0 0 0 2px var(--ev-bad);
+}
+/* Notices under the card: warnings, Network Link */
+.ev-notice {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 14px;
+	border-radius: var(--ev-radius);
+	font-size: 13px;
+	color: var(--ev-text-2);
+}
+.ev-notice.warn {
+	align-items: flex-start;
+	background: var(--ev-subtle);
+}
+.ev-notice.link {
+	border: 1px solid var(--ev-border);
+	background: var(--ev-card);
+}
+.ev-notice .ic {
+	display: inline-flex;
+	flex: none;
+	color: var(--ev-text-4);
+}
+.ev-notice.warn .ic {
+	color: var(--ev-warn);
+	margin-top: 1px;
+}
+.ev-notice .ic svg {
+	width: 16px;
+	height: 16px;
+}
+.ev-notice .tx {
+	flex: 1;
+	min-width: 0;
+}
+.ev-notice .t {
+	font-weight: 600;
+	color: var(--ev-text);
+	margin-bottom: 2px;
+}
+.ev-notice .d {
+	white-space: pre-line;
+}
+.ev-notice .btn {
+	flex: none;
+}
+@media (max-width: 640px) {
+	.ev-stepper {
+		padding: 14px 10px 12px;
+	}
+	.ev-step {
+		flex-basis: 72px;
+		min-width: 72px;
+	}
+	.ev-step .name {
+		font-size: 11px;
+	}
+}
+@media print {
+	.ev-track {
+		display: none;
+	}
+}
+
+/* ---- 4. FTTH Work Order list: column pills (public/js/ftth_work_order_list.js) */
+/* Frappe's dark yellow / cyan pills are solid bright blocks; give ours the same soft tint as the
+   other colours (only .ev-pill, so Frappe's own pills elsewhere are untouched). */
+[data-theme="dark"] .indicator-pill.ev-pill.yellow {
+	background: var(--surface-amber-2, #4b2606);
+	color: var(--ink-amber-3, #e79913);
+}
+[data-theme="dark"] .indicator-pill.ev-pill.cyan {
+	background: var(--surface-cyan-1, #0b252d);
+	color: var(--ink-cyan-1, #3cb8dc);
+}
+[data-theme="dark"] .indicator-pill.ev-pill.yellow::before,
+[data-theme="dark"] .indicator-pill.ev-pill.cyan::before {
+	background: currentColor;
+}
+/* Warning flag inside the Stage pill. */
+.ev-wo-warn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	margin-left: 5px;
+	border-radius: 50%;
+	font-size: 10px;
+	font-weight: 700;
+	color: #fff;
+	background: var(--ev-bad);
+	flex: none;
+}
+.ev-wo-muted {
+	color: var(--ev-text-5);
+}
+.ev-wo-num {
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- 3b. Header above the tracker (evision.hero_html) ---------------------------------------- */
+.ev-hero {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+.ev-hero-title {
+	min-width: 0;
+}
+.ev-hero-title .t {
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--ev-text);
+}
+.ev-hero-title .m {
+	display: flex;
+	flex-wrap: wrap;
+	margin-top: 4px;
+	font-size: 13px;
+	color: var(--ev-text-4);
+	font-variant-numeric: tabular-nums;
+}
+.ev-hero-title .m span + span::before {
+	content: "·";
+	margin: 0 7px;
+}
+.ev-hero-badges {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+.ev-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 20px;
+	padding: 0 8px;
+	border-radius: 999px;
+	font-size: 11.5px;
+	font-weight: 500;
+	white-space: nowrap;
+	color: var(--ev-text-2);
+	background: var(--ev-muted);
+}
+.ev-badge.outline {
+	background: transparent;
+	box-shadow: inset 0 0 0 1px var(--ev-border-strong);
+}
+.ev-badge.green { color: var(--ev-ok); background: var(--ev-ok-bg); }
+.ev-badge.blue { color: var(--ev-accent); background: var(--ev-accent-bg); }
+.ev-badge.orange { color: var(--ev-warn); background: var(--ev-warn-bg); }
+.ev-badge.yellow { color: var(--ink-amber-3, #b45309); background: var(--surface-amber-2, #fff7d3); }
+.ev-badge.purple { color: var(--ev-violet); background: var(--ev-violet-bg); }
+.ev-badge.cyan { color: var(--ev-cyan); background: var(--surface-cyan-1, #e0f7fb); }
+.ev-badge.red { color: var(--ev-bad); background: var(--ev-bad-bg); }
+
+/* ---- 5. Form look (.ev-form, set by evision.form_style) -------------------------------------- */
+/* 2026-11-02: flat sections, as the user chose (the earlier per-section cards are gone): calm
+   section titles, small grey labels, and read-only values as plain text under their label, so
+   the grey input boxes left are exactly what the user can fill in. Frappe 16.33 classes; if they
+   change, only this styling stops applying. */
+.ev-form .form-dashboard-section {
+	border-bottom: 0;
+}
+.ev-form .form-section .section-head {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--ev-text);
+}
+.ev-form .frappe-control .control-label,
+.ev-form .frappe-control .checkbox label {
+	font-size: 12.5px;
+	color: var(--ev-text-3);
+}
+.ev-form .frappe-control .control-value.like-disabled-input,
+.ev-form .frappe-control .like-disabled-input {
+	background: transparent;
+	border-color: transparent;
+	padding: 2px 0 4px;
+	min-height: 0;
+	height: auto;
+	color: var(--ev-text);
+}
+.ev-form .frappe-control .like-disabled-input:empty::before {
+	content: "—";
+	color: var(--ev-text-6);
+}
+.ev-form .form-tabs .nav-link {
+	color: var(--ev-text-4);
+}
+.ev-form .form-tabs .nav-link.active {
+	color: var(--ev-text);
+	font-weight: 500;
+}
+
+/* ---- 6. FTTH dashboard workspace (FTTH Tracker) -------------------------------------------- */
+/* body[data-route] is set by Frappe's router (views/container.js) for the open page. */
+body[data-route="Workspaces/FTTH Tracker"] .widget.number-widget-box,
+body[data-route="Workspaces/FTTH Tracker"] .widget.dashboard-widget-box {
+	border-color: var(--ev-border);
+	border-radius: var(--ev-radius);
+	transition: border-color 0.12s, box-shadow 0.12s;
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.number-widget-box {
+	padding: 14px 16px;
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.number-widget-box:hover {
+	border-color: var(--ev-border-strong);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.number-widget-box .widget-title {
+	font-size: 12.5px;
+	font-weight: 500;
+	color: var(--ev-text-4);
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.number-widget-box .number {
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.dashboard-widget-box .widget-title {
+	font-weight: 600;
+}
+body[data-route="Workspaces/FTTH Tracker"] .widget.shortcut-widget-box,
+body[data-route="Workspaces/FTTH Tracker"] .widget.links-widget-box {
+	border-radius: var(--ev-radius);
+}

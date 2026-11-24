@@ -8,7 +8,9 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+# 2026-10-24: Site and Complaint Information link to GIS Node, which comes from FTTH Tracker
+# (the Node master was merged into it), so FTTH Tracker must be installed first.
+required_apps = ["ftth_tracker"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -25,8 +27,14 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/emp_tracking/css/emp_tracking.css"
-# app_include_js = "/assets/emp_tracking/js/emp_tracking.js"
+# 2026-11-02: EVision design layer (tokens, skeleton / empty states, stage tracker) and its
+# helpers. Plain files served from public/, so they need no bench build. emp_tracking is only
+# installed on the Evision site, so other sites on the bench do not load them.
+# 2026-11-02: "?v=" makes browsers fetch a changed file (assets are cached for 12 hours); raise
+# EV_ASSET_VERSION whenever evision.css / evision.js change.
+EV_ASSET_VERSION = "20261102c"
+app_include_css = f"/assets/emp_tracking/css/evision.css?v={EV_ASSET_VERSION}"
+app_include_js = f"/assets/emp_tracking/js/evision.js?v={EV_ASSET_VERSION}"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/emp_tracking/css/emp_tracking.css"
@@ -43,8 +51,17 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+# 2026-10-24: Site Diagram on the GIS Node form (moved from the merged Node doctype)
+# 2026-10-31: FTTH Work Order gets New Project's "Send Mail to Planning" / "Create Network Link"
+# 2026-11-20: Employee form shows the company-wise Employee Code (IPT-/AUT-/INF-) when a company is picked
+doctype_js = {
+	"GIS Node": "public/js/gis_node.js",
+	"FTTH Work Order": "public/js/ftth_work_order.js",
+	"Employee": "public/js/employee.js",
+}
+# 2026-11-02: FTTH Work Order list: stage pipeline strip and clearer columns (extends FTTH
+# Tracker's own list settings; runs after them).
+doctype_list_js = {"FTTH Work Order": "public/js/ftth_work_order_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -175,7 +192,39 @@ app_license = "mit"
 
 # 2026-10-09: after every migrate (also on Frappe Cloud) rebuild the roles, desk tiles and the
 # OverHead menu, so nobody has to run apply_access by hand after a deploy.
-after_migrate = ["emp_tracking.emp_tracking.page.workforce_dashboard.setup.after_migrate"]
+after_migrate = [
+	"emp_tracking.emp_tracking.page.workforce_dashboard.setup.after_migrate",
+	# 2026-10-26: Fiber Store (cable drum inward / outward on ERPNext stock) and its dashboard
+	"emp_tracking.fiber_store.after_migrate",
+	# 2026-10-29: New Project roles (Project Head, Area Manager, Fiber / Splicing Team) on FTTH Work Order
+	"emp_tracking.ftth_stages.after_migrate",
+	# 2026-11-20: Company "Employee Code Prefix" field + IPT / AUT / INF defaults (Employee Code series)
+	"emp_tracking.overrides.employee.after_migrate",
+	# 2026-11-23: Shift Types for attendance from mobile-app punches (HRMS Auto Attendance)
+	"emp_tracking.app_attendance.after_migrate",
+	# 2026-11-23: Remarks field on Additional Salary (salary Advance entries, like the Excel)
+	"emp_tracking.payroll_advance.after_migrate",
+	# 2026-11-24: Company "Name on Payslip" + "Company Stamp" fields (RKBG Payslip Classic print format)
+	"emp_tracking.payslip_print.after_migrate",
+]
+
+# 2026-10-26: Fiber Store stock entries: check drum readings, fill the metres the dashboard sums
+doc_events = {
+	"Stock Entry": {"validate": "emp_tracking.fiber_store.stock_entry_validate"},
+	# 2026-10-29: FTTH Work Order stage changes notify the next person, like New Project
+	# 2026-10-31: the same hook makes the Network Link when the HOTO Date is entered
+	"FTTH Work Order": {"on_update": "emp_tracking.ftth_stages.on_update"},
+	# 2026-11-20: company-wise Employee Code (IPT-####, AUT-####, INF-####) given on insert
+	# 2026-11-23: Mode of Attendance "Mobile App" sets / clears the Default Shift (app_attendance.py)
+	"Employee": {
+		"before_insert": "emp_tracking.overrides.employee.before_insert",
+		"before_save": "emp_tracking.app_attendance.employee_before_save",
+	},
+	# 2026-11-21: leave encashment per day = Gross / 30 when left blank (field staff encash leaves)
+	"Salary Structure Assignment": {
+		"before_validate": "emp_tracking.overrides.salary_structure_assignment.before_validate"
+	},
+}
 
 # 2026-10-09: refresh the Aging of open complaints every hour.
 scheduler_events = {
@@ -197,6 +246,11 @@ scheduler_events = {
 # 	"Task": "emp_tracking.custom.task.CustomTaskMixin"
 # }
 
+# 2026-10-21: employees with "Allow Punch From Anywhere" skip the shift location radius check.
+extend_doctype_class = {
+	"Employee Checkin": ["emp_tracking.overrides.employee_checkin.EmployeeCheckinMixin"],
+}
+
 # Overriding Methods
 # ------------------------------
 #
@@ -207,9 +261,10 @@ scheduler_events = {
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "emp_tracking.task.get_dashboard_data"
-# }
+# 2026-10-24: Sites and Complaints in GIS Node's Connections panel (Node merged into GIS Node)
+override_doctype_dashboards = {
+	"GIS Node": ["emp_tracking.overrides.gis_node.get_dashboard_data"],
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
@@ -293,4 +348,9 @@ fixtures = [
     {"dt": "Workflow", "filters": [["name", "=", "OHP Maintenance Workflow"]]},
     {"dt": "Workspace Sidebar", "filters": [["name", "=", "Helpdesk NOC"]]},
     {"dt": "Desktop Icon", "filters": [["name", "=", "Helpdesk NOC"]]},
+    # 2026-11-20: Employee form laid out in the 13 sections of the employee master sheet, made with
+    # Customize Form (Custom Fields + Property Setters, module "Emp Tracking"). After changing the
+    # Employee form in Customize Form, set Module = Emp Tracking on new rows and re-export fixtures.
+    {"dt": "Custom Field", "filters": [["dt", "=", "Employee"], ["module", "=", "Emp Tracking"]]},
+    {"dt": "Property Setter", "filters": [["doc_type", "=", "Employee"], ["module", "=", "Emp Tracking"]]},
 ]

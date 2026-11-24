@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 19:00:00.000000",
+ "description": "One pin type on the KMZ Map (row of KMZ Map Settings). Created 2026-10-27.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "label",
+  "match_type",
+  "keywords",
+  "colour",
+  "show_by_default"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Pin Type",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "default": "Name has word",
+   "fieldname": "match_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Match",
+   "options": "Name has word\nShort code (e.g. 1PZ21)\nEverything else",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "description": "For \"Name has word\": words in the KMZ pin name, comma separated, e.g. encl*, jc, tapping. A * at the end matches any ending (encl* = encloser, enclosure, enclouser).",
+   "fieldname": "keywords",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Words in Pin Name"
+  },
+  {
+   "columns": 2,
+   "fieldname": "colour",
+   "fieldtype": "Color",
+   "in_list_view": 1,
+   "label": "Colour",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "1",
+   "fieldname": "show_by_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Show"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-27 19:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "KMZ Pin Type",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

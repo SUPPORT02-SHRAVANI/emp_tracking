@@ -1,0 +1,211 @@
+{#-
+	RKBG Salary Slip: payslip print format for HRMS Salary Slip.
+	Created: 2026-11-23
+
+	- Read by Frappe from this file because the Print Format is "standard" in the Emp Tracking
+	  module (frappe.www.printview.get_print_format), so it ships with the app and survives updates.
+	- Layout uses tables only (no flexbox) because PDFs are made with wkhtmltopdf 0.12.6.
+	- Earnings / Deductions show only rows that are part of pay. Rows marked "Do not include in
+	  total" or "Statistical" (PF Employer, Bonus, Insurance, Net CTC Cost ...) are listed
+	  separately as employer contributions, because they are not paid in this slip.
+	- Bank account number is masked to the last 4 digits; the slip may be emailed or printed.
+	- Advance / other Additional Salary rows show the Remarks typed on the Additional Salary
+	  (custom field custom_remarks, see emp_tracking/payroll_advance.py).
+	- Company logo (Company > Company Logo) and the company's Address are shown when they exist,
+	  so the header fills in by itself once HR adds them; nothing is hard-coded.
+
+	Change log:
+		2026-11-23  Created (modern card layout).
+		2026-11-23  Redesigned as a formal bordered payslip (user: "make professional salary slip"):
+		            company header with logo/address, one combined Earnings | Deductions table,
+		            Net Pay band, attendance row, signature lines.
+		2026-11-23  Amounts printed rounded to whole rupees (no paise).
+-#}
+{%- set emp = frappe.db.get_value("Employee", doc.employee,
+	["custom_employee_code", "pan_number", "provident_fund_account", "custom_esic_no",
+	 "bank_name", "bank_ac_no", "ifsc_code", "date_of_joining", "gender"], as_dict=True) or {} -%}
+{%- set co = frappe.db.get_value("Company", doc.company, ["company_logo", "abbr", "phone_no", "email", "website"], as_dict=True) or {} -%}
+{#- First Address linked to the Company (Address > Links), if any -#}
+{%- set addr_name = frappe.db.get_value("Dynamic Link", {"link_doctype": "Company", "link_name": doc.company, "parenttype": "Address"}, "parent") -%}
+{%- set addr = frappe.db.get_value("Address", addr_name, ["address_line1", "address_line2", "city", "state", "pincode", "gstin"], as_dict=True) if addr_name else None -%}
+{%- set cur = doc.currency or "INR" -%}
+{#- 2026-11-23: amounts are printed rounded to whole rupees (user: "make it rounding").
+	Print only: the slip keeps its exact amounts. Each row and each total is rounded on its own, so
+	rows can differ from the printed total by a rupee or two in some months. -#}
+{%- macro money(v) -%}{{ frappe.utils.fmt_money(frappe.utils.rounded(v or 0), 0, cur) }}{%- endmacro -%}
+{%- macro plain(v) -%}{{ frappe.utils.fmt_money(frappe.utils.rounded(v or 0), 0) }}{%- endmacro -%}
+{%- macro days(v) -%}{{ frappe.utils.flt(v, 1)|string|replace(".0", "") }}{%- endmacro -%}
+
+{#- Net pay: rounded total unless rounding is switched off in Payroll Settings -#}
+{%- set use_rounded = doc.rounded_total and not frappe.db.get_single_value("Payroll Settings", "disable_rounded_total") -%}
+{%- set net = doc.rounded_total if use_rounded else doc.net_pay -%}
+
+{%- set earn = [] -%}{%- set ded = [] -%}{%- set info = [] -%}
+{%- for d in doc.earnings -%}
+	{%- if d.amount and not d.do_not_include_in_total and not d.statistical_component -%}{%- set _ = earn.append(d) -%}
+	{%- elif d.amount -%}{%- set _ = info.append(d) -%}{%- endif -%}
+{%- endfor -%}
+{%- for d in doc.deductions -%}
+	{%- if d.amount and not d.do_not_include_in_total and not d.statistical_component -%}{%- set _ = ded.append(d) -%}
+	{%- elif d.amount -%}{%- set _ = info.append(d) -%}{%- endif -%}
+{%- endfor -%}
+{%- set nrows = [earn|length, ded|length]|max -%}
+
+{%- set ac = (doc.bank_account_no or emp.bank_ac_no or "")|string -%}
+{%- set lop = (doc.absent_days or 0) + (doc.leave_without_pay or 0) -%}
+{%- set dept = (doc.department or "")|replace(" - " ~ (co.abbr or ""), "") -%}
+
+<style>
+	.ps { font-family: "DejaVu Sans", Arial, Helvetica, sans-serif; color: #222; font-size: 10.5px; line-height: 1.35; }
+	.ps table { width: 100%; border-collapse: collapse; }
+	.ps td, .ps th { vertical-align: top; }
+	.ps .r { text-align: right; white-space: nowrap; }
+	.ps .c { text-align: center; }
+	.ps .b { font-weight: bold; }
+	.ps .grey { color: #666; }
+	/* header */
+	.ps-head td { vertical-align: middle; padding-bottom: 8px; }
+	.ps-head .logo img { max-height: 60px; max-width: 140px; }
+	.ps-head .co { font-size: 17px; font-weight: bold; letter-spacing: .03em; color: #14315a; text-transform: uppercase; }
+	.ps-head .addr { font-size: 9.5px; color: #555; margin-top: 2px; }
+	.ps-head .doc { text-align: right; }
+	.ps-head .doc .t { font-size: 13px; font-weight: bold; letter-spacing: .12em; color: #14315a; }
+	.ps-head .doc .m { font-size: 11px; margin-top: 2px; }
+	.ps-rule { border-top: 2.5px solid #14315a; border-bottom: 1px solid #14315a; height: 2px; margin-bottom: 10px; }
+	/* bordered grids */
+	.ps-grid { border: 1px solid #9aa5b4; margin-bottom: 10px; }
+	.ps-grid td, .ps-grid th { border: 1px solid #c9d0d9; padding: 5px 7px; }
+	.ps-grid th { background: #14315a; color: #fff; font-size: 10px; font-weight: bold; text-align: left; letter-spacing: .03em; }
+	.ps-grid th.r { text-align: right; }
+	.ps-grid .k { background: #f3f5f8; color: #555; width: 16%; }
+	.ps-grid .v { font-weight: bold; width: 34%; }
+	.ps-cap { font-size: 10px; font-weight: bold; color: #14315a; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 4px; }
+	.ps-grid tr.tot td { background: #e8edf3; font-weight: bold; border-top: 1.5px solid #9aa5b4; }
+	.ps-grid td.sep { border-left: 1.5px solid #9aa5b4; }
+	.ps-grid .note { display: block; font-size: 8.5px; color: #777; font-weight: normal; }
+	/* attendance */
+	.ps-att td { text-align: center; width: 20%; }
+	.ps-att .lbl { font-size: 8.5px; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+	.ps-att .val { font-size: 12px; font-weight: bold; }
+	/* net pay band */
+	.ps-net { border: 1.5px solid #14315a; margin-bottom: 10px; }
+	.ps-net td { padding: 8px 10px; vertical-align: middle; }
+	.ps-net .lbl { background: #14315a; color: #fff; font-weight: bold; letter-spacing: .06em; width: 26%; font-size: 11px; }
+	.ps-net .words { font-size: 10px; color: #333; }
+	.ps-net .amt { font-size: 16px; font-weight: bold; text-align: right; white-space: nowrap; width: 24%; }
+	/* signatures */
+	.ps-sign { margin-top: 34px; }
+	.ps-sign td { width: 50%; padding-top: 4px; font-size: 9.5px; color: #444; }
+	.ps-sign .line { border-top: 1px solid #555; width: 70%; padding-top: 3px; }
+	.ps-sign td.right .line { margin-left: 30%; text-align: right; }
+	.ps-foot { margin-top: 14px; border-top: 1px solid #c9d0d9; padding-top: 5px; font-size: 8.5px; color: #777; text-align: center; }
+</style>
+
+<div class="ps">
+	{#- ===== Company header ===== -#}
+	<table class="ps-head"><tr>
+		{%- if co.company_logo %}<td class="logo" style="width: 150px;"><img src="{{ co.company_logo }}"></td>{% endif %}
+		<td>
+			<div class="co">{{ doc.company }}</div>
+			{%- if addr %}
+			<div class="addr">
+				{{ addr.address_line1 or "" }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}{% if addr.city %}, {{ addr.city }}{% endif %}{% if addr.state %}, {{ addr.state }}{% endif %}{% if addr.pincode %} - {{ addr.pincode }}{% endif %}
+				{%- if addr.gstin %}<br>GSTIN: {{ addr.gstin }}{% endif %}
+			</div>
+			{%- endif %}
+			{%- if co.phone_no or co.email %}
+			<div class="addr">{% if co.phone_no %}Ph: {{ co.phone_no }}{% endif %}{% if co.phone_no and co.email %} &nbsp;|&nbsp; {% endif %}{% if co.email %}{{ co.email }}{% endif %}</div>
+			{%- endif %}
+		</td>
+		<td class="doc">
+			<div class="t">PAYSLIP</div>
+			<div class="m">for the month of <b>{{ frappe.utils.formatdate(doc.start_date, "MMMM yyyy") }}</b></div>
+		</td>
+	</tr></table>
+	<div class="ps-rule"></div>
+
+	{#- ===== Employee details ===== -#}
+	<div class="ps-cap">Employee Details</div>
+	<table class="ps-grid">
+		<tr><td class="k">Employee Name</td><td class="v">{{ doc.employee_name }}</td>
+			<td class="k">Employee Code</td><td class="v">{{ emp.custom_employee_code or doc.employee }}</td></tr>
+		<tr><td class="k">Designation</td><td class="v">{{ doc.designation or "-" }}</td>
+			<td class="k">Department</td><td class="v">{{ dept or "-" }}</td></tr>
+		<tr><td class="k">Date of Joining</td><td class="v">{{ frappe.utils.formatdate(emp.date_of_joining) if emp.date_of_joining else "-" }}</td>
+			<td class="k">Location</td><td class="v">{{ doc.branch or "-" }}</td></tr>
+		<tr><td class="k">PAN</td><td class="v">{{ emp.pan_number or "-" }}</td>
+			<td class="k">UAN / PF No.</td><td class="v">{{ emp.provident_fund_account or "-" }}</td></tr>
+		<tr><td class="k">ESIC No.</td><td class="v">{{ emp.custom_esic_no or "-" }}</td>
+			<td class="k">Pay Period</td><td class="v">{{ frappe.utils.formatdate(doc.start_date) }} to {{ frappe.utils.formatdate(doc.end_date) }}</td></tr>
+		<tr><td class="k">Bank Name</td><td class="v">{{ doc.bank_name or emp.bank_name or "-" }}</td>
+			<td class="k">Bank A/c No. / IFSC</td><td class="v">{{ ("XXXXXX" ~ ac[-4:]) if ac|length > 4 else (ac or "-") }}{% if emp.ifsc_code %} / {{ emp.ifsc_code }}{% endif %}</td></tr>
+	</table>
+
+	{#- ===== Attendance ===== -#}
+	<table class="ps-grid ps-att"><tr>
+		<td><div class="lbl">Days in Month</div><div class="val">{{ days(doc.total_working_days) }}</div></td>
+		<td><div class="lbl">Paid Days</div><div class="val">{{ days(doc.payment_days) }}</div></td>
+		<td><div class="lbl">Absent / LOP Days</div><div class="val">{{ days(lop) }}</div></td>
+		<td><div class="lbl">Pay Date</div><div class="val">{{ frappe.utils.formatdate(doc.posting_date) if doc.posting_date else "-" }}</div></td>
+		<td><div class="lbl">Slip No.</div><div class="val" style="font-size: 9.5px;">{{ doc.name }}</div></td>
+	</tr></table>
+
+	{#- ===== Earnings | Deductions (one table, rows paired) ===== -#}
+	<table class="ps-grid">
+		<tr>
+			<th style="width: 27%;">Earnings</th>
+			<th class="r" style="width: 13%;">Rate</th>
+			<th class="r" style="width: 13%;">Amount</th>
+			<th style="width: 32%;">Deductions</th>
+			<th class="r" style="width: 15%;">Amount</th>
+		</tr>
+		{%- for i in range(nrows) %}
+		{%- set e = earn[i] if i < earn|length else None %}
+		{%- set d = ded[i] if i < ded|length else None %}
+		{%- set note = frappe.db.get_value("Additional Salary", d.additional_salary, "custom_remarks") if (d and d.additional_salary) else "" %}
+		<tr>
+			<td>{{ e.salary_component if e else "" }}</td>
+			<td class="r grey">{{ plain(e.default_amount) if e else "" }}</td>
+			<td class="r">{{ plain(e.amount) if e else "" }}</td>
+			<td class="sep">{% if d %}{{ d.salary_component }}{% if note %}<span class="note">{{ note }}</span>{% endif %}{% endif %}</td>
+			<td class="r">{{ plain(d.amount) if d else "" }}</td>
+		</tr>
+		{%- endfor %}
+		<tr class="tot">
+			<td>Gross Earnings</td><td class="r grey">{{ plain(earn|sum(attribute="default_amount")) }}</td><td class="r">{{ plain(doc.gross_pay) }}</td>
+			<td class="sep">Total Deductions</td><td class="r">{{ plain(doc.total_deduction) }}</td>
+		</tr>
+	</table>
+
+	{#- ===== Net pay ===== -#}
+	<table class="ps-net"><tr>
+		<td class="lbl">NET PAY</td>
+		<td class="words"><span class="grey">Amount in words:</span> <b>{{ doc.total_in_words or "" }}</b></td>
+		<td class="amt">{{ money(net) }}</td>
+	</tr></table>
+
+	{#- ===== Employer contributions / CTC (not part of take-home) ===== -#}
+	{%- if info %}
+	<div class="ps-cap">Employer Contributions &amp; Benefits <span class="grey" style="text-transform: none; letter-spacing: 0; font-weight: normal;">(for information, not part of net pay)</span></div>
+	<table class="ps-grid">
+		{%- for row in info|batch(3, "") %}
+		<tr>
+			{%- for d in row %}
+			<td style="width: 22%;" class="{{ 'k' if d else '' }}">{{ d.salary_component if d else "" }}</td>
+			<td style="width: 11.3%;" class="r b">{{ plain(d.amount) if d else "" }}</td>
+			{%- endfor %}
+		</tr>
+		{%- endfor %}
+	</table>
+	{%- endif %}
+
+	{#- ===== Signatures ===== -#}
+	<table class="ps-sign"><tr>
+		<td><div class="line">Employee Signature</div></td>
+		<td class="right"><div class="line">For {{ doc.company }}<br>Authorised Signatory</div></td>
+	</tr></table>
+
+	<div class="ps-foot">
+		This is a computer-generated payslip. &nbsp;|&nbsp; "Rate" is the full-month amount; "Amount" is paid for {{ days(doc.payment_days) }} of {{ days(doc.total_working_days) }} days.
+	</div>
+</div>

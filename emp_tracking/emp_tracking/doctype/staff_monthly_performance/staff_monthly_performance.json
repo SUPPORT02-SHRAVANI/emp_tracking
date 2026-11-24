@@ -1,0 +1,258 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "creation": "2026-10-24 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "designation",
+  "column_break_main",
+  "month",
+  "city",
+  "data_source",
+  "attendance_section",
+  "total_days",
+  "total_leaves",
+  "working_days",
+  "column_break_att",
+  "avg_field_time",
+  "avg_home_time",
+  "avg_office_time",
+  "avg_working_time",
+  "calls_section",
+  "main_calls",
+  "assistant_calls",
+  "total_calls",
+  "avg_calls_per_day",
+  "column_break_calls",
+  "in_sla",
+  "out_sla",
+  "avg_mttr",
+  "avg_mttr_assistant",
+  "score_section",
+  "score"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee.employee_name",
+   "fetch_if_empty": 1,
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Select",
+   "label": "Designation",
+   "options": "Supervisor\nSplicer\nRider",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Supervisor and Splicer calls are scored with different weights (Leaderboard Settings)."
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Date",
+   "label": "Month",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Any day of the month; saved as the 1st."
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City",
+   "default": "Pune"
+  },
+  {
+   "fieldname": "data_source",
+   "fieldtype": "Data",
+   "label": "Data Source",
+   "description": "Where the figures came from, e.g. the monthly sheet."
+  },
+  {
+   "fieldname": "attendance_section",
+   "fieldtype": "Section Break",
+   "label": "Attendance & Location"
+  },
+  {
+   "fieldname": "total_days",
+   "fieldtype": "Int",
+   "label": "Total Days"
+  },
+  {
+   "fieldname": "total_leaves",
+   "fieldtype": "Int",
+   "label": "Total Leaves"
+  },
+  {
+   "fieldname": "working_days",
+   "fieldtype": "Int",
+   "label": "Working Days"
+  },
+  {
+   "fieldname": "column_break_att",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "avg_field_time",
+   "fieldtype": "Duration",
+   "label": "Avg Daily Time on Field Location"
+  },
+  {
+   "fieldname": "avg_home_time",
+   "fieldtype": "Duration",
+   "label": "Avg Daily Time at Home Location"
+  },
+  {
+   "fieldname": "avg_office_time",
+   "fieldtype": "Duration",
+   "label": "Avg Daily Time at Office Location"
+  },
+  {
+   "fieldname": "avg_working_time",
+   "fieldtype": "Duration",
+   "label": "Avg Daily Working Hours"
+  },
+  {
+   "fieldname": "calls_section",
+   "fieldtype": "Section Break",
+   "label": "Calls & SLA"
+  },
+  {
+   "fieldname": "main_calls",
+   "fieldtype": "Int",
+   "label": "Calls (Supervisor / as Splicer)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "assistant_calls",
+   "fieldtype": "Int",
+   "label": "Calls as Assistant Splicer"
+  },
+  {
+   "fieldname": "total_calls",
+   "fieldtype": "Int",
+   "label": "Total Calls",
+   "read_only": 1
+  },
+  {
+   "fieldname": "avg_calls_per_day",
+   "fieldtype": "Float",
+   "label": "Avg Calls per Day",
+   "read_only": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_calls",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "in_sla",
+   "fieldtype": "Int",
+   "label": "In SLA"
+  },
+  {
+   "fieldname": "out_sla",
+   "fieldtype": "Int",
+   "label": "Out of SLA"
+  },
+  {
+   "fieldname": "avg_mttr",
+   "fieldtype": "Duration",
+   "label": "Avg MTTR"
+  },
+  {
+   "fieldname": "avg_mttr_assistant",
+   "fieldtype": "Duration",
+   "label": "Avg MTTR as Assistant Splicer"
+  },
+  {
+   "fieldname": "score_section",
+   "fieldtype": "Section Break",
+   "label": "Score"
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Float",
+   "label": "Performance Score",
+   "read_only": 1,
+   "in_list_view": 1,
+   "precision": "2",
+   "description": "Worked out on save with the weights in Leaderboard Settings (Maintenance Calls)."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-24 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Staff Monthly Performance",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "Project Head",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "NOC Head",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "Area Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "month",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "search_fields": "employee_name,designation,month",
+ "track_changes": 1,
+ "row_format": "Dynamic"
+}

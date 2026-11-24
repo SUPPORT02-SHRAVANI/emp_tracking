@@ -13,6 +13,7 @@
 #
 # Change log
 #   2026-10-09  Created.
+#   2026-10-31  Skipped when New Project no longer exists (merged into FTTH Work Order).
 # ---------------------------------------------------------------------------------------------
 
 import frappe
@@ -21,6 +22,9 @@ import frappe
 # Date: 2026-10-09
 def execute():
 	"""Copy old Rider / Splicer into a first Splicing Team row, then refresh stages."""
+	# 2026-10-31: nothing to do once New Project is merged into FTTH Work Order and removed.
+	if not frappe.db.exists("DocType", "New Project"):
+		return
 	frappe.reload_doc("emp_tracking", "doctype", "project_splicing_team_member")
 	frappe.reload_doc("emp_tracking", "doctype", "new_project")
 	if frappe.db.has_column("New Project", "splicer") and frappe.db.has_column("New Project", "splicing_rider"):

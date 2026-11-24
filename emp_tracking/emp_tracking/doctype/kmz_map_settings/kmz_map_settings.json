@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 19:00:00.000000",
+ "description": "Colours of the KMZ Map: pin types and complaint / no-node colours. Created 2026-10-27.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pins_section",
+  "pin_types",
+  "colours_section",
+  "down_colour",
+  "affected_colour",
+  "column_break_colours",
+  "no_node_colour"
+ ],
+ "fields": [
+  {
+   "description": "Each KMZ pin gets the first type (top to bottom) whose rule fits its name. Keep \"Everything else\" as the last row. Untick Show to hide a type when the map opens (it can still be shown from the map's Index). Node pins keep their node colour.",
+   "fieldname": "pins_section",
+   "fieldtype": "Section Break",
+   "label": "Pin Types"
+  },
+  {
+   "fieldname": "pin_types",
+   "fieldtype": "Table",
+   "label": "Pin Types",
+   "options": "KMZ Pin Type"
+  },
+  {
+   "fieldname": "colours_section",
+   "fieldtype": "Section Break",
+   "label": "Other Colours"
+  },
+  {
+   "default": "#dc2626",
+   "description": "Lines / pins of a site with an open complaint, and the complaint marker.",
+   "fieldname": "down_colour",
+   "fieldtype": "Color",
+   "label": "Down (open complaint)"
+  },
+  {
+   "default": "#f97316",
+   "description": "Lines / pins of sites fed through a down site.",
+   "fieldname": "affected_colour",
+   "fieldtype": "Color",
+   "label": "Affected"
+  },
+  {
+   "fieldname": "column_break_colours",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "#c026d3",
+   "description": "Routes and pins the KMZ Upload could not match to a GIS Node.",
+   "fieldname": "no_node_colour",
+   "fieldtype": "Color",
+   "label": "No GIS Node"
+  }
+ ],
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-10-27 19:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "KMZ Map Settings",
+ "owner": "Administrator",
+ "permissions": [
+  { "role": "System Manager", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "share": 1 },
+  { "role": "Project Head", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "share": 1 },
+  { "role": "NOC Head", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "share": 1 },
+  { "role": "Area Manager", "read": 1, "print": 1 }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "creation": "2026-11-23 12:00:00.000000",
+ "description": "Shows the formulas of a Salary Structure in simple words, with example amounts for a chosen gross salary. Read-only view of the live structure; nothing here changes payroll. Created 2026-11-23.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "salary_structure",
+  "company",
+  "column_break_ex",
+  "example_gross",
+  "example_variable",
+  "example_gender",
+  "section_formulas",
+  "formulas",
+  "section_totals",
+  "example_total_earnings",
+  "example_total_deductions",
+  "column_break_tot",
+  "example_net_pay",
+  "example_ctc"
+ ],
+ "fields": [
+  {
+   "description": "Choose a structure: its components and formulas are shown below",
+   "fieldname": "salary_structure",
+   "fieldtype": "Link",
+   "label": "Salary Structure",
+   "options": "Salary Structure"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ex",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "25000",
+   "description": "Monthly gross (the \"Base\" of a Salary Structure Assignment) used for the example amounts",
+   "fieldname": "example_gross",
+   "fieldtype": "Currency",
+   "label": "Example Gross Salary (Monthly)"
+  },
+  {
+   "default": "0",
+   "description": "The \"Variable\" of a Salary Structure Assignment (Incentive)",
+   "fieldname": "example_variable",
+   "fieldtype": "Currency",
+   "label": "Example Variable Pay"
+  },
+  {
+   "default": "Male",
+   "description": "Some rules depend on gender (e.g. Professional Tax)",
+   "fieldname": "example_gender",
+   "fieldtype": "Select",
+   "label": "Example Gender",
+   "options": "Male\nFemale"
+  },
+  {
+   "fieldname": "section_formulas",
+   "fieldtype": "Section Break",
+   "label": "Components and Formulas"
+  },
+  {
+   "fieldname": "formulas",
+   "fieldtype": "Table",
+   "label": "Formulas",
+   "options": "Salary Formula Row",
+   "read_only": 1
+  },
+  {
+   "description": "Full month, no absent days. A real salary slip also cuts the \"Cut for Absent\" rows for absent days.",
+   "fieldname": "section_totals",
+   "fieldtype": "Section Break",
+   "label": "Example Totals"
+  },
+  {
+   "fieldname": "example_total_earnings",
+   "fieldtype": "Currency",
+   "label": "Gross Pay",
+   "read_only": 1
+  },
+  {
+   "fieldname": "example_total_deductions",
+   "fieldtype": "Currency",
+   "label": "Total Deductions",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tot",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "example_net_pay",
+   "fieldtype": "Currency",
+   "label": "Net Pay",
+   "read_only": 1
+  },
+  {
+   "description": "Value of the component with abbreviation CTC, if the structure has one",
+   "fieldname": "example_ctc",
+   "fieldtype": "Currency",
+   "label": "Cost to Company (CTC)",
+   "read_only": 1
+  }
+ ],
+ "hide_toolbar": 0,
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Salary Formula Viewer",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

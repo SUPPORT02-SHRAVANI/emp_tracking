@@ -1,0 +1,117 @@
+{
+ "actions": [],
+ "creation": "2026-11-23 12:00:00.000000",
+ "description": "One salary component of a Salary Structure, as shown in the Salary Formula Viewer. Filled by the viewer, not typed by hand. Created 2026-11-23.",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "component_type",
+  "salary_component",
+  "abbr",
+  "rule",
+  "condition_text",
+  "example_amount",
+  "cut_for_absent_days",
+  "part_of_pay",
+  "formula",
+  "condition"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "component_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Type",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Component",
+   "options": "Salary Component",
+   "read_only": 1
+  },
+  {
+   "fieldname": "abbr",
+   "fieldtype": "Data",
+   "label": "Abbr",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "description": "The formula in simple words",
+   "fieldname": "rule",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "How it is worked out",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "condition_text",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Only when",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "For the example gross salary, full month (no absent days)",
+   "fieldname": "example_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Example",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "description": "Ticked = reduced for absent days (amount x payment days / working days)",
+   "fieldname": "cut_for_absent_days",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Cut for Absent",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "description": "Not ticked = information only (company cost / CTC break-up), not paid or deducted",
+   "fieldname": "part_of_pay",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Part of Pay",
+   "read_only": 1
+  },
+  {
+   "description": "Exact formula (or fixed amount) as written in the Salary Structure",
+   "fieldname": "formula",
+   "fieldtype": "Small Text",
+   "label": "Formula (as in Salary Structure)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "Condition (as in Salary Structure)",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Salary Formula Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "format:CBL-{YY}{MM}-{#####}",
+ "creation": "2026-10-27 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "team",
+  "work_type",
+  "column_break_main",
+  "total_cable",
+  "location",
+  "month",
+  "remarks_section",
+  "remarks",
+  "column_break_src",
+  "is_monthly_total",
+  "sheet_team"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "default": "Today",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Link",
+   "label": "Maintenance Team",
+   "options": "Maintenance Team",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "work_type",
+   "fieldtype": "Select",
+   "label": "Project / Maintenance",
+   "options": "Maintenance\nProject",
+   "default": "Maintenance",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_cable",
+   "fieldtype": "Float",
+   "label": "Total Cable (m)",
+   "reqd": 1,
+   "in_list_view": 1,
+   "precision": "0"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Site / Link / Location",
+   "allow_in_quick_entry": 1
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Date",
+   "label": "Month",
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "search_index": 1,
+   "description": "1st of the entry's month; set on save. Used by the Team Cable Summary report."
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks",
+   "allow_in_quick_entry": 1
+  },
+  {
+   "fieldname": "column_break_src",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "is_monthly_total",
+   "fieldtype": "Check",
+   "label": "Monthly Total from Sheet",
+   "read_only": 1,
+   "description": "Past data: the whole month's cable for the team, from the Fiber Maintenance & Project Data sheet."
+  },
+  {
+   "fieldname": "sheet_team",
+   "fieldtype": "Data",
+   "label": "Team in Sheet",
+   "read_only": 1,
+   "depends_on": "is_monthly_total",
+   "description": "The team as written in the sheet, e.g. \"Team 1/6\" (Team 1 and Team 6 reported together)."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 19:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "Team Monthly Cable",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "Project Head",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "NOC Head",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "Area Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "date",
+ "sort_order": "DESC",
+ "states": [],
+ "search_fields": "team,work_type,date",
+ "title_field": "team",
+ "track_changes": 1,
+ "row_format": "Dynamic"
+}

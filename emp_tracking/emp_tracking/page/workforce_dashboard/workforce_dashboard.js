@@ -15,6 +15,15 @@
 //               added to EV_LINKS, so each user sees only the ones they can open.
 //   2026-10-09  One menu everywhere: pin_sidebar filters the Dashboard, OverHead Project and
 //               Helpdesk NOC menus (OH_SIDEBARS) and keeps whichever is open.
+//   2026-10-24  One "EVision" tile and menu again (setup.py): EV_SIDEBAR = 'EVision'; OH_SIDEBARS
+//               are EVision, Helpdesk NOC and FTTH Tracker, which all carry the same menu.
+//   2026-10-29  EVision split into three module tiles (setup.py): EV_SIDEBAR = 'Emp Tracking' (the
+//               dashboards' own menu); OH_SIDEBARS lists every module menu, and an open one is kept.
+//   2026-11-02  EVision design layer (public/css/evision.css): colours in WD_STYLE are --ev-* tokens
+//               (Frappe Espresso, light + dark mode) instead of hex; lighter type weights; no
+//               coloured top strip on KPI tiles; line icons on the tabs; skeleton loading and
+//               icon empty states come from evision.css.
+//   2026-11-17  'EVision' tile back next to the module tiles: added to OH_SIDEBARS.
 
 frappe.pages['workforce-dashboard'].on_page_load = function (wrapper) {
 	var page = frappe.ui.make_app_page({
@@ -32,154 +41,155 @@ frappe.pages['workforce-dashboard'].on_page_show = function (wrapper) {
 var WD_API = 'emp_tracking.emp_tracking.page.workforce_dashboard.workforce_dashboard.';
 var WD_REFRESH_MS = 5 * 60 * 1000;
 
-// Same visual language as the Manager Dashboard page (md-*): white cards, slate text,
-// coloured top borders on stat tiles, blue underline tabs, uppercase table headers.
+// Same visual language as the Manager Dashboard page (md-*): cards, neutral text, tinted icon
+// tiles, blue underline tabs, uppercase table headers. 2026-11-02: colours are the --ev-*
+// tokens from public/css/evision.css, so light and dark mode both work.
 var WD_STYLE = [
 	'<style>',
 	'.wd-root{padding:12px 16px 28px}',
 	'@media (max-width:480px){.wd-root{padding:10px 12px 24px}}',
 	// tabs
-	'.wd-tabs{display:flex;gap:22px;border-bottom:1px solid #e5e7eb;margin:0 16px 4px;flex-wrap:wrap}',
-	'.wd-tab{display:flex;align-items:center;gap:6px;padding:10px 2px;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;',
+	'.wd-tabs{display:flex;gap:22px;border-bottom:1px solid var(--ev-border);margin:0 16px 4px;flex-wrap:wrap}',
+	'.wd-tab{display:flex;align-items:center;gap:6px;padding:10px 2px;font-size:13px;font-weight:500;color:var(--ev-text-4);cursor:pointer;',
 	'  border:0;background:none;border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}',
-	'.wd-tab:hover{color:#334155}',
-	'.wd-tab.active{color:#2563eb;border-bottom-color:#2563eb}',
+	'.wd-tab:hover{color:var(--ev-text-2)}',
+	'.wd-tab.active{color:var(--ev-accent);border-bottom-color:var(--ev-accent)}',
 	// page head
 	'.wd-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px}',
 	'.wd-head-left{display:flex;align-items:center;gap:12px;min-width:0}',
-	'.wd-title{font-size:16px;font-weight:800;color:#0f172a;line-height:1.2}',
-	'.wd-sub{font-size:12px;color:#64748b;margin-top:2px}',
+	'.wd-title{font-size:16px;font-weight:600;color:var(--ev-text);line-height:1.2}',
+	'.wd-sub{font-size:12px;color:var(--ev-text-4);margin-top:2px}',
 	'.wd-head-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
-	'.wd-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#475569;background:#fff;',
-	'  border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;white-space:nowrap}',
-	'.wd-badge .dot{width:7px;height:7px;border-radius:50%;background:#16a34a}',
+	'.wd-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--ev-text-3);background:var(--ev-card);',
+	'  border:1px solid var(--ev-border);border-radius:8px;padding:6px 10px;white-space:nowrap}',
+	'.wd-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ev-ok)}',
 	// stat tiles
 	'.wd-kpis{display:grid;grid-template-columns:repeat(var(--wd-cols,4),minmax(0,1fr));gap:12px;margin-bottom:18px}',
-	'.wd-score{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:#475569;background:#fff;',
-	'  border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px 4px 4px;cursor:pointer;white-space:nowrap}',
-	'.wd-score:hover{border-color:#93c5fd}',
+	'.wd-score{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:500;color:var(--ev-text-3);background:var(--ev-card);',
+	'  border:1px solid var(--ev-border);border-radius:8px;padding:4px 10px 4px 4px;cursor:pointer;white-space:nowrap}',
+	'.wd-score:hover{border-color:var(--ev-accent-border)}',
 	'.wd-score .ring{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;',
-	'  font-size:11px;font-weight:800;color:#fff}',
-	'.wd-score .ring.green{background:#16a34a}.wd-score .ring.orange{background:#f97316}.wd-score .ring.red{background:#ef4444}',
-	'.wd-score .ring.gray{background:#94a3b8}',
-	'.wd-score .m{color:#94a3b8;font-weight:600}',
-	'.wd-kpi{background:#fff;border:1px solid #e5e7eb;border-top:3px solid #2563eb;border-radius:12px;padding:13px 14px;',
+	'  font-size:11px;font-weight:600;color:#fff}',
+	'.wd-score .ring.green{background:var(--ev-ok)}.wd-score .ring.orange{background:var(--ev-warn)}.wd-score .ring.red{background:var(--ev-bad)}',
+	'.wd-score .ring.gray{background:var(--ev-text-5)}',
+	'.wd-score .m{color:var(--ev-text-5);font-weight:600}',
+	'.wd-kpi{background:var(--ev-card);border:1px solid var(--ev-border);border-top:1px solid var(--ev-border);border-radius:12px;padding:13px 14px;',
 	'  display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:box-shadow .15s,transform .15s;min-width:0}',
 	'.wd-kpi.clickable{cursor:pointer}',
 	'.wd-kpi.clickable:hover{box-shadow:0 4px 10px rgba(15,23,42,.08);transform:translateY(-1px)}',
 	'.wd-kpi-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;',
-	'  background:#eff6ff;color:#2563eb}',
+	'  background:var(--ev-accent-bg);color:var(--ev-accent)}',
 	'.wd-kpi-body{min-width:0;flex:1}',
-	'.wd-kpi .val{font-size:19px;font-weight:800;color:#0f172a;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;',
+	'.wd-kpi .val{font-size:19px;font-weight:600;color:var(--ev-text);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;',
 	'  overflow:hidden;text-overflow:ellipsis}',
-	'.wd-kpi .lbl{font-size:10.5px;color:#64748b;margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-	'.wd-kpi .hint{font-size:10.5px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-	'.wd-kpi.t-blue{border-top-color:#2563eb}.wd-kpi.t-blue .wd-kpi-icon{background:#eff6ff;color:#2563eb}',
-	'.wd-kpi.t-green{border-top-color:#16a34a}.wd-kpi.t-green .wd-kpi-icon{background:#f0fdf4;color:#16a34a}.wd-kpi.t-green .val{color:#16a34a}',
-	'.wd-kpi.t-orange{border-top-color:#f97316}.wd-kpi.t-orange .wd-kpi-icon{background:#fff7ed;color:#f97316}.wd-kpi.t-orange .val{color:#f97316}',
-	'.wd-kpi.t-red{border-top-color:#ef4444}.wd-kpi.t-red .wd-kpi-icon{background:#fef2f2;color:#ef4444}.wd-kpi.t-red .val{color:#ef4444}',
-	'.wd-kpi.t-purple{border-top-color:#7c3aed}.wd-kpi.t-purple .wd-kpi-icon{background:#f5f3ff;color:#7c3aed}.wd-kpi.t-purple .val{color:#7c3aed}',
+	'.wd-kpi .lbl{font-size:10.5px;color:var(--ev-text-4);margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+	'.wd-kpi .hint{font-size:10.5px;color:var(--ev-text-5);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+	'.wd-kpi.t-blue{border-top-color:var(--ev-border)}.wd-kpi.t-blue .wd-kpi-icon{background:var(--ev-accent-bg);color:var(--ev-accent)}',
+	'.wd-kpi.t-green{border-top-color:var(--ev-border)}.wd-kpi.t-green .wd-kpi-icon{background:var(--ev-ok-bg);color:var(--ev-ok)}.wd-kpi.t-green .val{color:var(--ev-ok)}',
+	'.wd-kpi.t-orange{border-top-color:var(--ev-border)}.wd-kpi.t-orange .wd-kpi-icon{background:var(--ev-warn-bg);color:var(--ev-warn)}.wd-kpi.t-orange .val{color:var(--ev-warn)}',
+	'.wd-kpi.t-red{border-top-color:var(--ev-border)}.wd-kpi.t-red .wd-kpi-icon{background:var(--ev-bad-bg);color:var(--ev-bad)}.wd-kpi.t-red .val{color:var(--ev-bad)}',
+	'.wd-kpi.t-purple{border-top-color:var(--ev-border)}.wd-kpi.t-purple .wd-kpi-icon{background:var(--ev-violet-bg);color:var(--ev-violet)}.wd-kpi.t-purple .val{color:var(--ev-violet)}',
 	'.wd-kpi .val .wd-chip{font-size:12px;vertical-align:middle}',
 	// layout + cards
 	'.wd-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:stretch}',
 	'.wd-w-full{grid-column:span 12}.wd-w-two-thirds{grid-column:span 8}.wd-w-half{grid-column:span 6}.wd-w-third{grid-column:span 4}',
 	'@media (max-width:1100px){.wd-w-third{grid-column:span 6}.wd-w-two-thirds{grid-column:span 12}}',
 	'@media (max-width:767px){.wd-w-two-thirds,.wd-w-half,.wd-w-third{grid-column:span 12}}',
-	'.wd-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px 16px;min-width:0;display:flex;flex-direction:column;',
+	'.wd-card{background:var(--ev-card);border:1px solid var(--ev-border);border-radius:14px;padding:14px 16px;min-width:0;display:flex;flex-direction:column;',
 	'  box-shadow:0 1px 2px rgba(15,23,42,.04)}',
 	'.wd-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;min-height:26px}',
-	'.wd-card-head .title{font-size:13.5px;font-weight:800;color:#0f172a}',
-	'.wd-card-head .count{color:#64748b;font-weight:700}',
-	'.wd-card-head .sub{font-size:11px;color:#94a3b8;font-weight:600;margin-top:2px}',
-	'.wd-btn{font-size:11px;font-weight:800;color:#fff;background:#2563eb;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;',
+	'.wd-card-head .title{font-size:13.5px;font-weight:600;color:var(--ev-text)}',
+	'.wd-card-head .count{color:var(--ev-text-4);font-weight:500}',
+	'.wd-card-head .sub{font-size:11px;color:var(--ev-text-5);font-weight:600;margin-top:2px}',
+	'.wd-btn{font-size:11px;font-weight:600;color:#fff;background:var(--ev-accent);border:none;border-radius:6px;padding:5px 10px;cursor:pointer;',
 	'  white-space:nowrap;line-height:1.3}',
-	'.wd-btn:hover{background:#1d4ed8}',
-	'.wd-btn.light{color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe}.wd-btn.light:hover{background:#dbeafe}',
-	'.wd-btn.green{background:#16a34a}.wd-btn.green:hover{background:#15803d}',
-	'.wd-btn.red{background:#fff;color:#dc2626;border:1px solid #fecaca}.wd-btn.red:hover{background:#fef2f2}',
-	'.wd-link{font-size:11.5px;font-weight:700;color:#2563eb;cursor:pointer;white-space:nowrap}',
+	'.wd-btn:hover{background:var(--ev-accent)}',
+	'.wd-btn.light{color:var(--ev-accent);background:var(--ev-accent-bg);border:1px solid var(--ev-accent-border)}.wd-btn.light:hover{background:var(--ev-accent-bg)}',
+	'.wd-btn.green{background:var(--ev-ok)}.wd-btn.green:hover{background:var(--ev-ok)}',
+	'.wd-btn.red{background:var(--ev-card);color:var(--ev-bad);border:1px solid var(--ev-bad-border)}.wd-btn.red:hover{background:var(--ev-bad-bg)}',
+	'.wd-link{font-size:11.5px;font-weight:500;color:var(--ev-accent);cursor:pointer;white-space:nowrap}',
 	'.wd-link:hover{text-decoration:underline}',
 	// tables
 	'.wd-table-wrap{overflow:auto;max-height:340px;flex:1}',
 	'.wd-table{width:100%;border-collapse:collapse}',
-	'.wd-table thead th{position:sticky;top:0;background:#fff;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;',
-	'  color:#94a3b8;font-weight:700;padding:6px 8px;border-bottom:1px solid #f1f5f9;white-space:nowrap;z-index:1}',
-	'.wd-table tbody td{padding:8px;font-size:12px;color:#334155;border-bottom:1px solid #f8fafc;vertical-align:middle;max-width:260px;',
+	'.wd-table thead th{position:sticky;top:0;background:var(--ev-card);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;',
+	'  color:var(--ev-text-5);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--ev-border);white-space:nowrap;z-index:1}',
+	'.wd-table tbody td{padding:8px;font-size:12px;color:var(--ev-text-2);border-bottom:1px solid var(--ev-border);vertical-align:middle;max-width:260px;',
 	'  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.wd-table .num{text-align:right;font-variant-numeric:tabular-nums}',
 	'.wd-table tr.clickable{cursor:pointer}',
-	'.wd-table tr.clickable:hover td{background:#f8fafc}',
+	'.wd-table tr.clickable:hover td{background:var(--ev-subtle)}',
 	'.wd-emp-cell{display:flex;align-items:center;gap:8px;min-width:0}',
-	'.wd-emp-name{font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis}',
-	'.wd-avatar{width:26px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;',
+	'.wd-emp-name{font-weight:500;color:var(--ev-text);overflow:hidden;text-overflow:ellipsis}',
+	'.wd-avatar{width:26px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;',
 	'  font-size:10.5px;flex-shrink:0}',
 	'.wd-avatar.lg{width:42px;height:42px;border-radius:21px;font-size:14px}',
 	'.wd-actions-cell{text-align:right;white-space:nowrap}',
 	'.wd-actions-cell .wd-btn{margin-left:4px}',
-	'.wd-empty{text-align:center;padding:30px 14px;color:#94a3b8;font-size:12.5px}',
+	'.wd-empty{text-align:center;padding:30px 14px;color:var(--ev-text-5);font-size:12.5px}',
 	// chips (status pills)
-	'.wd-chip{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;line-height:1.4}',
-	'.wd-chip.green{color:#15803d;background:#dcfce7}.wd-chip.red{color:#b91c1c;background:#fee2e2}',
-	'.wd-chip.orange{color:#c2410c;background:#ffedd5}.wd-chip.blue{color:#1d4ed8;background:#dbeafe}',
-	'.wd-chip.purple{color:#6d28d9;background:#ede9fe}.wd-chip.gray{color:#475569;background:#f1f5f9}',
+	'.wd-chip{display:inline-block;font-size:10.5px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;line-height:1.4}',
+	'.wd-chip.green{color:var(--ev-ok);background:var(--ev-ok-bg)}.wd-chip.red{color:var(--ev-bad);background:var(--ev-bad-bg)}',
+	'.wd-chip.orange{color:var(--ev-warn);background:var(--ev-warn-bg)}.wd-chip.blue{color:var(--ev-accent);background:var(--ev-accent-bg)}',
+	'.wd-chip.purple{color:var(--ev-violet);background:var(--ev-violet-bg)}.wd-chip.gray{color:var(--ev-text-3);background:var(--ev-muted)}',
 	// bars
-	'.wd-bar{padding:6px 0;border-bottom:1px solid #f8fafc}',
+	'.wd-bar{padding:6px 0;border-bottom:1px solid var(--ev-border)}',
 	'.wd-bar:last-child{border-bottom:0}',
 	'.wd-bar.clickable{cursor:pointer}',
-	'.wd-bar .line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:5px}',
+	'.wd-bar .line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;font-weight:600;color:var(--ev-text-2);margin-bottom:5px}',
 	'.wd-bar .line .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-	'.wd-bar .line .num{font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;white-space:nowrap}',
-	'.wd-bar .track{height:7px;border-radius:4px;background:#f1f5f9}',
-	'.wd-bar .fill{height:7px;border-radius:4px;min-width:3px;background:#2563eb}',
-	'.wd-bar .fill.ok{background:#16a34a}.wd-bar .fill.warn{background:#f97316}.wd-bar .fill.bad{background:#ef4444}',
-	'.wd-bar.clickable:hover .line .name{color:#2563eb}',
+	'.wd-bar .line .num{font-weight:600;color:var(--ev-text);font-variant-numeric:tabular-nums;white-space:nowrap}',
+	'.wd-bar .track{height:7px;border-radius:4px;background:var(--ev-muted)}',
+	'.wd-bar .fill{height:7px;border-radius:4px;min-width:3px;background:var(--ev-accent)}',
+	'.wd-bar .fill.ok{background:var(--ev-ok)}.wd-bar .fill.warn{background:var(--ev-warn)}.wd-bar .fill.bad{background:var(--ev-bad)}',
+	'.wd-bar.clickable:hover .line .name{color:var(--ev-accent)}',
 	// stats
 	'.wd-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
-	'.wd-stat{background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:10px 12px;min-width:0}',
-	'.wd-stat.clickable{cursor:pointer}.wd-stat.clickable:hover{border-color:#93c5fd;background:#eff6ff}',
-	'.wd-stat .v{font-size:16px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;line-height:1.2}',
-	'.wd-stat .l{font-size:9.5px;color:#64748b;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.02em;',
+	'.wd-stat{background:var(--ev-subtle);border:1px solid var(--ev-border);border-radius:10px;padding:10px 12px;min-width:0}',
+	'.wd-stat.clickable{cursor:pointer}.wd-stat.clickable:hover{border-color:var(--ev-accent-border);background:var(--ev-accent-bg)}',
+	'.wd-stat .v{font-size:16px;font-weight:600;color:var(--ev-text);font-variant-numeric:tabular-nums;line-height:1.2}',
+	'.wd-stat .l{font-size:9.5px;color:var(--ev-text-4);font-weight:500;margin-top:4px;text-transform:uppercase;letter-spacing:.02em;',
 	'  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
 	// timeline
 	'.wd-timeline{overflow-y:auto;max-height:340px}',
-	'.wd-tl-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}',
+	'.wd-tl-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--ev-border)}',
 	'.wd-tl-row:last-child{border-bottom:none}',
-	'.wd-tl-mark{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb;background:#94a3b8}',
-	'.wd-tl-mark.ok{background:#16a34a}.wd-tl-mark.info{background:#2563eb}.wd-tl-mark.neutral{background:#dc2626}',
+	'.wd-tl-mark{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid var(--ev-card);box-shadow:0 0 0 1px var(--ev-border);background:var(--ev-text-5)}',
+	'.wd-tl-mark.ok{background:var(--ev-ok)}.wd-tl-mark.info{background:var(--ev-accent)}.wd-tl-mark.neutral{background:var(--ev-bad)}',
 	'.wd-tl-top{display:flex;justify-content:space-between;gap:8px}',
-	'.wd-tl-title{font-size:12.5px;font-weight:800;color:#0f172a}',
-	'.wd-tl-time{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap}',
-	'.wd-tl-sub{font-size:11px;color:#94a3b8;margin-top:3px}',
+	'.wd-tl-title{font-size:12.5px;font-weight:600;color:var(--ev-text)}',
+	'.wd-tl-time{font-size:11px;font-weight:500;color:var(--ev-text-4);white-space:nowrap}',
+	'.wd-tl-sub{font-size:11px;color:var(--ev-text-5);margin-top:3px}',
 	// map + charts
-	'.wd-map{height:360px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#f8fafc;z-index:0}',
+	'.wd-map{height:360px;border:1px solid var(--ev-border);border-radius:12px;overflow:hidden;background:var(--ev-subtle);z-index:0}',
 	'.wd-map-list{font-size:12.5px}',
-	'.wd-map-label{background:#fff;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3);',
-	'  border:0;color:#0f172a}',
+	'.wd-map-label{background:var(--ev-card);padding:1px 7px;border-radius:6px;font-size:11px;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.3);',
+	'  border:0;color:var(--ev-text)}',
 	'.wd-chart{min-height:230px}',
-	'.wd-message{padding:40px 16px;text-align:center;color:#64748b;font-size:13px}',
-	'.wd-loading{padding:60px 0;text-align:center;color:#94a3b8;font-size:13px}',
-	'.wd-updated{color:#94a3b8;font-size:11px;text-align:right;margin-top:14px}',
+	'.wd-message{padding:40px 16px;text-align:center;color:var(--ev-text-4);font-size:13px}',
+	'.wd-loading{padding:60px 0;text-align:center;color:var(--ev-text-5);font-size:13px}',
+	'.wd-updated{color:var(--ev-text-5);font-size:11px;text-align:right;margin-top:14px}',
 	'.wd-print-head{display:none}',
 	// drill-down + detail dialog
 	'.wd-dlg-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}',
-	'.wd-dlg-bar input{max-width:300px;border:1px solid #e2e8f0;border-radius:10px;padding:7px 12px;font-size:12.5px;background:#f8fafc}',
-	'.wd-dlg-bar .count{font-size:12px;font-weight:700;color:#64748b;margin-left:auto}',
+	'.wd-dlg-bar input{max-width:300px;border:1px solid var(--ev-border);border-radius:10px;padding:7px 12px;font-size:12.5px;background:var(--ev-subtle)}',
+	'.wd-dlg-bar .count{font-size:12px;font-weight:500;color:var(--ev-text-4);margin-left:auto}',
 	'.wd-dlg .wd-table-wrap{max-height:60vh}',
 	'.wd-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}',
-	'.wd-detail-head h4{margin:0 0 4px;font-size:16px;font-weight:800;color:#0f172a}',
-	'.wd-detail-head .sub{font-size:12px;color:#64748b}',
+	'.wd-detail-head h4{margin:0 0 4px;font-size:16px;font-weight:600;color:var(--ev-text)}',
+	'.wd-detail-head .sub{font-size:12px;color:var(--ev-text-4)}',
 	'.wd-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px 18px;margin-bottom:14px}',
-	'.wd-field .label{font-size:9.5px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.02em}',
-	'.wd-field .value{font-size:13px;font-weight:600;color:#0f172a;word-break:break-word;margin-top:2px}',
+	'.wd-field .label{font-size:9.5px;color:var(--ev-text-4);font-weight:500;text-transform:uppercase;letter-spacing:.02em}',
+	'.wd-field .value{font-size:13px;font-weight:600;color:var(--ev-text);word-break:break-word;margin-top:2px}',
 	'.wd-field.wide{grid-column:1/-1}',
-	'.wd-person{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:#f8fafc;border:1px solid #f1f5f9;margin-bottom:14px}',
-	'.wd-person .name{font-weight:800;font-size:13.5px;color:#0f172a}',
-	'.wd-person .meta{font-size:11.5px;color:#64748b;margin-top:2px}',
-	'.wd-related{border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px}',
-	'.wd-related .title{font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;display:flex;justify-content:space-between}',
-	'.wd-detail-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #f1f5f9}',
+	'.wd-person{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--ev-subtle);border:1px solid var(--ev-border);margin-bottom:14px}',
+	'.wd-person .name{font-weight:600;font-size:13.5px;color:var(--ev-text)}',
+	'.wd-person .meta{font-size:11.5px;color:var(--ev-text-4);margin-top:2px}',
+	'.wd-related{border:1px solid var(--ev-border);border-radius:12px;padding:12px 14px;margin-bottom:12px}',
+	'.wd-related .title{font-size:12px;font-weight:600;color:var(--ev-text);margin-bottom:10px;display:flex;justify-content:space-between}',
+	'.wd-detail-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--ev-border)}',
 	'.wd-detail-actions .wd-btn{padding:8px 14px;font-size:12px}',
-	'.wd-mini-map{height:200px;border-radius:12px;border:1px solid #e5e7eb;margin-bottom:14px;z-index:0}',
+	'.wd-mini-map{height:200px;border-radius:12px;border:1px solid var(--ev-border);margin-bottom:14px;z-index:0}',
 	'@media print{',
 	'  .navbar,.page-head,.page-form,.wd-tabs,.wd-no-print,.wd-link,.wd-btn,.wd-actions-cell,.layout-side-section,.footer-powered{display:none!important}',
 	'  .wd-print-head{display:block;margin-bottom:12px}',
@@ -207,8 +217,10 @@ var WD_ICONS = {
 	pin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
 };
 
+// Date: 2026-11-02 — tab icons are the line icons above (were emoji), drawn in the tab's text colour.
 var WD_TAB_ICONS = {
-	employee: '👤', team: '👥', hr: '🗂', field: '📍', tasks: '✅', claims: '⛽', performance: '📈', management: '📊', exceptions: '⚠',
+	employee: WD_ICONS.person, team: WD_ICONS.users, hr: WD_ICONS.calendar, field: WD_ICONS.pin, tasks: WD_ICONS.list,
+	claims: WD_ICONS.money, performance: WD_ICONS.star, management: WD_ICONS.chart, exceptions: WD_ICONS.alert,
 };
 
 // Status text -> indicator colour. Anything unknown is gray.
@@ -311,7 +323,7 @@ class WorkforceDashboard {
 		if (this.boot.dashboards.length < 2) this.$tabs.hide();
 		this.boot.dashboards.forEach((d) => {
 			$('<button class="wd-tab"></button>')
-				.html('<span>' + (WD_TAB_ICONS[d.key] || '') + '</span><span>' + esc(d.label) + '</span>')
+				.html('<span class="ev-tab-icon">' + (WD_TAB_ICONS[d.key] || '') + '</span><span>' + esc(d.label) + '</span>')
 				.attr('data-key', d.key)
 				.on('click', () => frappe.set_route('workforce-dashboard', d.key))
 				.appendTo(this.$tabs);
@@ -692,7 +704,7 @@ class WorkforceDashboard {
 			if (d.employee) {
 				var e = d.employee;
 				html += '<div class="wd-person">' + avatar(e.employee_name, 'lg') + '<div>' +
-					'<div class="name">' + esc(e.employee_name) + ' <span style="color:#94a3b8;font-weight:600">' + esc(e.name) + '</span></div>' +
+					'<div class="name">' + esc(e.employee_name) + ' <span style="color:var(--ev-text-5);font-weight:600">' + esc(e.name) + '</span></div>' +
 					'<div class="meta">' + [e.designation, e.department, e.reports_to_name ? __('Reports to {0}', [e.reports_to_name]) : null, e.cell_number]
 						.filter(Boolean).map(esc).join(' · ') + '</div>' +
 					'<div class="meta"><span class="wd-link wd-emp-dash">' + __('Open employee dashboard') + ' ›</span></div></div></div>';
@@ -780,17 +792,20 @@ class WorkforceDashboard {
 
 // ---- OverHead Project menu ------------------------------------------------------
 
-// Date: 2026-10-09 — renamed from 'EVision'; must match SIDEBAR in setup.py. The dashboard page
-// shows this sidebar, trimmed by ev_menu_items() to the links the user can open.
-var EV_SIDEBAR = 'OverHead Project';
-// Date: 2026-10-09 — the three menus that carry the one EVisions menu (see oh_menu in setup.py).
-var OH_SIDEBARS = ['Dashboard', 'OverHead Project', 'Helpdesk NOC'];
+// Date: 2026-10-09 — must match SIDEBAR in setup.py (2026-10-24: back to 'EVision'). The dashboard
+// page shows this sidebar, trimmed by ev_menu_items() to the links the user can open.
+// 2026-10-29: 'Emp Tracking' (EVision was split into module tiles).
+var EV_SIDEBAR = 'Emp Tracking';
+// Date: 2026-10-09 — the menus that carry the one EVision menu (see oh_menu / MIRROR_SIDEBARS in
+// setup.py). 2026-10-24: Dashboard and OverHead Project are gone; FTTH Tracker added.
+// 2026-10-29: the three module menus plus their mirrors.
+// 2026-11-17: + 'EVision' (the tile with every module menu), so it stays open on this page.
+var OH_SIDEBARS = ['Emp Tracking', 'OverHead Project', 'NOC', 'EVision', 'Helpdesk NOC', 'FTTH Tracker'];
 
 // Menu link -> the doctype it opens. Team links are for leads, HR, finance and management only:
 // employees reach their own Employee record and leave allocation through the dashboard instead.
 var EV_LINKS = {
-	// 2026-10-09: OH Project screens.
-	'/app/new-project': { doctype: 'New Project' },
+	// 2026-10-09: OH Project screens. (2026-10-31: New Project removed, merged into FTTH Work Order.)
 	'/app/network-link': { doctype: 'Network Link' },
 	'/app/fiber-pulling-team': { doctype: 'Fiber Pulling Team' },
 	'/app/maintenance-team': { doctype: 'Maintenance Team' },

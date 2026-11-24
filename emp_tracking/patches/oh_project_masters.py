@@ -18,6 +18,7 @@
 #   2026-10-09  Created.
 #   2026-10-09  refresh_projects writes 0, not NULL, into number columns (migrate failed on
 #               "Column 'distance_difference' cannot be null").
+#   2026-10-31  New Project refresh skipped when the doctype is gone (merged into FTTH Work Order).
 # ---------------------------------------------------------------------------------------------
 
 import frappe
@@ -53,12 +54,15 @@ def execute():
 	"""Create the missing masters, then refresh every New Project's calculated fields."""
 	frappe.reload_doc("emp_tracking", "doctype", "fiber_pulling_team")
 	frappe.reload_doc("emp_tracking", "doctype", "maintenance_team")
-	frappe.reload_doc("emp_tracking", "doctype", "new_project")
 	make_customers()
 	make_teams()
 	make_vendors()
 	make_fiber_pulling_teams()
-	refresh_projects()
+	# 2026-10-31: New Project was merged into FTTH Work Order and its code removed; only a site
+	# that still has the doctype gets its projects refreshed.
+	if frappe.db.exists("DocType", "New Project") and frappe.db.table_exists("New Project"):
+		frappe.reload_doc("emp_tracking", "doctype", "new_project")
+		refresh_projects()
 
 
 # Date: 2026-10-09

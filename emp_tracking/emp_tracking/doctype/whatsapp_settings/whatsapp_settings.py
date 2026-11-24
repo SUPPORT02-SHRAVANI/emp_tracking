@@ -17,6 +17,8 @@
 #   2026-10-08  Created for New Project stage messages.
 #   2026-10-08  Test Mode: all messages go to the Test Mobile Number; "Send Test Message" button.
 #   2026-10-08  Webhook for replies and delivery status; every message logged in WhatsApp Message.
+#   2026-10-31  New Project merged into FTTH Work Order: the stage template field is labelled
+#               "Work Order Stage Template" (fieldname project_stage_template unchanged).
 # ---------------------------------------------------------------------------------------------
 
 import hashlib

@@ -8,10 +8,10 @@ Safe to run again; every step only creates or updates what is missing.
 	bench --site newsite.local execute emp_tracking.emp_tracking.page.workforce_dashboard.setup.install
 
 How it works: install() / apply_access() create the custom fields, import the page, make the roles and
-permissions, and build two desk tiles, each opening its own Workspace Sidebar:
-	"Dashboard"         -> the Workforce Dashboards page
-	"OverHead Project"  -> tasks, attendance, leave, claims, field tracking and team lists
-Staff (employees with only self-service roles) get a module profile and see only these tiles plus
+permissions, and build one desk tile, "EVision" (2026-10-24; was "Dashboard" + "OverHead Project"),
+opening the EVision Workspace Sidebar: dashboards, FTTH work orders, OH projects, complaints,
+network, teams and settings (see oh_menu()).
+Staff (employees with only self-service roles) get a module profile and see only this tile plus
 Leaves and Expenses.
 
 Change log:
@@ -36,6 +36,52 @@ Change log:
 	            Company, Employee, Area, Teams, Vendors, Network Link, Node and Site.
 	2026-10-09  One fixed order on every tile: Dashboards, New Project, Complaints, Network (Nodes,
 	            Network Links, Sites), Masters.
+	2026-10-21  Employee custom field "Allow Punch From Anywhere" (custom_allow_punch_from_anywhere),
+	            used by overrides/employee_checkin.py to skip the Shift Location radius check.
+	2026-10-24  Menu: "Performance Leaderboard" report under Dashboards and "Leaderboard Settings"
+	            under Masters. link_exists() also checks Report links.
+	2026-10-24  Back to ONE desk tile, "EVision": the "Dashboard" and "OverHead Project" tiles and
+	            sidebars are deleted, and the FTTH Tracker and empty WorkForce tiles are hidden
+	            (HIDDEN_ICONS). The EVision menu follows the work: Dashboards -> FTTH Work Orders ->
+	            OH Projects -> Complaints -> Network -> Teams & Vendors -> Settings, and includes
+	            the FTTH Tracker screens when that app is installed. The Helpdesk NOC and FTTH
+	            Tracker sidebars carry the same menu (MIRROR_SIDEBARS), so it never changes while
+	            moving between screens. FTTH Manager / FTTH User also see the tile.
+	2026-10-24  "Staff Monthly Performance" added to the Dashboards section of the menu.
+	2026-10-24  Node merged into GIS Node: "Nodes" left the menu, OH roles get link rights on
+	            GIS Node instead of Node (patches/merge_node_into_gis_node.py moves the data).
+	2026-10-26  Dashboards: "Employee Performance" page instead of the Performance Leaderboard report.
+	2026-10-26  "Fiber Store" menu section: dashboard, inward / outward entries, drum balance reports.
+	2026-10-26  GIS Node "KMZ Files" section (KMZ File upload, KMZ Folder Path, imported KMZ list),
+	            placed above the Site Diagram.
+	2026-10-26  KMZ Route / KMZ Point custom fields (Matched By, Site, KMZ Upload) and "Upload KMZ"
+	            in the Network menu.
+	2026-10-26  KMZ Route / KMZ Point "KMZ Path" field (folder chain inside the KMZ) and the
+	            "KMZ Map" page in the Network menu.
+	2026-10-27  GIS Node "Fed From Node" (custom_fed_from) and the "Network Topology" page in the
+	            Network menu.
+	2026-10-27  "KMZ Site Check" page in the Network menu.
+	2026-10-27  "KMZ Map Settings" in the Network menu.
+	2026-10-27  KMZ Route Matched By gets the option "Drawn on Map" (KMZ Map Add Route).
+	2026-10-27  KMZ Route / KMZ Point Matched By get the option "Nearest Node" (KMZ Map Assign Nodes).
+	2026-10-29  EVision menu trimmed to the daily screens (37 -> 19 links); the rest still open from
+	            the search bar. Links are now nested under their section headings (child = 1), so the
+	            sidebar shows collapsible sections instead of one long flat list.
+	2026-10-29  Menu grouped by module: OverHead Project, Emp Tracking, NOC.
+	2026-10-29  The EVision tile is replaced by three desk tiles, one per module, each with its own
+	            sidebar: OverHead Project (Projects, FTTH, Fiber Store, Network, Teams & Vendors),
+	            Emp Tracking (dashboards) and NOC (complaints). The Helpdesk NOC tile is hidden (its
+	            sidebar shows the NOC menu); the FTTH Tracker sidebar shows the OverHead menu.
+	2026-10-29  Desk home keeps only OverHead Project, Emp Tracking, NOC and Milestone
+	            (keep_only_desk_icons, undo: show_hidden_desk_icons); picture icons for the four
+	            tiles in public/icons/desktop_icons (Milestone's in milestone_app).
+	2026-10-31  New Project merged into FTTH Work Order: the OverHead Project menu loses its
+	            "Projects" section and the FTTH link is labelled "Work Orders".
+	2026-11-17  "EVision" desk tile back, next to the three module tiles (user's request): its
+	            sidebar holds all three module menus (EVISION_MODULES); seen by TILE_ROLES.
+	2026-11-23  "Allow Punch From Anywhere" checkbox retired: Punch-In Location = "Anywhere" is the one
+	            setting (user's request). after_migrate() runs retire_allow_punch_from_anywhere(), which
+	            moves ticked employees to "Anywhere" and then deletes the custom field.
 """
 
 import os
@@ -50,10 +96,36 @@ PAGE_ROLES = ["Employee", "Team Lead", "HR Manager", "HR User", "Finance Manager
 # Desk tiles: everyone above plus the OH project and NOC roles (2026-10-09).
 TILE_ROLES = PAGE_ROLES + [
 	"Project Head", "Area Manager", "Fiber Team", "Splicing Team", "NOC Head", "Maintenance Agent", "Accounts User",
+	# 2026-10-24: FTTH Tracker roles (skipped by make_tile when the app is not installed)
+	"FTTH Manager", "FTTH User",
 ]
-SIDEBAR = "OverHead Project"  # 2026-10-09: was "EVision"; holds the workforce links
-DASHBOARD_SIDEBAR = "Dashboard"  # 2026-10-09: split out of "EVision"; holds the dashboards page
-OLD_SIDEBARS = ("Workforce", "EVision")  # earlier names of the menu, deleted by make_navigation()
+# 2026-10-24: one tile and menu again, "EVision" (was "OverHead Project" + "Dashboard" since 2026-10-09)
+# 2026-10-29: three module tiles instead of EVision: OverHead Project, Emp Tracking, NOC (user's
+# request). SIDEBAR is the Emp Tracking one: staff keep it, and the Workforce Dashboard page shows it.
+SIDEBAR = "Emp Tracking"
+# Who sees each module tile (System Manager sees all). Emp Tracking keeps TILE_ROLES, as EVision had.
+OH_TILE_ROLES = ["Project Head", "Area Manager", "Fiber Team", "Splicing Team", "Accounts User", "Accounts Manager",
+	"FTTH Manager", "FTTH User", "Management", "System Manager"]
+NOC_TILE_ROLES = ["NOC Head", "Maintenance Agent", "Management", "System Manager"]
+# Earlier names of the menu; their tiles and sidebars are deleted by make_navigation()
+# 2026-10-29: "EVision" added; "OverHead Project" removed (it is a module tile again).
+# 2026-11-17: "EVision" taken out again: it is a tile once more (EVISION_TILE).
+OLD_SIDEBARS = ("Workforce", "Dashboard")
+# 2026-11-17: the "EVision" tile, shown next to the module tiles. Its sidebar is all module menus
+# together, in this order (section names in oh_menu() are unique across modules, so no clash).
+EVISION_TILE = "EVision"
+EVISION_MODULES = ("Emp Tracking", "OverHead Project", "NOC")
+# 2026-10-24: tiles folded into EVision. They are made by Frappe for other workspaces/apps, so they
+# are only hidden (hidden=1), never deleted, and re-hidden after every migrate.
+# 2026-10-29: "Helpdesk NOC" hidden too; the NOC tile replaces it (its sidebar stays, with the NOC menu).
+HIDDEN_ICONS = ("FTTH Tracker", "WorkForce", "Helpdesk NOC")
+# 2026-10-29: the only tiles left on the desk home (user's request); every other Desktop Icon is
+# hidden after each migrate by keep_only_desk_icons(). Their pictures are SVGs in
+# <app>/public/icons/desktop_icons/{solid,subtle}/<scrubbed label>.svg (emp_tracking, milestone_app).
+# 2026-11-17: + EVision.
+DESK_ICONS = ("OverHead Project", "Emp Tracking", "NOC", EVISION_TILE, "Milestone")
+# Icons hidden by keep_only_desk_icons(), kept so the change can be undone (show_hidden_desk_icons()).
+DESK_HIDDEN_KEY = "emp_tracking_desk_hidden_icons"
 HOME_PAGE = "app/workforce-dashboard"
 # After login Frappe sends a user to the first of their roles that has a home page; without one it falls
 # back to the portal / website home page, which on this site is the Helpdesk portal.
@@ -76,6 +148,8 @@ CUSTOM_FIELDS = {
 			"insert_after": "designation", "in_standard_filter": 1,
 			"description": "Field: every working hour counts as field hours. Office: every working hour counts as office hours. "
 				"Blank: decided from GPS trips in the last 30 days."},
+		# 2026-11-23: "Allow Punch From Anywhere" (custom_allow_punch_from_anywhere, added 2026-10-21) removed
+		# from here; Punch-In Location = "Anywhere" replaces it (see retire_allow_punch_from_anywhere()).
 	],
 	"Employee Checkin": [
 		{"fieldname": "custom_work_mode", "label": "Work Mode", "fieldtype": "Select", "options": "\nOffice\nField",
@@ -93,6 +167,57 @@ CUSTOM_FIELDS = {
 		{"fieldname": "custom_eligible_km", "label": "Eligible KM", "fieldtype": "Float", "insert_after": "custom_gps_km",
 			"description": "Claimed KM, limited to GPS KM + 10%"},
 		{"fieldname": "custom_rate_per_km", "label": "Rate per KM", "fieldtype": "Currency", "insert_after": "custom_eligible_km"},
+	],
+	# 2026-10-24: Site Diagram moved here from the Node form (Node merged into GIS Node);
+	# drawn by public/js/gis_node.js (doctype_js in hooks.py).
+	"GIS Node": [
+		# 2026-10-27: upstream node, for the Network Topology page: if it stops, this node stops too
+		{"fieldname": "custom_fed_from", "label": "Fed From Node", "fieldtype": "Link", "options": "GIS Node",
+			"insert_after": "area", "description": "The node this node gets its fiber from (Network Topology)"},
+		# 2026-10-26: "KMZ Files" section: the node's own KMZ file (upload) and its folder path on
+		# the shared drive, plus a list of the KMZ files FTTH Tracker imported for this node
+		# (drawn by public/js/gis_node.js). It sits above the Site Diagram.
+		{"fieldname": "custom_kmz_section", "label": "KMZ Files", "fieldtype": "Section Break",
+			"insert_after": "area_manager_no", "collapsible": 1},
+		{"fieldname": "custom_kmz_file", "label": "KMZ File", "fieldtype": "Attach",
+			"insert_after": "custom_kmz_section", "description": "Upload this node's .kmz / .kml file"},
+		{"fieldname": "custom_kmz_column", "fieldtype": "Column Break", "insert_after": "custom_kmz_file"},
+		{"fieldname": "custom_kmz_path", "label": "KMZ Folder Path", "fieldtype": "Data", "length": 500,
+			"insert_after": "custom_kmz_column",
+			"description": "Where the node's KMZ is kept on the shared drive, e.g. GIS/D1J/D1J.kmz"},
+		{"fieldname": "custom_kmz_imported", "label": "Imported KMZ Files", "fieldtype": "HTML",
+			"insert_after": "custom_kmz_path", "depends_on": "eval:!doc.__islocal"},
+		{"fieldname": "custom_site_diagram_section", "label": "Site Diagram", "fieldtype": "Section Break",
+			"insert_after": "custom_kmz_imported", "depends_on": "eval:!doc.__islocal"},
+		{"fieldname": "custom_site_diagram", "label": "Site Diagram", "fieldtype": "HTML",
+			"insert_after": "custom_site_diagram_section"},
+	],
+	"KMZ Route": [
+		# 2026-10-26: how KMZ Upload (doctype kmz_upload) filed this row under its GIS Node
+		# 2026-10-27: "Drawn on Map" = drawn with the KMZ Map's Add Route button (kmz_map.add_route)
+		# 2026-10-27: "Nearest Node" = node given by the KMZ Map's Assign Nodes (kmz_map.apply_nearest)
+		{"fieldname": "custom_kmz_matched_by", "label": "Matched By", "fieldtype": "Select", "insert_after": "gis",
+			"options": "\nNode Name\nBuilding Name\nSame Folder\nDrawn on Map\nNearest Node","read_only": 1, "in_standard_filter": 1},
+		{"fieldname": "custom_site", "label": "Site", "fieldtype": "Link", "options": "Site",
+			"insert_after": "custom_kmz_matched_by", "read_only": 1},
+		{"fieldname": "custom_kmz_upload", "label": "KMZ Upload", "fieldtype": "Link", "options": "KMZ Upload",
+			"insert_after": "custom_site", "read_only": 1},
+		# 2026-10-26: full folder chain inside the KMZ ("My Places / C1U / Icon Residency ..."), for the KMZ Map
+		{"fieldname": "custom_kmz_path", "label": "KMZ Path", "fieldtype": "Small Text",
+			"insert_after": "custom_kmz_upload", "read_only": 1},
+	],
+	"KMZ Point": [
+		# 2026-10-26: how KMZ Upload (doctype kmz_upload) filed this row under its GIS Node
+		# 2026-10-27: "Nearest Node" = node given by the KMZ Map's Assign Nodes (kmz_map.apply_nearest)
+		{"fieldname": "custom_kmz_matched_by", "label": "Matched By", "fieldtype": "Select", "insert_after": "gis",
+			"options": "\nNode Name\nBuilding Name\nSame Folder\nNearest Node","read_only": 1, "in_standard_filter": 1},
+		{"fieldname": "custom_site", "label": "Site", "fieldtype": "Link", "options": "Site",
+			"insert_after": "custom_kmz_matched_by", "read_only": 1},
+		{"fieldname": "custom_kmz_upload", "label": "KMZ Upload", "fieldtype": "Link", "options": "KMZ Upload",
+			"insert_after": "custom_site", "read_only": 1},
+		# 2026-10-26: full folder chain inside the KMZ ("My Places / C1U / Icon Residency ..."), for the KMZ Map
+		{"fieldname": "custom_kmz_path", "label": "KMZ Path", "fieldtype": "Small Text",
+			"insert_after": "custom_kmz_upload", "read_only": 1},
 	],
 }
 
@@ -115,6 +240,11 @@ def after_migrate():
 	tiles and the one OverHead menu. The heavier staff restrictions stay in apply_access(),
 	run by hand when needed.
 	"""
+	# 2026-11-23: own try block, so a failure here never stops the menu rebuild below (and vice versa).
+	try:
+		retire_allow_punch_from_anywhere()
+	except Exception:
+		frappe.log_error(title="emp_tracking: retiring 'Allow Punch From Anywhere' failed")
 	try:
 		# Only for doctypes this site has (Task / Expense Claim come from ERPNext / HRMS).
 		create_custom_fields(
@@ -127,6 +257,29 @@ def after_migrate():
 	except Exception:
 		# A menu problem must never fail a deploy; it is listed in the Error Log instead.
 		frappe.log_error(title="emp_tracking: rebuilding the desk menu after migrate failed")
+
+
+# Date: 2026-11-23
+# One punch-location setting instead of two (user's request): "Allow Punch From Anywhere" (checkbox,
+# 2026-10-21) did the same job as Punch-In Location = "Anywhere" (the field the mobile app reads), so an
+# admin had to set both. Employees with the box ticked are first given Punch-In Location = "Anywhere"
+# (no access is lost), then the custom field is deleted. Idempotent: does nothing once the field is gone.
+# Runs after fixtures are synced, so Punch-In Location exists by then.
+RETIRED_ANYWHERE_FIELD = "custom_allow_punch_from_anywhere"
+PUNCH_IN_LOCATION_FIELD = "custom_punch_in_location"
+
+
+def retire_allow_punch_from_anywhere():
+	cf_name = frappe.db.get_value("Custom Field", {"dt": "Employee", "fieldname": RETIRED_ANYWHERE_FIELD})
+	if not cf_name:
+		return
+	if not frappe.get_meta("Employee").has_field(PUNCH_IN_LOCATION_FIELD):
+		# Without the replacement field, deleting the checkbox would take away access; keep it for now.
+		return
+	if frappe.db.has_column("Employee", RETIRED_ANYWHERE_FIELD):
+		for name in frappe.get_all("Employee", filters={RETIRED_ANYWHERE_FIELD: 1}, pluck="name"):
+			frappe.db.set_value("Employee", name, PUNCH_IN_LOCATION_FIELD, "Anywhere", update_modified=False)
+	frappe.delete_doc("Custom Field", cf_name, ignore_permissions=True, force=True)
 
 
 # Date: 2026-10-09
@@ -167,7 +320,8 @@ STAFF_ROLES = {
 }
 STAFF_PROFILE = "Workforce Staff"
 STAFF_MODULES = ("Emp Tracking",)  # modules staff keep
-STAFF_ICONS = (DASHBOARD_SIDEBAR, SIDEBAR, "Leaves", "Expenses")  # self service: dashboard, workforce menu, apply leave, petrol claims
+# self service: Emp Tracking (dashboards; was EVision until 2026-10-29), apply leave, petrol claims
+STAFF_ICONS = (SIDEBAR, "Leaves", "Expenses")
 
 # 2026-10-09: OverHead roles. A user whose roles are only these and STAFF_ROLES sees only the
 # OverHead tiles (Dashboard, OverHead Project, Helpdesk NOC) on the desk, not ERPNext's.
@@ -223,7 +377,7 @@ def restrict_desktop_icons():
 	"""
 	import json
 
-	ours = set(STAFF_ICONS) | {NOC_SIDEBAR}
+	ours = set(STAFF_ICONS) | {NOC_SIDEBAR} | set(module_tiles())  # 2026-10-29: + the module tiles
 	icons = set(frappe.get_all("Desktop Icon", pluck="name"))
 	earlier = set(json.loads(frappe.db.get_default(RESTRICTED_ICONS_KEY) or "[]")) & icons
 	open_icons = [
@@ -293,6 +447,7 @@ TEAM_LEAD_PERMS = {
 
 # What the OverHead roles may do on the lists their forms link to (2026-10-09). Without these a
 # Project Head could not pick a Customer, Area, Team or Vendor on New Project ("no permission").
+# (2026-10-31: New Project is merged into FTTH Work Order; the Network Link it makes still needs these.)
 # Employee / Customer / Company only get "select": enough to pick one, without opening the record.
 OH_LINK_PERMS = {
 	"Customer": ("select",),
@@ -303,7 +458,7 @@ OH_LINK_PERMS = {
 	"Maintenance Vendor": ("select", "read"),
 	"Fiber Pulling Team": ("select", "read"),
 	"Network Link": ("select", "read"),
-	"Node": ("select", "read"),
+	"GIS Node": ("select", "read"),  # 2026-10-24: was Node, merged into GIS Node
 	"Site": ("select", "read"),
 }
 
@@ -312,7 +467,7 @@ OH_LINK_PERMS = {
 # Gives every OverHead role (OH_ROLES) the OH_LINK_PERMS rights, adding a permission rule where
 # the role has none yet. Doctypes this site does not have are skipped.
 def grant_oh_link_permissions():
-	from frappe.permissions import add_permission, update_permission_property
+	from frappe.permissions import setup_custom_perms, update_permission_property
 
 	for doctype, ptypes in OH_LINK_PERMS.items():
 		if not frappe.db.exists("DocType", doctype):
@@ -321,7 +476,13 @@ def grant_oh_link_permissions():
 			if not frappe.db.exists("Role", role):
 				continue
 			if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 0}):
-				add_permission(doctype, role, 0)
+				# 2026-10-24: inserted directly instead of frappe.permissions.add_permission, which
+				# re-validates the doctype's standard rows and fails for GIS Node (FTTH Tracker ships
+				# "import" ticked on a non-importable doctype). The new row only grants what
+				# OH_LINK_PERMS lists below.
+				setup_custom_perms(doctype)
+				frappe.get_doc({"doctype": "Custom DocPerm", "parent": doctype, "parenttype": "DocType",
+					"parentfield": "permissions", "role": role, "permlevel": 0}).insert(ignore_permissions=True)
 			for ptype in ptypes:
 				update_permission_property(doctype, role, 0, ptype, 1, validate=False)
 
@@ -397,14 +558,19 @@ def import_page():
 
 # The complaints sidebar from the Helpdesk NOC fixture; it gets the same one menu (2026-10-09).
 NOC_SIDEBAR = "Helpdesk NOC"
+# 2026-10-24: sidebars that carry the EVision menu besides EVision itself. Frappe may open the
+# FTTH Tracker sidebar for an FTTH screen, so it gets the same menu and nothing changes on screen.
+# 2026-10-29: sidebar -> the module tile whose menu it copies.
+MIRROR_SIDEBARS = {NOC_SIDEBAR: "NOC", "FTTH Tracker": "OverHead Project"}
 
 
 # Date: 2026-10-09
-# The one EVisions menu, as {section: [items]}. Every tile (Dashboard, OverHead Project,
-# Helpdesk NOC) shows this same menu, so moving between dashboards, projects and complaints
-# never switches menus.
-# All entries are DocType / Page links of our own module: Frappe shows each only to users who
-# can open it, and keeps the current menu when one is opened (it matches the link to the page).
+# The one EVision menu, as {section: [items]}. The EVision tile and the MIRROR_SIDEBARS show
+# this same menu, so moving between dashboards, work orders, projects and complaints never
+# switches menus.
+# Entries are DocType / Page / Report / Workspace links: Frappe shows each only to users who can
+# open it, and keeps the current menu when one is opened (it matches the link to the page).
+# Links to apps that are not installed (e.g. FTTH Tracker) are dropped by link_exists().
 def oh_menu():
 	def doctype(label, name):
 		return {"type": "Link", "label": label, "link_type": "DocType", "link_to": name}
@@ -412,36 +578,96 @@ def oh_menu():
 	def page(label, name):
 		return {"type": "Link", "label": label, "link_type": "Page", "link_to": name}
 
+	def report(label, name):
+		return {"type": "Link", "label": label, "link_type": "Report", "link_to": name}
+
+	def workspace(label, name):
+		return {"type": "Link", "label": label, "link_type": "Workspace", "link_to": name}
+
+	def url(label, path, needs_doctype):
+		# needs_doctype: the link is kept only when this DocType exists (see link_exists)
+		return {"type": "Link", "label": label, "link_type": "URL", "url": path, "needs_doctype": needs_doctype}
+
 	# 2026-10-09: only OverHead screens in the menu (client's request); the HR / workforce lists
 	# (tasks, attendance, leave, claims, trips, employees) were taken out. Staff still reach leave
 	# and petrol claims through their own "Leaves" and "Expenses" tiles.
-	# 2026-10-09: fixed order asked by the client: Dashboards, New Project, Complaints, Nodes,
-	# then the other masters.
+	# 2026-10-24: sections follow the work, from the overview down to setup:
+	#   Dashboards -> FTTH Work Orders (WO received -> import -> map -> GIS summary)
+	#   -> OH Projects (survey to billing) -> Complaints (maintenance after HOTO)
+	#   -> Network (GIS / nodes, links, sites, KMZ) -> Teams & Vendors -> Settings
+	# 2026-10-29: only the screens used every day (user's request). Taken off the menu but still
+	#   reachable from the search bar: Staff Monthly Performance, Work Order Map, FTTH GIS Summary,
+	#   Drum Balance, Fiber Stock Balance, Drums, Network Links, Node Sites, KMZ Routes / Points,
+	#   Network Topology, KMZ Site Check, KMZ Map Settings, IBD / Fiber Pulling / Fiber Teams,
+	#   FTTH Settings, Leaderboard Settings.
+	# 2026-10-29: one desk tile per module (user's request), each with its own sidebar sections:
+	#   {tile: {section: [items]}}. The tile order here is the order on the desk.
 	return {
-		"Dashboards": [page("Workforce Dashboards", "workforce-dashboard"), page("NOC Dashboard", "noc-dashboard")],
-		"OH Project": [doctype("New Project", "New Project")],
-		"Complaints": [doctype("Complaints", "Complaint Information")],
-		"Network": [
-			doctype("Nodes", "Node"),
-			doctype("Network Links (LINKID)", "Network Link"),
-			doctype("Sites", "Site"),
-		],
-		"Masters": [
-			doctype("Areas", "Area"),
-			doctype("EVisions Teams", "Maintenance Team"),
-			doctype("Vendors", "Maintenance Vendor"),
-			doctype("Fiber Pulling Teams", "Fiber Pulling Team"),
-		],
+		"OverHead Project": {
+			# 2026-10-31: "Projects" (New Project) section removed: New Project was merged into
+			#             FTTH Work Order, listed here as "Work Orders".
+			"FTTH": [
+				workspace("FTTH Dashboard", "FTTH Tracker"),  # FTTH number cards and charts
+				doctype("Work Orders", "FTTH Work Order"),
+				doctype("FTTH Imports", "FTTH Import"),
+			],
+			# 2026-10-26: cable drum register on ERPNext stock (emp_tracking/fiber_store.py)
+			"Fiber Store": [
+				url("Fiber Dashboard", "/app/dashboard-view/Fiber%20Store", "Stock Entry"),
+				url("Cable Inward / Outward", "/app/stock-entry?custom_fiber_direction=%5B%22is%22%2C%22set%22%5D", "Stock Entry"),
+			],
+			"Network": [
+				doctype("GIS Nodes", "GIS Node"),  # 2026-10-24: the one node master (Node merged in)
+				doctype("Link Register", "FTTH Link"),
+				doctype("Sites", "Site"),
+				page("KMZ Map", "kmz-map"),  # 2026-10-26: routes and pins on a map, with filters
+				doctype("Upload KMZ", "KMZ Upload"),  # 2026-10-26: whole KMZ, matched to nodes
+			],
+			"Teams & Vendors": [
+				doctype("Areas", "Area"),
+				doctype("EVisions Teams", "Maintenance Team"),
+				doctype("Vendors", "Maintenance Vendor"),
+				doctype("Field Staff", "Field Staff"),
+			],
+		},
+		"Emp Tracking": {
+			"Dashboards": [
+				page("Workforce Dashboards", "workforce-dashboard"),
+				# 2026-10-26: visual Employee Performance page replaces the Performance Leaderboard
+				#             report link (the report still works by URL and feeds the page's FTTH view)
+				page("Employee Performance", "employee-performance"),
+			],
+		},
+		"NOC": {
+			"Complaints": [
+				page("NOC Dashboard", "noc-dashboard"),
+				doctype("Complaints", "Complaint Information"),
+			],
+		},
+	}
+
+
+# Date: 2026-10-29
+# Desk tile settings per module: (icon, roles that see the tile).
+# 2026-11-17: + the EVision tile (every module), seen by TILE_ROLES like the old EVision tile.
+def module_tiles():
+	return {
+		"OverHead Project": ("project", OH_TILE_ROLES),
+		"Emp Tracking": ("dashboard", TILE_ROLES),
+		"NOC": ("support", NOC_TILE_ROLES),
+		EVISION_TILE: ("dashboard", TILE_ROLES),
 	}
 
 
 # Date: 2026-10-09
 # The menu as sidebar rows, in the order of oh_menu() (the same on every tile).
-def oh_menu_items():
-	menu = oh_menu()
+# 2026-10-29: takes one tile's {section: [items]} (oh_menu() now has one menu per module tile).
+def oh_menu_items(menu):
 	items = []
 	for name in menu:
-		links =[item for item in menu[name] if link_exists(item)]
+		links = [item for item in menu[name] if link_exists(item)]
+		for item in links:
+			item.pop("needs_doctype", None)  # helper key only, not a sidebar field
 		if links:
 			items.append({"type": "Section Break", "label": name})
 			items.extend(links)
@@ -449,37 +675,105 @@ def oh_menu_items():
 
 
 # Date: 2026-10-09
-# A DocType / Page link is kept only if that DocType / Page exists on this site.
+# A DocType / Page / Report / Workspace link is kept only if it exists on this site; a URL link
+# only if the DocType it opens exists (Report added 2026-10-24, Workspace and URL 2026-10-24).
 def link_exists(item):
-	if item["link_type"] in ("DocType", "Page"):
+	if item["link_type"] in ("DocType", "Page", "Report", "Workspace"):
 		return bool(frappe.db.exists(item["link_type"], item["link_to"]))
+	if item.get("needs_doctype"):
+		return bool(frappe.db.exists("DocType", item["needs_doctype"]))
 	return True
 
 
 # Date: 2026-10-09
-# Builds the desk tiles and gives all of them the same one menu, in the same order:
-#   "Dashboard", "OverHead Project", and "Helpdesk NOC" (tile and roles from its fixture)
-# and deletes the sidebars/tiles the menu had before ("Workforce", then "EVision").
+# Builds the one desk tile "EVision" and gives the MIRROR_SIDEBARS the same menu, in the same
+# order. Deletes the tiles/sidebars the menu had before (OLD_SIDEBARS) and hides the tiles that
+# EVision replaces (HIDDEN_ICONS).
+# 2026-10-24: was two tiles ("Dashboard" and "OverHead Project") plus Helpdesk NOC.
+# 2026-10-29: three module tiles (OverHead Project, Emp Tracking, NOC), each with its own menu;
+# each mirror sidebar copies the menu of its module.
+# 2026-11-17: plus the EVision tile, whose menu is all three module menus.
 def make_navigation():
+	tiles = module_tiles()
 	for old in OLD_SIDEBARS:
-		if old in (SIDEBAR, DASHBOARD_SIDEBAR):
+		if old in tiles:
 			continue
 		if frappe.db.exists("Desktop Icon", old):
 			frappe.delete_doc("Desktop Icon", old, force=True, ignore_permissions=True)
 		if frappe.db.exists("Workspace Sidebar", old):
 			frappe.delete_doc("Workspace Sidebar", old, force=True, ignore_permissions=True)
 
-	make_tile(DASHBOARD_SIDEBAR, oh_menu_items(), icon="dashboard", color="blue")
-	make_tile(SIDEBAR, oh_menu_items(), icon="users", color="blue")
-	if frappe.db.exists("Workspace Sidebar", NOC_SIDEBAR):
-		set_sidebar_items(frappe.get_doc("Workspace Sidebar", NOC_SIDEBAR), oh_menu_items())
+	menus = {}
+	for idx, (tile, menu) in enumerate(oh_menu().items()):
+		menus[tile] = oh_menu_items(menu)
+		icon, roles = tiles[tile]
+		make_tile(tile, menus[tile], icon=icon, color="blue", roles=roles, idx=idx)
+	# 2026-11-17: the EVision tile, after the module tiles; copies, since set_sidebar_items adds
+	# layout keys to each row.
+	icon, roles = tiles[EVISION_TILE]
+	evision_items = [dict(i) for module in EVISION_MODULES for i in menus.get(module, [])]
+	make_tile(EVISION_TILE, evision_items, icon=icon, color="blue", roles=roles, idx=len(menus))
+	for name, tile in MIRROR_SIDEBARS.items():
+		if frappe.db.exists("Workspace Sidebar", name):
+			# copies: set_sidebar_items adds layout keys to each row
+			set_sidebar_items(frappe.get_doc("Workspace Sidebar", name), [dict(i) for i in menus[tile]])
+	hide_replaced_icons()
+	keep_only_desk_icons()
+
+
+# Date: 2026-10-29
+# Hides every Desktop Icon except DESK_ICONS (and their own child icons), so the desk home shows
+# only the module tiles. Runs after every migrate, so icons another app adds later are hidden too.
+# Written straight to the database, like hide_replaced_icons(), so no app's icon JSON is rewritten.
+# The names hidden here are remembered under DESK_HIDDEN_KEY for show_hidden_desk_icons().
+def keep_only_desk_icons():
+	import json
+
+	keep = set(DESK_ICONS)
+	hidden_before = set(json.loads(frappe.db.get_default(DESK_HIDDEN_KEY) or "[]"))
+	icons = frappe.get_all("Desktop Icon", fields=["name", "parent_icon", "hidden"])
+	to_hide = [i.name for i in icons if i.name not in keep and i.parent_icon not in keep and not i.hidden]
+	for name in to_hide:
+		frappe.db.set_value("Desktop Icon", name, "hidden", 1, update_modified=False)
+	frappe.db.set_default(DESK_HIDDEN_KEY, json.dumps(sorted(hidden_before | set(to_hide))))
+	frappe.cache.delete_key("desktop_icons")
+	frappe.cache.delete_key("bootinfo")
+
+
+# Date: 2026-10-29
+# Undo for keep_only_desk_icons(): shows again every icon it hid. Remove the keep_only_desk_icons()
+# call in make_navigation() first, or the next migrate hides them again.
+#   bench --site newsite.local execute emp_tracking.emp_tracking.page.workforce_dashboard.setup.show_hidden_desk_icons
+def show_hidden_desk_icons():
+	import json
+
+	for name in json.loads(frappe.db.get_default(DESK_HIDDEN_KEY) or "[]"):
+		if frappe.db.exists("Desktop Icon", name):
+			frappe.db.set_value("Desktop Icon", name, "hidden", 0, update_modified=False)
+	frappe.db.set_default(DESK_HIDDEN_KEY, "[]")
+	frappe.cache.delete_key("desktop_icons")
+	frappe.cache.delete_key("bootinfo")
+
+
+# Date: 2026-10-24
+# Hides the desk tiles that EVision replaces. Written straight to the database (like
+# restrict_desktop_icons) so a standard icon's JSON in another app is never rewritten.
+def hide_replaced_icons():
+	for name in HIDDEN_ICONS:
+		if frappe.db.exists("Desktop Icon", name):
+			frappe.db.set_value("Desktop Icon", name, "hidden", 1, update_modified=False)
+	frappe.cache.delete_key("desktop_icons")
+	frappe.cache.delete_key("bootinfo")
 
 
 # Date: 2026-10-09
 # Replaces a sidebar's rows (adding the layout defaults every row needs) and saves it.
 def set_sidebar_items(sidebar, items):
 	for item in items:
-		item.update({"child": 0, "collapsible": 1, "indent": 0, "keep_closed": 0, "show_arrow": 0})
+		# 2026-10-29: links are children of the Section Break above them (child = 1); with child = 0
+		# Frappe drew every link at the top level, so the section headings never showed.
+		item.update({"child": 0 if item.get("type") == "Section Break" else 1, "collapsible": 1,
+			"indent": 0, "keep_closed": 0, "show_arrow": 0})
 	sidebar.set("items", items)
 	sidebar.save(ignore_permissions=True)
 
@@ -487,7 +781,8 @@ def set_sidebar_items(sidebar, items):
 # Date: 2026-10-09
 # Creates/updates one Workspace Sidebar with the given items and the desktop tile that opens it,
 # visible to TILE_ROLES.
-def make_tile(name, items, icon, color):
+# 2026-10-29: `roles` (default TILE_ROLES) and `idx` (place on the desk) per module tile.
+def make_tile(name, items, icon, color, roles=None, idx=None):
 	sidebar = frappe.get_doc("Workspace Sidebar", name) if frappe.db.exists("Workspace Sidebar", name) else frappe.new_doc("Workspace Sidebar")
 	sidebar.update({"title": name, "header_icon": icon, "module": "Emp Tracking", "app": "emp_tracking", "standard": 0})
 	set_sidebar_items(sidebar, items)
@@ -505,5 +800,7 @@ def make_tile(name, items, icon, color):
 		"hidden": 0,
 		"standard": 0,
 	})
-	tile.set("roles", [{"role": r} for r in TILE_ROLES if frappe.db.exists("Role", r)])
+	if idx is not None and tile.meta.has_field("idx"):
+		tile.idx = idx
+	tile.set("roles", [{"role": r} for r in (roles or TILE_ROLES) if frappe.db.exists("Role", r)])
 	tile.save(ignore_permissions=True)

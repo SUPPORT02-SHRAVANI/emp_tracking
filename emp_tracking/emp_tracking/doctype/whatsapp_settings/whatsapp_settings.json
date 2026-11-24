@@ -110,7 +110,7 @@
    "description": "Approved template with 4 body variables: {{1}} project, {{2}} site, {{3}} completed stage, {{4}} next stage.",
    "fieldname": "project_stage_template",
    "fieldtype": "Data",
-   "label": "New Project Stage Template"
+   "label": "Work Order Stage Template"
   },
   {
    "fieldname": "column_break_template",
@@ -155,7 +155,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-08 18:30:00.000000",
+ "modified": "2026-10-31 10:40:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "WhatsApp Settings",
