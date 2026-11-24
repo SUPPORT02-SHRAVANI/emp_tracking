@@ -6,7 +6,7 @@
 #
 # How it works
 #   FTTH Tracker (ftth_tracker app) works out each work order's Stage on save
-#   (ftth_tracker/logic.py compute_stage). This module adds what New Project already does:
+#   (ftth/logic.py compute_stage). This module adds what New Project already does:
 #     - on_update (doc_events in hooks.py): when the Stage changes, a bell notification and a
 #       WhatsApp message (WhatsApp Settings "project_stage_template") go to whoever acts next:
 #         Area Manager stages  -> the work order's Area Manager (Login), else role Area Manager
@@ -45,7 +45,7 @@ from frappe.desk.doctype.notification_log.notification_log import enqueue_create
 WORK_ORDER = "FTTH Work Order"
 NETWORK_LINK_FIELD = "custom_network_link"
 
-# Stage name -> who acts. Stage names come from ftth_tracker.logic (same wording as New Project).
+# Stage name -> who acts. Stage names come from emp_tracking.ftth.logic (same wording as New Project).
 AREA_MANAGER_STAGES = (
 	"Survey by Area Manager",
 	"Fiber Team Assignment by Area Manager",

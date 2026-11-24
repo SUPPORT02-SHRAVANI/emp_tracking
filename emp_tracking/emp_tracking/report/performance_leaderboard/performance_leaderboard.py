@@ -142,7 +142,7 @@ def get_members(source, rows):
 def ftth_job(p):
 	return {
 		"rfs_date": getdate(p.rfs_date),
-		# eff_final_distance already falls back to survey / planning distance (ftth_tracker.logic)
+		# eff_final_distance already falls back to survey / planning distance (emp_tracking.ftth.logic)
 		"fiber_m": flt(p.eff_final_distance),
 		"hp": cint(p.hp),
 		# days_to_rfs is worked out by the work order itself; empty when a date is missing

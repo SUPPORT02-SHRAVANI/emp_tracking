@@ -1,0 +1,1202 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:FTTH-{#####}",
+ "creation": "2026-10-24 12:00:00.000000",
+ "description": "One record per Airtel FTTH work order.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sb_paste",
+  "wo_message",
+  "extract_data",
+  "sb_wo",
+  "wo_number",
+  "unique_id",
+  "wo_received_date",
+  "communication_mode",
+  "ibd_team",
+  "hp",
+  "city",
+  "cb_wo",
+  "wo_id",
+  "status",
+  "stage",
+  "wo_date",
+  "segment",
+  "building_type",
+  "evisions_link_id",
+  "ftth_link",
+  "sb_gis",
+  "gis",
+  "area",
+  "team",
+  "cb_gis1",
+  "company_engineer",
+  "company_engineer_no",
+  "manager",
+  "cb_gis2",
+  "area_manager",
+  "area_manager_no",
+  "area_manager_user",
+  "sb_issue",
+  "site_status",
+  "issue_type",
+  "rework_required_date",
+  "cb_issue",
+  "issue_detail",
+  "next_action",
+  "tab_loc",
+  "sb_aend",
+  "end_location",
+  "end_lat_long",
+  "cb_aend",
+  "latitude",
+  "longitude",
+  "end_point",
+  "sb_bend",
+  "b_end",
+  "b_end_lat_long",
+  "cb_bend",
+  "b_end_latitude",
+  "b_end_longitude",
+  "b_end_point",
+  "sb_survey",
+  "planning_distance",
+  "survey_distance",
+  "cb_survey",
+  "b_end_issue",
+  "new_b_end",
+  "final_b_end",
+  "sb_map",
+  "route_map",
+  "tab_fiber",
+  "sb_fiber",
+  "fiber_team",
+  "fiber_type",
+  "fiber_id",
+  "cb_fiber",
+  "fiber_reading_a",
+  "fiber_reading_b",
+  "fiber_used",
+  "sb_splice",
+  "splicer",
+  "assistant_splicer",
+  "route_video_done",
+  "cb_splice",
+  "rider_1",
+  "splicer_2",
+  "rider_2",
+  "splicing_snaps_done",
+  "sb_snaps",
+  "fiber_id_snap",
+  "reading_a_snap",
+  "reading_b_snap",
+  "cb_snaps",
+  "splicing_snap_a",
+  "splicing_snap_b",
+  "route_video",
+  "tab_rfs",
+  "sb_dist",
+  "final_distance",
+  "distance_shared",
+  "cb_dist",
+  "eff_survey_distance",
+  "eff_final_distance",
+  "eff_shared_distance",
+  "sb_kmz",
+  "kmz_file",
+  "kmz_done",
+  "cb_kmz",
+  "kmz_route",
+  "kmz_route_length",
+  "sb_mail",
+  "mail_to_planning_date",
+  "approval_date",
+  "approval_snap",
+  "approval_kmz",
+  "cb_mail",
+  "approved_length",
+  "required_length",
+  "deviation_reason",
+  "cb_mail2",
+  "rsu",
+  "pincode",
+  "nearest_odf",
+  "feeder_type",
+  "sb_rfs",
+  "work_completed_date",
+  "ho_date",
+  "cb_rfs",
+  "rfs_date",
+  "rfs_month",
+  "rfs_year",
+  "days_to_rfs",
+  "sb_check",
+  "has_warnings",
+  "warnings",
+  "cb_check",
+  "remarks",
+  "sb_import",
+  "imported_from",
+  "ftth_import",
+  "tab_billing",
+  "sb_at_hoto",
+  "at_status",
+  "at_paper_status",
+  "is_billed",
+  "cb_hoto1",
+  "hoto_no",
+  "hoto_date",
+  "hoto_signature_status",
+  "cb_hoto2",
+  "billing_year",
+  "billing_section_name",
+  "sb_billing_po",
+  "billing_status",
+  "po_no",
+  "po_date",
+  "cb_billing_po",
+  "invoice_no",
+  "invoice_date",
+  "invoice_sent",
+  "cb_billing_ref",
+  "arn",
+  "airtel_approver",
+  "sb_billing_amount",
+  "base_amount",
+  "gst_amount",
+  "final_amount",
+  "cb_payment",
+  "payment_due_date",
+  "payment_status",
+  "cb_billing_remark",
+  "billing_remark"
+ ],
+ "fields": [
+  {
+   "description": "Paste the MWO text message here and click Extract & Fill",
+   "fieldname": "sb_paste",
+   "fieldtype": "Section Break",
+   "label": "Paste WO Message"
+  },
+  {
+   "fieldname": "wo_message",
+   "fieldtype": "Long Text",
+   "label": "WO Message"
+  },
+  {
+   "fieldname": "extract_data",
+   "fieldtype": "Button",
+   "label": "Extract & Fill"
+  },
+  {
+   "fieldname": "sb_wo",
+   "fieldtype": "Section Break",
+   "label": "Work Order"
+  },
+  {
+   "description": "Paste the full WO text. WO ID, WO date, segment and building type are read from it.",
+   "fieldname": "wo_number",
+   "fieldtype": "Data",
+   "label": "WO Number",
+   "length": 255
+  },
+  {
+   "description": "e.g. PUN15796",
+   "fieldname": "unique_id",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Airtel Unique ID",
+   "search_index": 1
+  },
+  {
+   "description": "Blank = the date inside the WO number (or today)",
+   "fieldname": "wo_received_date",
+   "fieldtype": "Date",
+   "label": "WO Received Date",
+   "reqd": 1
+  },
+  {
+   "default": "Telegram",
+   "fieldname": "communication_mode",
+   "fieldtype": "Select",
+   "label": "Received Via",
+   "options": "Telegram\nMail\nWhatsApp\nPhone\nOther"
+  },
+  {
+   "fieldname": "ibd_team",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "IBD Team / Vendor",
+   "options": "IBD Team"
+  },
+  {
+   "fieldname": "hp",
+   "fieldtype": "Int",
+   "label": "HP (Home Pass)",
+   "non_negative": 1
+  },
+  {
+   "default": "Pune",
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "cb_wo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "wo_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WO ID",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "default": "New",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "New\nSurvey\nOn Hold\nFiber Laid\nSplicing Done\nRFS Done\nCancelled",
+   "read_only": 1
+  },
+  {
+   "description": "Who has to act now. Worked out on every save, like New Project's stage.",
+   "fieldname": "stage",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Stage",
+   "options": "\nSurvey by Area Manager\nB End Approval by Project Head\nFiber Team Assignment by Area Manager\nFiber Work by Fiber Team\nSplicer Assignment by Area Manager\nSplicing by Splicing Team\nFinal Details by Project Head\nAT & HOTO by Project Head\nBilling by Accounts\nClosed\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "wo_date",
+   "fieldtype": "Date",
+   "label": "WO Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "segment",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Segment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "building_type",
+   "fieldtype": "Data",
+   "label": "Building Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "evisions_link_id",
+   "fieldtype": "Data",
+   "label": "Evisions Link ID",
+   "search_index": 1
+  },
+  {
+   "description": "Matched by Link ID, or by building name + GIS",
+   "fieldname": "ftth_link",
+   "fieldtype": "Link",
+   "label": "Link Register",
+   "options": "FTTH Link"
+  },
+  {
+   "fieldname": "sb_gis",
+   "fieldtype": "Section Break",
+   "label": "GIS / Node"
+  },
+  {
+   "description": "Area, engineer, manager, team and area manager fill in from GIS Node",
+   "fieldname": "gis",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "GIS",
+   "options": "GIS Node"
+  },
+  {
+   "fetch_from": "gis.area",
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Area",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "gis.team",
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "label": "Team",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_gis1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "gis.company_engineer",
+   "fieldname": "company_engineer",
+   "fieldtype": "Data",
+   "label": "Company Engineer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "gis.company_engineer_no",
+   "fieldname": "company_engineer_no",
+   "fieldtype": "Data",
+   "label": "Company Engineer No",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "gis.manager",
+   "fieldname": "manager",
+   "fieldtype": "Data",
+   "label": "Manager",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_gis2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "gis.area_manager",
+   "fieldname": "area_manager",
+   "fieldtype": "Data",
+   "label": "Area Manager",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "gis.area_manager_no",
+   "fieldname": "area_manager_no",
+   "fieldtype": "Data",
+   "label": "Area Manager No",
+   "read_only": 1
+  },
+  {
+   "description": "Gets the Area Manager stage notifications. Filled from the Area Manager name when a user has that full name.",
+   "fieldname": "area_manager_user",
+   "fieldtype": "Link",
+   "label": "Area Manager (Login)",
+   "options": "User"
+  },
+  {
+   "fieldname": "sb_issue",
+   "fieldtype": "Section Break",
+   "label": "Site status & issues"
+  },
+  {
+   "fieldname": "site_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Site Status",
+   "options": "\nClear Site\nIssue Site"
+  },
+  {
+   "description": "What is holding the site, if anything",
+   "fieldname": "issue_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Issue Type",
+   "options": "\nCompleted\nWIP\nYet to Start\nPermission Issue A End\nPermission Issue B End\nPermission Issue\nMail Approval Required\nOLT Pending\nSite Location Not Received\nDetails Not Received\nB End Not Evisions\nAccess Issue\nWrong WO\nLocal Issue\nCancelled\nOther"
+  },
+  {
+   "fieldname": "rework_required_date",
+   "fieldtype": "Date",
+   "label": "Re-work Required Date"
+  },
+  {
+   "fieldname": "cb_issue",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_detail",
+   "fieldtype": "Small Text",
+   "label": "Issue Detail"
+  },
+  {
+   "fieldname": "next_action",
+   "fieldtype": "Data",
+   "label": "Next Action / Suggestion",
+   "length": 255
+  },
+  {
+   "fieldname": "tab_loc",
+   "fieldtype": "Tab Break",
+   "label": "Location & Survey"
+  },
+  {
+   "fieldname": "sb_aend",
+   "fieldtype": "Section Break",
+   "label": "End location (A end)"
+  },
+  {
+   "description": "Building / society. Also used as Survey A End.",
+   "fieldname": "end_location",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "End Location Name",
+   "length": 255,
+   "reqd": 1
+  },
+  {
+   "description": "Paste as 18.5210, 73.9083 (comma or space)",
+   "fieldname": "end_lat_long",
+   "fieldtype": "Data",
+   "label": "End Lat, Long"
+  },
+  {
+   "fieldname": "cb_aend",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "End Latitude",
+   "precision": "7",
+   "read_only": 1
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "End Longitude",
+   "precision": "7",
+   "read_only": 1
+  },
+  {
+   "description": "Matched from the KMZ pins; fills the lat/long when it is blank",
+   "fieldname": "end_point",
+   "fieldtype": "Link",
+   "label": "End KMZ Pin",
+   "options": "KMZ Point"
+  },
+  {
+   "fieldname": "sb_bend",
+   "fieldtype": "Section Break",
+   "label": "B end (from Planning)"
+  },
+  {
+   "description": "Survey start location received from Planning",
+   "fieldname": "b_end",
+   "fieldtype": "Data",
+   "label": "B End Location",
+   "length": 255
+  },
+  {
+   "fieldname": "b_end_lat_long",
+   "fieldtype": "Data",
+   "label": "B End Lat, Long"
+  },
+  {
+   "fieldname": "cb_bend",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "b_end_latitude",
+   "fieldtype": "Float",
+   "label": "B End Latitude",
+   "precision": "7",
+   "read_only": 1
+  },
+  {
+   "fieldname": "b_end_longitude",
+   "fieldtype": "Float",
+   "label": "B End Longitude",
+   "precision": "7",
+   "read_only": 1
+  },
+  {
+   "fieldname": "b_end_point",
+   "fieldtype": "Link",
+   "label": "B End KMZ Pin",
+   "options": "KMZ Point"
+  },
+  {
+   "fieldname": "sb_survey",
+   "fieldtype": "Section Break",
+   "label": "Survey"
+  },
+  {
+   "fieldname": "planning_distance",
+   "fieldtype": "Float",
+   "label": "Planning Distance (m)",
+   "non_negative": 1,
+   "precision": "0"
+  },
+  {
+   "description": "Leave blank if same as Planning distance",
+   "fieldname": "survey_distance",
+   "fieldtype": "Float",
+   "label": "Survey Distance (m)",
+   "non_negative": 1,
+   "precision": "0"
+  },
+  {
+   "fieldname": "cb_survey",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "b_end_issue",
+   "fieldtype": "Check",
+   "label": "B End / Distance Issue"
+  },
+  {
+   "depends_on": "eval:doc.b_end_issue || doc.new_b_end",
+   "description": "Only if the B end changed during survey",
+   "fieldname": "new_b_end",
+   "fieldtype": "Data",
+   "label": "New B End Location",
+   "length": 255
+  },
+  {
+   "fieldname": "final_b_end",
+   "fieldtype": "Data",
+   "label": "Final B End",
+   "length": 255,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_map",
+   "fieldtype": "Section Break",
+   "label": "Map"
+  },
+  {
+   "description": "A end, B end and the matched KMZ route",
+   "fieldname": "route_map",
+   "fieldtype": "Geolocation",
+   "label": "Route Map",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tab_fiber",
+   "fieldtype": "Tab Break",
+   "label": "Fiber & Splicing"
+  },
+  {
+   "fieldname": "sb_fiber",
+   "fieldtype": "Section Break",
+   "label": "Fiber"
+  },
+  {
+   "fieldname": "fiber_team",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Fiber Team",
+   "options": "Fiber Team"
+  },
+  {
+   "fieldname": "fiber_type",
+   "fieldtype": "Select",
+   "label": "Fiber Type",
+   "options": "\n12F\n24F\n48F\n96F"
+  },
+  {
+   "fieldname": "fiber_id",
+   "fieldtype": "Data",
+   "label": "Fiber ID"
+  },
+  {
+   "fieldname": "cb_fiber",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiber_reading_a",
+   "fieldtype": "Float",
+   "label": "Fiber Reading A End",
+   "precision": "0"
+  },
+  {
+   "fieldname": "fiber_reading_b",
+   "fieldtype": "Float",
+   "label": "Fiber Reading B End",
+   "precision": "0"
+  },
+  {
+   "fieldname": "fiber_used",
+   "fieldtype": "Float",
+   "label": "Fiber Used (A−B)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_splice",
+   "fieldtype": "Section Break",
+   "label": "Splicing"
+  },
+  {
+   "fieldname": "splicer",
+   "fieldtype": "Link",
+   "label": "Splicer",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "assistant_splicer",
+   "fieldtype": "Link",
+   "label": "Assistant Splicer",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "route_video_done",
+   "fieldtype": "Check",
+   "label": "Route Video Taken"
+  },
+  {
+   "fieldname": "cb_splice",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rider_1",
+   "fieldtype": "Link",
+   "label": "Rider 1",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "splicer_2",
+   "fieldtype": "Link",
+   "label": "Splicer 2",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "rider_2",
+   "fieldtype": "Link",
+   "label": "Rider 2",
+   "options": "Field Staff"
+  },
+  {
+   "description": "Power / OTDR / pigtail / splicing-completed snaps at both ends. Ticks itself when both snaps are attached.",
+   "fieldname": "splicing_snaps_done",
+   "fieldtype": "Check",
+   "label": "Splicing Snaps A & B"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_snaps",
+   "fieldtype": "Section Break",
+   "label": "Proof photos"
+  },
+  {
+   "fieldname": "fiber_id_snap",
+   "fieldtype": "Attach Image",
+   "label": "Fiber ID Snap"
+  },
+  {
+   "fieldname": "reading_a_snap",
+   "fieldtype": "Attach Image",
+   "label": "Reading A End Snap"
+  },
+  {
+   "fieldname": "reading_b_snap",
+   "fieldtype": "Attach Image",
+   "label": "Reading B End Snap"
+  },
+  {
+   "fieldname": "cb_snaps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "splicing_snap_a",
+   "fieldtype": "Attach Image",
+   "label": "Splicing Snap A End"
+  },
+  {
+   "fieldname": "splicing_snap_b",
+   "fieldtype": "Attach Image",
+   "label": "Splicing Snap B End"
+  },
+  {
+   "fieldname": "route_video",
+   "fieldtype": "Attach",
+   "label": "Route Video"
+  },
+  {
+   "fieldname": "tab_rfs",
+   "fieldtype": "Tab Break",
+   "label": "Distance & RFS"
+  },
+  {
+   "fieldname": "sb_dist",
+   "fieldtype": "Section Break",
+   "label": "Distances"
+  },
+  {
+   "description": "Leave blank if same as Survey distance",
+   "fieldname": "final_distance",
+   "fieldtype": "Float",
+   "label": "Final Distance (m)",
+   "non_negative": 1,
+   "precision": "0"
+  },
+  {
+   "description": "Leave blank if same as Final distance",
+   "fieldname": "distance_shared",
+   "fieldtype": "Float",
+   "label": "Distance Shared to Airtel (m)",
+   "non_negative": 1,
+   "precision": "0"
+  },
+  {
+   "fieldname": "cb_dist",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "eff_survey_distance",
+   "fieldtype": "Float",
+   "label": "Survey Distance Used (m)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "eff_final_distance",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Final Distance Used (m)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "eff_shared_distance",
+   "fieldtype": "Float",
+   "label": "Shared Distance Used (m)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_kmz",
+   "fieldtype": "Section Break",
+   "label": "KMZ"
+  },
+  {
+   "fieldname": "kmz_file",
+   "fieldtype": "Attach",
+   "label": "KMZ File"
+  },
+  {
+   "fieldname": "kmz_done",
+   "fieldtype": "Check",
+   "label": "KMZ Done"
+  },
+  {
+   "fieldname": "cb_kmz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "kmz_route",
+   "fieldtype": "Link",
+   "label": "KMZ Route",
+   "options": "KMZ Route"
+  },
+  {
+   "fetch_from": "kmz_route.length_m",
+   "fieldname": "kmz_route_length",
+   "fieldtype": "Float",
+   "label": "KMZ Route Length (m)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_mail",
+   "fieldtype": "Section Break",
+   "label": "Mail approval (Planning)"
+  },
+  {
+   "fieldname": "mail_to_planning_date",
+   "fieldtype": "Date",
+   "label": "Mail to Planning Date"
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Date",
+   "label": "Site Approved Date"
+  },
+  {
+   "fieldname": "approval_snap",
+   "fieldtype": "Attach Image",
+   "label": "Approval Snap"
+  },
+  {
+   "fieldname": "approval_kmz",
+   "fieldtype": "Check",
+   "label": "KMZ Sent with Mail"
+  },
+  {
+   "fieldname": "cb_mail",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_length",
+   "fieldtype": "Float",
+   "label": "Approved Length (m)",
+   "precision": "0"
+  },
+  {
+   "fieldname": "required_length",
+   "fieldtype": "Float",
+   "label": "Required Length (m)",
+   "precision": "0"
+  },
+  {
+   "fieldname": "deviation_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason for Deviation"
+  },
+  {
+   "fieldname": "cb_mail2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rsu",
+   "fieldtype": "Data",
+   "label": "RSU"
+  },
+  {
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "Pincode"
+  },
+  {
+   "fieldname": "nearest_odf",
+   "fieldtype": "Data",
+   "label": "Nearest ODF / JC",
+   "length": 255
+  },
+  {
+   "fieldname": "feeder_type",
+   "fieldtype": "Select",
+   "label": "Feeder Type",
+   "options": "\nB2B\nMix\nPole\nUG\nOH"
+  },
+  {
+   "fieldname": "sb_rfs",
+   "fieldtype": "Section Break",
+   "label": "Completion & RFS"
+  },
+  {
+   "fieldname": "work_completed_date",
+   "fieldtype": "Date",
+   "label": "Work Completed Date"
+  },
+  {
+   "fieldname": "ho_date",
+   "fieldtype": "Date",
+   "label": "Handover (HO) Date"
+  },
+  {
+   "fieldname": "cb_rfs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Blank = Work Completed Date",
+   "fieldname": "rfs_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "RFS Date"
+  },
+  {
+   "fieldname": "rfs_month",
+   "fieldtype": "Data",
+   "label": "RFS Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rfs_year",
+   "fieldtype": "Int",
+   "label": "RFS Year",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_to_rfs",
+   "fieldtype": "Int",
+   "label": "Days WO → RFS",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_check",
+   "fieldtype": "Section Break",
+   "label": "Checks & remarks"
+  },
+  {
+   "fieldname": "has_warnings",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Has Warnings",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warnings",
+   "fieldtype": "Small Text",
+   "label": "Warnings",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_check",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_import",
+   "fieldtype": "Section Break",
+   "label": "Import info"
+  },
+  {
+   "fieldname": "imported_from",
+   "fieldtype": "Data",
+   "label": "Imported From",
+   "length": 255,
+   "read_only": 1
+  },
+  {
+   "fieldname": "ftth_import",
+   "fieldtype": "Link",
+   "label": "Import",
+   "options": "FTTH Import",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tab_billing",
+   "fieldtype": "Tab Break",
+   "label": "Billing"
+  },
+  {
+   "description": "Filled from the Link Register's HOTO rows (billing sheet) when empty.",
+   "fieldname": "sb_at_hoto",
+   "fieldtype": "Section Break",
+   "label": "AT & HOTO"
+  },
+  {
+   "fieldname": "at_status",
+   "fieldtype": "Select",
+   "label": "AT Status",
+   "options": "\nPending\nDone"
+  },
+  {
+   "fieldname": "at_paper_status",
+   "fieldtype": "Select",
+   "label": "AT Paper Status",
+   "options": "\nPending\nDone"
+  },
+  {
+   "fetch_from": "ftth_link.is_billed",
+   "fieldname": "is_billed",
+   "fieldtype": "Check",
+   "label": "Billed (Link Register)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_hoto1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hoto_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "HOTO No"
+  },
+  {
+   "fieldname": "hoto_date",
+   "fieldtype": "Date",
+   "label": "HOTO Date"
+  },
+  {
+   "fieldname": "hoto_signature_status",
+   "fieldtype": "Select",
+   "label": "HOTO Signature Status",
+   "options": "\nPending\nDone"
+  },
+  {
+   "fieldname": "cb_hoto2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Financial year from the billing sheet, e.g. 2024-25",
+   "fieldname": "billing_year",
+   "fieldtype": "Data",
+   "label": "Billing Year"
+  },
+  {
+   "description": "Building name as written in the billing sheet",
+   "fieldname": "billing_section_name",
+   "fieldtype": "Data",
+   "label": "Section Name"
+  },
+  {
+   "fieldname": "sb_billing_po",
+   "fieldtype": "Section Break",
+   "label": "Customer PO & Invoice"
+  },
+  {
+   "fieldname": "billing_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Billing Status",
+   "options": "\nPending\nDone"
+  },
+  {
+   "fieldname": "po_no",
+   "fieldtype": "Data",
+   "label": "PO No"
+  },
+  {
+   "fieldname": "po_date",
+   "fieldtype": "Date",
+   "label": "PO Date"
+  },
+  {
+   "fieldname": "cb_billing_po",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_no",
+   "fieldtype": "Data",
+   "label": "Invoice No"
+  },
+  {
+   "fieldname": "invoice_date",
+   "fieldtype": "Date",
+   "label": "Invoice Date"
+  },
+  {
+   "fieldname": "invoice_sent",
+   "fieldtype": "Select",
+   "label": "Invoice Sent",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "cb_billing_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "arn",
+   "fieldtype": "Data",
+   "label": "Airtel Reference No (ARN)"
+  },
+  {
+   "fieldname": "airtel_approver",
+   "fieldtype": "Data",
+   "label": "Airtel Approver Name"
+  },
+  {
+   "fieldname": "sb_billing_amount",
+   "fieldtype": "Section Break",
+   "label": "Amount & Payment"
+  },
+  {
+   "fieldname": "base_amount",
+   "fieldtype": "Currency",
+   "label": "Base Amount"
+  },
+  {
+   "fieldname": "gst_amount",
+   "fieldtype": "Currency",
+   "label": "GST Amount"
+  },
+  {
+   "description": "Base Amount + GST Amount",
+   "fieldname": "final_amount",
+   "fieldtype": "Currency",
+   "label": "Final Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_due_date",
+   "fieldtype": "Date",
+   "label": "Payment Due Date"
+  },
+  {
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Payment Status",
+   "options": "\nNot Received\nAwaiting Payment\nPartially Received\nFully Received\nOverdue\nCancelled/ Written Off"
+  },
+  {
+   "fieldname": "cb_billing_remark",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "billing_remark",
+   "fieldtype": "Small Text",
+   "label": "Final Remark (Billing Related)"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [
+  {
+   "group": "Network",
+   "link_doctype": "Node Site",
+   "link_fieldname": "work_order"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "FTTH Work Order",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "end_location,wo_id,unique_id,gis,area",
+ "show_title_field_in_link": 1,
+ "sort_field": "wo_received_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "end_location",
+ "track_changes": 1
+}

@@ -25,7 +25,7 @@
 	const esc = frappe.utils.escape_html;
 
 	// Date: 2026-11-02
-	// Stages in process order (ftth_tracker/logic.py STAGES): short label and the colour of who
+	// Stages in process order (ftth/logic.py STAGES): short label and the colour of who
 	// acts. Area Manager orange, Project Head blue, Fiber Team yellow, Splicing purple,
 	// Accounts cyan, Closed green, Cancelled red.
 	const STAGES = [

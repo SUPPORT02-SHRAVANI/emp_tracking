@@ -18,3 +18,8 @@ emp_tracking.patches.leaderboard_call_defaults
 emp_tracking.patches.kmz_map_settings_defaults
 emp_tracking.patches.import_03y_sites
 emp_tracking.patches.remove_new_project
+# 2026-11-24: FTTH module moved in from the ftth_tracker app. Sites that ran these under their old
+# ftth_tracker.patches.* names have them marked done (Patch Log) during the move.
+emp_tracking.ftth.patches.set_work_order_stage
+emp_tracking.ftth.patches.fill_billing_from_link_register
+emp_tracking.ftth.patches.ftth_settings_defaults

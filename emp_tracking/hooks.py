@@ -10,7 +10,9 @@ app_license = "mit"
 
 # 2026-10-24: Site and Complaint Information link to GIS Node, which comes from FTTH Tracker
 # (the Node master was merged into it), so FTTH Tracker must be installed first.
-required_apps = ["ftth_tracker"]
+# 2026-11-24: the FTTH Tracker code now lives in this app (module "FTTH", emp_tracking/ftth/),
+# so ftth_tracker is no longer a separate app and is not required.
+# required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -102,8 +104,9 @@ doctype_list_js = {"FTTH Work Order": "public/js/ftth_work_order_list.js"}
 # Installation
 # ------------
 
-# before_install = "emp_tracking.install.before_install"
-# after_install = "emp_tracking.install.after_install"
+# 2026-11-24: FTTH roles and FTTH Settings defaults (moved here from the ftth_tracker app)
+before_install = "emp_tracking.ftth.install.before_install"
+after_install = "emp_tracking.ftth.install.after_install"
 
 # Uninstallation
 # ------------
@@ -209,6 +212,8 @@ after_migrate = [
 	# 2026-11-24: HR setup shipped as JSON (Salary Components, Leave Types, Salary Structures,
 	# HR / Payroll Settings, RKBG IPTECH Letter Head); only created where missing
 	"emp_tracking.hr_setup.after_migrate",
+	# 2026-11-24: FTTH Manager / FTTH User roles (was ftth_tracker's after_migrate)
+	"emp_tracking.ftth.install.ensure_roles",
 ]
 
 # 2026-10-26: Fiber Store stock entries: check drum readings, fill the metres the dashboard sums

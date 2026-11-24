@@ -208,7 +208,7 @@ def add_route(route_name, coords, gis=None, site=None):
 	coords: [[lat, lon], ...] as clicked. Saved like an uploaded route (same dedupe key as KMZ
 	Upload, so uploading the same line later does not duplicate it), with source_file
 	DRAWN_SOURCE and Matched By "Drawn on Map". insert() checks the user may create KMZ Routes."""
-	from ftth_tracker.logic import feature_collection, line_feature, line_length_m, split_route_name
+	from emp_tracking.ftth.logic import feature_collection, line_feature, line_length_m, split_route_name
 
 	from emp_tracking.emp_tracking.doctype.kmz_upload.kmz_upload import row_key
 

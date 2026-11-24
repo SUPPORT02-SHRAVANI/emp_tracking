@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:SITE-{#####}",
+ "creation": "2026-10-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "site_name",
+  "gis",
+  "b_location",
+  "area",
+  "engineer",
+  "partner",
+  "priority",
+  "cb_1",
+  "fiber_length",
+  "fiber_type",
+  "route_start",
+  "route_end",
+  "has_work_order",
+  "work_order",
+  "sb_src",
+  "source_file",
+  "dedupe_key"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "site_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Site Name",
+   "length": 255,
+   "reqd": 1
+  },
+  {
+   "fieldname": "gis",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "GIS",
+   "options": "GIS Node"
+  },
+  {
+   "fieldname": "b_location",
+   "fieldtype": "Data",
+   "label": "B Location"
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Area"
+  },
+  {
+   "fieldname": "engineer",
+   "fieldtype": "Data",
+   "label": "Engineer"
+  },
+  {
+   "fieldname": "partner",
+   "fieldtype": "Data",
+   "label": "IP1 Partner"
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Data",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiber_length",
+   "fieldtype": "Float",
+   "label": "IP1 Fiber Length (m)",
+   "precision": "0"
+  },
+  {
+   "fieldname": "fiber_type",
+   "fieldtype": "Data",
+   "label": "IP1 Fiber Type"
+  },
+  {
+   "fieldname": "route_start",
+   "fieldtype": "Data",
+   "label": "Fiber Route Start Point",
+   "length": 255
+  },
+  {
+   "fieldname": "route_end",
+   "fieldtype": "Data",
+   "label": "Fiber Route End Point",
+   "length": 255
+  },
+  {
+   "fieldname": "has_work_order",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Has Work Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "options": "FTTH Work Order",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_src",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source_file",
+   "fieldtype": "Data",
+   "label": "Source File",
+   "length": 255,
+   "read_only": 1
+  },
+  {
+   "fieldname": "dedupe_key",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Dedupe Key",
+   "length": 255,
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "Node Site",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "site_name,gis",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "site_name",
+ "track_changes": 1
+}

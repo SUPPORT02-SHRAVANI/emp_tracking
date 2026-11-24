@@ -148,7 +148,7 @@ def read_placemarks(path):
 def row_key(pm):
 	"""(doctype, dedupe_key) of a placemark: the same keys as FTTH Tracker's reader, so both
 	importers share the rows. Also used by patches/backfill_kmz_path.py."""
-	from ftth_tracker.logic import line_length_m, norm
+	from emp_tracking.ftth.logic import line_length_m, norm
 
 	if pm["kind"] == "route":
 		return "KMZ Route", f"{norm(pm['name'])}|{round(round(line_length_m(pm['coords']), 1))}"[:255]
@@ -161,7 +161,7 @@ def row_key(pm):
 
 class KMZMatcher:
 	def __init__(self, doc):
-		from ftth_tracker.logic import norm
+		from emp_tracking.ftth.logic import norm
 
 		self.doc, self.norm = doc, norm
 		self.codes = {c.upper() for c in frappe.get_all("GIS Node", pluck="name")}
@@ -216,7 +216,7 @@ class KMZMatcher:
 	# Date: 2026-10-26
 	def match(self, pm):
 		"""Sets pm['gis'], pm['site'], pm['by']."""
-		from ftth_tracker.logic import split_route_name
+		from emp_tracking.ftth.logic import split_route_name
 
 		pm.update({"gis": None, "site": None, "by": None})
 		if pm["kind"] == "point":
@@ -247,7 +247,7 @@ class KMZMatcher:
 
 	# Date: 2026-10-26
 	def run(self):
-		from ftth_tracker.logic import feature_collection, line_feature, line_length_m, split_route_name
+		from emp_tracking.ftth.logic import feature_collection, line_feature, line_length_m, split_route_name
 
 		file_doc = frappe.get_doc("File", {"file_url": self.doc.kmz_file})
 		label = (file_doc.file_name or self.doc.kmz_file.rsplit("/", 1)[-1])[:255]

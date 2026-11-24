@@ -28,7 +28,7 @@
 // ---------------------------------------------------------------------------------------------
 
 // Date: 2026-11-02
-// The work order's steps, in the order ftth_tracker/logic.py compute_stage() moves through them,
+// The work order's steps, in the order ftth/logic.py compute_stage() moves through them,
 // with short labels for the tracker and the role that acts at each (as in ftth_stages.py).
 // "B End Approval" only applies when the Area Manager ticked B End / Distance Issue.
 const WO_STEPS = [

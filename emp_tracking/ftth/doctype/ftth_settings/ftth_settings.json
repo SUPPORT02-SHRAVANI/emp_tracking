@@ -1,0 +1,136 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "",
+ "creation": "2026-10-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sb_const",
+  "company",
+  "wo_received_mode",
+  "splicing_team_size",
+  "cb_1",
+  "customer_name",
+  "customer_contact_no",
+  "ibd_contact_no",
+  "sb_checks",
+  "survey_diff_pct",
+  "kmz_diff_pct",
+  "cb_2",
+  "auto_match_kmz"
+ ],
+ "fields": [
+  {
+   "fieldname": "sb_const",
+   "fieldtype": "Section Break",
+   "label": "Same for every work order"
+  },
+  {
+   "default": "Airtel",
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company"
+  },
+  {
+   "default": "Telegram",
+   "fieldname": "wo_received_mode",
+   "fieldtype": "Select",
+   "label": "WO Received Mode",
+   "options": "Telegram\nEmail\nWhatsApp\nPhone\nOther"
+  },
+  {
+   "default": "1",
+   "fieldname": "splicing_team_size",
+   "fieldtype": "Int",
+   "label": "Splicing Team Size"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  },
+  {
+   "fieldname": "customer_contact_no",
+   "fieldtype": "Data",
+   "label": "Customer Contact No"
+  },
+  {
+   "fieldname": "ibd_contact_no",
+   "fieldtype": "Data",
+   "label": "IBD Team Contact No"
+  },
+  {
+   "fieldname": "sb_checks",
+   "fieldtype": "Section Break",
+   "label": "Automatic checks"
+  },
+  {
+   "default": "50",
+   "fieldname": "survey_diff_pct",
+   "fieldtype": "Percent",
+   "label": "Warn if Survey vs Planning distance differs by more than"
+  },
+  {
+   "default": "30",
+   "fieldname": "kmz_diff_pct",
+   "fieldtype": "Percent",
+   "label": "Warn if KMZ route length differs from Final distance by more than"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_match_kmz",
+   "fieldtype": "Check",
+   "label": "Auto-link KMZ route by End Location name"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "FTTH Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

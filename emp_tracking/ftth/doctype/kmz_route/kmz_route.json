@@ -1,0 +1,166 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2026-10-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "route_name",
+  "a_end",
+  "b_end",
+  "cb_1",
+  "length_m",
+  "gis",
+  "node_folder",
+  "sb_map",
+  "location",
+  "sb_src",
+  "source_file",
+  "dedupe_key"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "route_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Route Name",
+   "length": 255,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "a_end",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "A End",
+   "length": 255
+  },
+  {
+   "fieldname": "b_end",
+   "fieldtype": "Data",
+   "label": "B End",
+   "length": 255
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Measured from the route line in the KMZ",
+   "fieldname": "length_m",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Length (m)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gis",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "GIS",
+   "options": "GIS Node"
+  },
+  {
+   "fieldname": "node_folder",
+   "fieldtype": "Data",
+   "label": "KMZ Folder",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_map",
+   "fieldtype": "Section Break",
+   "label": "Map"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Geolocation",
+   "label": "Route"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_src",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source_file",
+   "fieldtype": "Data",
+   "label": "Source File",
+   "length": 255,
+   "read_only": 1
+  },
+  {
+   "fieldname": "dedupe_key",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Dedupe Key",
+   "length": 255,
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Work Order",
+   "link_fieldname": "kmz_route"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "KMZ Route",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "route_name,a_end,b_end",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "route_name",
+ "track_changes": 1
+}

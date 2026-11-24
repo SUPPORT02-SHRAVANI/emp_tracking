@@ -1,0 +1,210 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:link_id",
+ "creation": "2026-10-24 12:00:00.000000",
+ "description": "Every link built since 2011 (FTTH, ILL, backbone …) with its HOTO / billing history.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "link_id",
+  "company",
+  "link_type",
+  "link_date",
+  "installation_date",
+  "cb_1",
+  "a_end",
+  "b_end",
+  "area",
+  "distance",
+  "cb_2",
+  "vendor",
+  "supervisor",
+  "gis",
+  "is_billed",
+  "sb_hoto",
+  "hotos",
+  "sb_src",
+  "source_file"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "link_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Link ID",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company"
+  },
+  {
+   "fieldname": "link_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Link Type"
+  },
+  {
+   "fieldname": "link_date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "installation_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Installation Date"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "a_end",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "A End",
+   "length": 255
+  },
+  {
+   "fieldname": "b_end",
+   "fieldtype": "Data",
+   "label": "B End",
+   "length": 255
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Area"
+  },
+  {
+   "fieldname": "distance",
+   "fieldtype": "Float",
+   "label": "Distance (m)",
+   "precision": "0"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vendor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Vendor",
+   "options": "IBD Team"
+  },
+  {
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Supervisor",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "gis",
+   "fieldtype": "Link",
+   "label": "GIS",
+   "options": "GIS Node"
+  },
+  {
+   "fieldname": "is_billed",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "HOTO Done",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_hoto",
+   "fieldtype": "Section Break",
+   "label": "HOTO / billing"
+  },
+  {
+   "fieldname": "hotos",
+   "fieldtype": "Table",
+   "label": "HOTO",
+   "options": "FTTH Link HOTO"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_src",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source_file",
+   "fieldtype": "Data",
+   "label": "Source File",
+   "length": 255,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Work Order",
+   "link_fieldname": "ftth_link"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "FTTH Link",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "a_end,b_end,area,company",
+ "sort_field": "link_id",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "a_end",
+ "track_changes": 1
+}

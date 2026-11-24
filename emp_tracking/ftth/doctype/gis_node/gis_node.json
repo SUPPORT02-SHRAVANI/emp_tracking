@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:gis_code",
+ "creation": "2026-10-24 12:00:00.000000",
+ "description": "One record per GIS / node. Work orders copy area, engineer, manager, team and area manager from here.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "gis_code",
+  "area",
+  "is_active",
+  "cb_1",
+  "manager",
+  "team",
+  "sb_people",
+  "company_engineer",
+  "company_engineer_no",
+  "cb_2",
+  "area_manager",
+  "area_manager_no"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "description": "e.g. G0B, H6Q, S7C",
+   "fieldname": "gis_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "GIS Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Area",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manager",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Manager",
+   "options": "Field Staff"
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Team"
+  },
+  {
+   "fieldname": "sb_people",
+   "fieldtype": "Section Break",
+   "label": "Contacts"
+  },
+  {
+   "fieldname": "company_engineer",
+   "fieldtype": "Link",
+   "label": "Airtel Engineer",
+   "options": "Field Staff"
+  },
+  {
+   "fetch_from": "company_engineer.contact_no",
+   "fetch_if_empty": 1,
+   "fieldname": "company_engineer_no",
+   "fieldtype": "Data",
+   "label": "Airtel Engineer No"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "area_manager",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Area Manager",
+   "options": "Field Staff"
+  },
+  {
+   "fetch_from": "area_manager.contact_no",
+   "fetch_if_empty": 1,
+   "fieldname": "area_manager_no",
+   "fieldtype": "Data",
+   "label": "Area Manager No"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Work Order",
+   "link_fieldname": "gis"
+  },
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Link",
+   "link_fieldname": "gis"
+  },
+  {
+   "group": "Network",
+   "link_doctype": "Node Site",
+   "link_fieldname": "gis"
+  },
+  {
+   "group": "Network",
+   "link_doctype": "KMZ Route",
+   "link_fieldname": "gis"
+  },
+  {
+   "group": "Network",
+   "link_doctype": "KMZ Point",
+   "link_fieldname": "gis"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "GIS Node",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "area,team,area_manager",
+ "sort_field": "gis_code",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "area",
+ "track_changes": 1
+}

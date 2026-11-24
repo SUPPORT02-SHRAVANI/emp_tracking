@@ -2,6 +2,49 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-24: FTTH Tracker code moved into emp_tracking (module "FTTH")
+
+- **Summary:**
+  - The whole ftth_tracker app is now part of emp_tracking as module **FTTH** (`emp_tracking/ftth/`): 13 doctypes, the FTTH GIS Summary report, the FTTH Tracker workspace, number cards, dashboard charts, the importer, `logic.py`, `linking.py`, `install.py`, patches and tests.
+    - DocType names did not change (FTTH Work Order, GIS Node, KMZ Route …), so all data and links stay as they are.
+    - All `ftth_tracker.*` import and method paths were rewritten to `emp_tracking.ftth.*`. That includes the uses in `kmz_upload.py`, `kmz_map.py`, `ftth_stages.py` and the FTTH Work Order JS.
+    - The `modified` time of every moved JSON was bumped, so migrate re-syncs it under the new module.
+  - `hooks.py`:
+    - `required_apps = ["ftth_tracker"]` removed.
+    - New `before_install` / `after_install` (FTTH roles and FTTH Settings defaults).
+    - FTTH roles added to `after_migrate`.
+  - New patch `emp_tracking.ftth.patches.ftth_settings_defaults` fills FTTH Settings on sites that already had emp_tracking, such as Frappe Cloud.
+  - CI now builds a version-16 bench and installs ERPNext and HRMS before emp_tracking.
+  - **newsite.local:**
+    - Backup taken first: `20261124_143510-newsite_local-database.sql.gz`.
+    - The old patch names were marked done in Patch Log under their new names.
+    - ftth_tracker was removed from the site's installed apps (`remove-from-installed-apps`, no data deleted), then migrate was run.
+    - The leftover Module Defs "FTTH Tracker" / "FTTH Tracker (Custom)" were deleted. The FTTH Tracker Workspace Sidebar and Desktop Icon were pointed at the new module and app.
+- **Reason:** ftth_tracker was never on GitHub (it existed only on the bench server), so CI and Frappe Cloud could not install emp_tracking, which required it. User asked to bring its code into emp_tracking.
+- **Files or modules affected:**
+  - `emp_tracking/ftth/` (new).
+  - `emp_tracking/modules.txt`, `emp_tracking/hooks.py`, `emp_tracking/patches.txt`.
+  - `emp_tracking/emp_tracking/doctype/kmz_upload/kmz_upload.py`, `emp_tracking/emp_tracking/page/kmz_map/kmz_map.py`.
+  - `emp_tracking/ftth_stages.py`, `emp_tracking/public/js/ftth_work_order.js`, `emp_tracking/public/js/ftth_work_order_list.js`.
+  - `emp_tracking/emp_tracking/report/performance_leaderboard/performance_leaderboard.py` (comment).
+  - `.github/workflows/ci.yml`.
+- **Testing:**
+  - On the server:
+    - `compileall` passed, and the importer, work order controller and new patch import.
+    - The 12 FTTH unit tests (`test_logic`, `test_linking`) passed.
+  - On newsite.local:
+    - Migrate ran twice without errors.
+    - Row counts of all 12 FTTH tables are the same before and after the move (e.g. 3012 work orders, 486 GIS Nodes, 27898 KMZ Points).
+    - Every FTTH DocType, Report, Workspace, Number Card and Dashboard Chart is now module FTTH.
+    - FTTH Work Order loads its controller from `emp_tracking.ftth`, and FTTH-33926 validates.
+- **Not tested:**
+  - CI (runs on GitHub after the push).
+  - A fresh install, and Frappe Cloud.
+  - Not opened in a browser.
+- **Pending items:**
+  - **OH.local** still has the separate ftth_tracker app (it has no emp_tracking), so `apps/ftth_tracker` stays on the bench for it. That copy no longer gets changes made in emp_tracking.
+  - ftth_tracker's 11 uncommitted local changes were moved in as they were; its own repo was left untouched.
+
 ## 2026-11-24: HR / Payroll setup shipped with the app (no employee or payroll data)
 
 - **Summary:**

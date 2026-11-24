@@ -1,0 +1,128 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:staff_name",
+ "creation": "2026-10-24 12:00:00.000000",
+ "description": "Everyone in the field: splicers, riders, supervisors, area managers, managers and Airtel engineers.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "staff_name",
+  "staff_type",
+  "contact_no",
+  "cb_1",
+  "team",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "staff_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Splicer",
+   "fieldname": "staff_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Role",
+   "options": "Splicer\nAssistant Splicer\nRider\nSupervisor\nArea Manager\nManager\nAirtel Engineer\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "contact_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Contact No"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Team"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "istable": 0,
+ "links": [
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Work Order",
+   "link_fieldname": "splicer"
+  },
+  {
+   "group": "Areas",
+   "link_doctype": "GIS Node",
+   "link_fieldname": "area_manager"
+  },
+  {
+   "group": "Work",
+   "link_doctype": "FTTH Link",
+   "link_fieldname": "supervisor"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "Field Staff",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "FTTH User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "staff_name",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

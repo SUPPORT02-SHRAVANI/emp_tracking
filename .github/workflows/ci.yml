@@ -83,14 +83,22 @@ jobs:
       - name: Setup
         run: |
           pip install frappe-bench
-          bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+          # 2026-11-24: version-16, the Frappe version the app runs on (was the develop branch)
+          bench init --skip-redis-config-generation --skip-assets --frappe-branch version-16 --python "$(which python)" ~/frappe-bench
 
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
+          # 2026-11-24: emp_tracking uses ERPNext and HRMS doctypes (Employee custom fields, Salary
+          # Slip print formats, Stock Entry hook), so they are installed first. FTTH Tracker is now
+          # part of this app (module "FTTH") and no longer a separate app.
+          bench get-app --branch version-16 erpnext
+          bench get-app --branch version-16 hrms
           bench get-app emp_tracking $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
+          bench --site test_site install-app erpnext
+          bench --site test_site install-app hrms
           bench --site test_site install-app emp_tracking
           bench build
         env:

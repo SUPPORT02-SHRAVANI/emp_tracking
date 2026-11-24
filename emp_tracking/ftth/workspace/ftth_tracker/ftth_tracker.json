@@ -1,0 +1,271 @@
+{
+ "charts": [
+  {
+   "chart_name": "Work Orders by GIS",
+   "label": "Work Orders by GIS"
+  },
+  {
+   "chart_name": "Fiber Laid by GIS",
+   "label": "Fiber Laid by GIS"
+  },
+  {
+   "chart_name": "Work Orders by Status",
+   "label": "Work Orders by Status"
+  },
+  {
+   "chart_name": "On Hold by Issue Type",
+   "label": "On Hold by Issue Type"
+  },
+  {
+   "chart_name": "RFS per Month",
+   "label": "RFS per Month"
+  }
+ ],
+ "content": "[{\"id\": \"ftth001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>FTTH Work Orders</b></span>\", \"col\": 12}}, {\"id\": \"ftth002\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Work Orders\", \"col\": 4}}, {\"id\": \"ftth003\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"RFS Done\", \"col\": 4}}, {\"id\": \"ftth004\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Work Orders\", \"col\": 4}}, {\"id\": \"ftth005\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"On Hold Work Orders\", \"col\": 4}}, {\"id\": \"ftth006\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Home Pass\", \"col\": 4}}, {\"id\": \"ftth007\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Fiber Laid in Metres\", \"col\": 4}}, {\"id\": \"ftth008\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Work Orders With Warnings\", \"col\": 4}}, {\"id\": \"ftth009\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ftth010\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"New Work Order\", \"col\": 3}}, {\"id\": \"ftth011\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Work Orders\", \"col\": 3}}, {\"id\": \"ftth012\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Map\", \"col\": 3}}, {\"id\": \"ftth013\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Import Export\", \"col\": 3}}, {\"id\": \"ftth014\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"GIS Summary\", \"col\": 3}}, {\"id\": \"ftth015\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ftth016\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Work Orders by GIS\", \"col\": 6}}, {\"id\": \"ftth017\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Fiber Laid by GIS\", \"col\": 6}}, {\"id\": \"ftth018\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Work Orders by Status\", \"col\": 6}}, {\"id\": \"ftth019\", \"type\": \"chart\", \"data\": {\"chart_name\": \"On Hold by Issue Type\", \"col\": 6}}, {\"id\": \"ftth020\", \"type\": \"chart\", \"data\": {\"chart_name\": \"RFS per Month\", \"col\": 6}}, {\"id\": \"ftth021\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ftth022\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Masters &amp; data</b></span>\", \"col\": 12}}, {\"id\": \"ftth023\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"ftth024\", \"type\": \"card\", \"data\": {\"card_name\": \"Network data\", \"col\": 4}}, {\"id\": \"ftth025\", \"type\": \"card\", \"data\": {\"card_name\": \"Tools\", \"col\": 4}}]",
+ "creation": "2026-10-24 12:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "map",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "FTTH Tracker",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Masters",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "GIS Node",
+   "link_count": 0,
+   "link_to": "GIS Node",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "IBD Team",
+   "link_count": 0,
+   "link_to": "IBD Team",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fiber Team",
+   "link_count": 0,
+   "link_to": "Fiber Team",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Field Staff",
+   "link_count": 0,
+   "link_to": "Field Staff",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "FTTH Settings",
+   "link_count": 0,
+   "link_to": "FTTH Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Network data",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "FTTH Link",
+   "link_count": 0,
+   "link_to": "FTTH Link",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "KMZ Route",
+   "link_count": 0,
+   "link_to": "KMZ Route",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "KMZ Point",
+   "link_count": 0,
+   "link_to": "KMZ Point",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Node Site",
+   "link_count": 0,
+   "link_to": "Node Site",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tools",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "FTTH Import",
+   "link_count": 0,
+   "link_to": "FTTH Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "FTTH GIS Summary",
+   "link_count": 0,
+   "link_to": "FTTH GIS Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-24 14:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "FTTH Tracker",
+ "number_cards": [
+  {
+   "label": "Total Work Orders",
+   "number_card_name": "Total Work Orders"
+  },
+  {
+   "label": "RFS Done",
+   "number_card_name": "RFS Done"
+  },
+  {
+   "label": "Pending Work Orders",
+   "number_card_name": "Pending Work Orders"
+  },
+  {
+   "label": "On Hold Work Orders",
+   "number_card_name": "On Hold Work Orders"
+  },
+  {
+   "label": "Total Home Pass",
+   "number_card_name": "Total Home Pass"
+  },
+  {
+   "label": "Fiber Laid in Metres",
+   "number_card_name": "Fiber Laid in Metres"
+  },
+  {
+   "label": "Work Orders With Warnings",
+   "number_card_name": "Work Orders With Warnings"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "New",
+   "label": "New Work Order",
+   "link_to": "FTTH Work Order",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "format": "{} on hold",
+   "label": "Work Orders",
+   "link_to": "FTTH Work Order",
+   "stats_filter": "[[\"FTTH Work Order\", \"status\", \"=\", \"On Hold\", false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Map",
+   "type": "URL",
+   "url": "/app/ftth-work-order/view/map"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "New",
+   "label": "Import Export",
+   "link_to": "FTTH Import",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "GIS Summary",
+   "link_to": "FTTH GIS Summary",
+   "type": "Report"
+  }
+ ],
+ "title": "FTTH Tracker"
+}
