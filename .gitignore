@@ -53,3 +53,8 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# 2026-11-24: local AI-assistant files (Claude Code settings, installed skills), not app code
+.agents/
+.claude/
+skills-lock.json
