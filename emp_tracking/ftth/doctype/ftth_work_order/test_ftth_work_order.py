@@ -4,6 +4,12 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+# 2026-11-24: setUp() makes the GIS Node and IBD Team these tests need, so Frappe must not build
+# sample records for the linked doctypes. Its generator follows links deep into ERPNext and stops
+# at Payment Gateway (payments app, not installed), which failed the whole CI test run.
+IGNORE_TEST_RECORD_DEPENDENCIES = ["FTTH Import", "FTTH Link", "Fiber Team", "Field Staff", "GIS Node",
+	"IBD Team", "KMZ Point", "KMZ Route", "Network Link", "User"]
+
 WO = "BAL-ANG-UASL-ROM-Maharashtra/PUNE/Capex/FTTH/B2C/New Rollout/Midrise/IBW/20022025/{}"
 
 

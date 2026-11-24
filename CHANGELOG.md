@@ -2,6 +2,19 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-24: CI test run fixed (empty test stubs removed)
+
+- **Summary:**
+  - Removed the 24 auto-generated doctype test files that had no test methods (15 in Emp Tracking, 9 in FTTH).
+  - `test_ftth_work_order.py` (4 real tests) now declares `IGNORE_TEST_RECORD_DEPENDENCIES` for its 10 linked doctypes.
+- **Reason:** CI failed in "Run Tests" with `DocType Payment Gateway not found` before any test ran. For every doctype that has a test file, Frappe builds sample records by following Link fields. The chain went into ERPNext and ended at Payment Gateway (payments app, not installed in CI or on the bench). The stubs tested nothing, and the work order test makes its own GIS Node and IBD Team in `setUp`.
+- **Files or modules affected:** 24 deleted `test_*.py` files under `emp_tracking/emp_tracking/doctype/` and `emp_tracking/ftth/doctype/`, and `emp_tracking/ftth/doctype/ftth_work_order/test_ftth_work_order.py`.
+- **Testing:**
+  - On the server, `py_compile` passed.
+  - The 19 pure-Python tests (`test_performance`, `test_logic`, `test_linking`) passed.
+- **Not tested:** The integration tests (including `test_ftth_work_order`) were not run locally. They insert records, so they were not run on newsite.local, and there is no throwaway test site. CI runs them.
+- **Pending items:** None known. If CI still fails, the next step depends on its log.
+
 ## 2026-11-24: FTTH Tracker code moved into emp_tracking (module "FTTH")
 
 - **Summary:**
