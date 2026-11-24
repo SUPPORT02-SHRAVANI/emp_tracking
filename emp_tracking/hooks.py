@@ -206,6 +206,9 @@ after_migrate = [
 	"emp_tracking.payroll_advance.after_migrate",
 	# 2026-11-24: Company "Name on Payslip" + "Company Stamp" fields (RKBG Payslip Classic print format)
 	"emp_tracking.payslip_print.after_migrate",
+	# 2026-11-24: HR setup shipped as JSON (Salary Components, Leave Types, Salary Structures,
+	# HR / Payroll Settings, RKBG IPTECH Letter Head); only created where missing
+	"emp_tracking.hr_setup.after_migrate",
 ]
 
 # 2026-10-26: Fiber Store stock entries: check drum readings, fill the metres the dashboard sums
@@ -334,6 +337,12 @@ override_doctype_dashboards = {
 # HD Ticket "Complaint Information" custom fields and the Default ticket template rows
 # that expose them in the Helpdesk UI. Exported to emp_tracking/fixtures/ so they are
 # stored in git and re-created on any install/migrate.
+# 2026-11-24: doctypes whose Customize Form changes (Property Setters, module "Emp Tracking") ship as fixtures
+HR_FORM_DOCTYPES = [
+    "Employee", "Attendance", "Expense Claim", "Expense Claim Detail", "Expense Taxes and Charges", "Gratuity",
+    "Leave Allocation", "Leave Application", "Leave Encashment", "Payroll Entry", "Salary Slip",
+]
+
 fixtures = [
     {"dt": "Role", "filters": [["name", "in", ["NOC Head", "Area Manager", "Maintenance Agent", "Project Head", "Fiber Team",
         "Splicing Team"]]]},
@@ -352,5 +361,8 @@ fixtures = [
     # Customize Form (Custom Fields + Property Setters, module "Emp Tracking"). After changing the
     # Employee form in Customize Form, set Module = Emp Tracking on new rows and re-export fixtures.
     {"dt": "Custom Field", "filters": [["dt", "=", "Employee"], ["module", "=", "Emp Tracking"]]},
-    {"dt": "Property Setter", "filters": [["doc_type", "=", "Employee"], ["module", "=", "Emp Tracking"]]},
+    # 2026-11-24: + the HR / Payroll form and list settings made in Customize Form (naming series,
+    # Salary Slip / Payroll Entry list columns, track changes, hidden accounting dimensions). Their
+    # Property Setters carry module "Emp Tracking" too. Masters and settings: see hr_setup.py.
+    {"dt": "Property Setter", "filters": [["doc_type", "in", HR_FORM_DOCTYPES], ["module", "=", "Emp Tracking"]]},
 ]

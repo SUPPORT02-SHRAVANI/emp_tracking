@@ -1,0 +1,20 @@
+[
+ {
+  "align": "Left",
+  "content": "<table style=\"width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif; color: #000;\">\n<tr>\n\t<td style=\"width: 34%; text-align: center; vertical-align: middle; padding: 10px;\"><img src=\"/assets/emp_tracking/images/rkbg_group_logo.png\" style=\"max-height: 70px; max-width: 160px;\"></td>\n\t<td style=\"vertical-align: middle; padding: 10px;\">\n\t\t<div style=\"font-size: 16px; font-weight: bold;\">RKBG IPTECH PVT. LTD.</div>\n\t\t<div style=\"font-size: 13px; line-height: 1.35;\">Swasti Apartment, 2nd Floor, Opp SNDT</div>\n\t\t<div style=\"font-size: 13px; line-height: 1.35;\">Karve Road, Erandwane, Pune;411004</div>\n\t</td>\n</tr>\n</table>",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Letter Head",
+  "footer_align": "Left",
+  "footer_image_height": 0.0,
+  "footer_image_width": 0.0,
+  "footer_source": "HTML",
+  "idx": 0,
+  "image_height": 0.0,
+  "image_width": 0.0,
+  "is_default": 0,
+  "letter_head_name": "RKBG IPTECH",
+  "name": "RKBG IPTECH",
+  "source": "Image"
+ }
+]

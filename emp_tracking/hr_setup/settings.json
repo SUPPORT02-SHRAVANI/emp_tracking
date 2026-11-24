@@ -1,0 +1,42 @@
+{
+ "HR Settings": {
+  "allow_employee_checkin_from_mobile_app": 1,
+  "allow_geolocation_tracking": 1,
+  "allow_multiple_shift_assignments": 0,
+  "auto_leave_encashment": 0,
+  "check_vacancies": 0,
+  "emp_created_by": "Naming Series",
+  "enable_multi_currency_expense_claim": 0,
+  "expense_approver_mandatory_in_expense_claim": 1,
+  "frequency": "Weekly",
+  "leave_approver_mandatory_in_leave_application": 1,
+  "prevent_self_expense_approval": 0,
+  "prevent_self_leave_approval": 0,
+  "remind_before": "00:15:00",
+  "restrict_backdated_leave_application": 0,
+  "send_birthday_reminders": 0,
+  "send_holiday_reminders": 1,
+  "send_interview_feedback_reminder": 0,
+  "send_interview_reminder": 0,
+  "send_leave_notification": 0,
+  "send_work_anniversary_reminders": 1,
+  "show_leaves_of_all_department_members_in_calendar": 0,
+  "standard_working_hours": 0.0,
+  "unlink_payment_on_cancellation_of_employee_advance": 0
+ },
+ "Payroll Settings": {
+  "consider_marked_attendance_on_holidays": 0,
+  "consider_unmarked_attendance_as": "Present",
+  "create_overtime_slip": 0,
+  "daily_wages_fraction_for_half_day": 0.5,
+  "disable_rounded_total": 0,
+  "email_salary_slip_to_employee": 1,
+  "encrypt_salary_slips_in_emails": 0,
+  "include_holidays_in_total_working_days": 1,
+  "mandatory_benefit_application": 0,
+  "max_working_hours_against_timesheet": 0.0,
+  "payroll_based_on": "Attendance",
+  "process_payroll_accounting_entry_based_on_employee": 0,
+  "show_leave_balances_in_salary_slip": 0
+ }
+}

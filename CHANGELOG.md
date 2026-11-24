@@ -2,6 +2,42 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-24: HR / Payroll setup shipped with the app (no employee or payroll data)
+
+- **Summary:**
+  - New `emp_tracking/hr_setup.py`, run from `after_migrate`. It creates the HR setup saved in `emp_tracking/hr_setup/*.json` on any site where it is missing:
+    - 25 Salary Components. Account rows are kept only when their company and account exist on that site.
+    - 7 Leave Types.
+    - 3 Salary Structures (RKBG Staff Monthly RA / RI / RIF). Each is submitted, and only created when its Company and all of its components exist.
+    - HR Settings and Payroll Settings. Applied once per site (default `emp_tracking_hr_settings_applied`), so later edits there are kept.
+    - The "RKBG IPTECH" Letter Head (not set as default). Its logo now points to `/assets/emp_tracking/images/rkbg_group_logo.png`, shipped in `public/images`.
+  - Existing records are never changed, and a failed record is written to the Error Log without stopping the migrate.
+  - Refresh the JSON from a site with `bench --site <site> execute emp_tracking.hr_setup.export_hr_setup`.
+  - The 27 HR form and list settings made in Customize Form now ship as Property Setter fixtures (module set to "Emp Tracking", `HR_FORM_DOCTYPES` in hooks.py). They cover Attendance, Expense Claim, Leave Allocation and Leave Application naming series, Salary Slip and Payroll Entry list columns, track changes, and hidden accounting dimensions.
+  - Both RKBG print formats were already app files and are unchanged.
+- **Reason:** User asked to push all HR structure (print formats, salary structures, settings) to the repo without data. Plain fixtures were not used for masters and settings: they overwrite the record on every migrate, and a submitted Salary Structure whose Company is missing would stop the migrate.
+- **Files or modules affected:**
+  - `emp_tracking/hr_setup.py` (new).
+  - `emp_tracking/hr_setup/` (new: `salary_component.json`, `leave_type.json`, `salary_structure.json`, `settings.json`, `letter_head.json`).
+  - `emp_tracking/public/images/rkbg_group_logo.png` (new).
+  - `emp_tracking/hooks.py` (`after_migrate`, `HR_FORM_DOCTYPES`, Property Setter fixture filter).
+  - `emp_tracking/fixtures/property_setter.json`.
+- **Testing:**
+  - On the server, `py_compile` passed.
+  - Import test on newsite.local, inside a transaction that was rolled back:
+    - A renamed Leave Type, Salary Component and RA Salary Structure were created, and the structure was submitted.
+    - An account row for a missing company was dropped.
+    - A structure for a missing company was skipped.
+  - `bench --site newsite.local migrate` ran without errors:
+    - 27 HR Property Setters are in place.
+    - The settings flag is set.
+    - No "emp_tracking HR setup" entries are in the Error Log.
+- **Not tested:** Not run on a second site (for example Frappe Cloud) where the records are actually missing.
+- **Pending items:**
+  - **RKBG Staff Monthly - RI will not import on another site.** Current HRMS (16.53) rejects its House Rent Allowance row, formula `round((BDA)*0.35)` with "Depends On Payment Days" on. BDA is already prorated by payment days, so HRA is prorated twice in months with absent days. The error lands in that site's Error Log. Fixing it (turning "Depends On Payment Days" off on that row) changes payroll, so it waits for HR's decision. RA and RIF pass.
+  - Accounts of Salary Components and Structures must be set on a site whose companies or accounts differ.
+  - Employee Type (`custom_employee_type`) on newsite.local: after this migrate its options are "Field Employee / Office Employee" (from the merged `setup.py`), but 77 employees hold "Office" and 2 hold "Field". Saving those employees will fail until the data or options are aligned.
+
 ## 2026-11-24: "RKBG Payslip Classic" print format, laid out like the Excel payslip
 
 - **Summary:**
