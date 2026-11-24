@@ -18,6 +18,6 @@ FIELDS = ("name", "issue_type", "rfs_date", "work_completed_date", "b_end_issue"
 # Date: 2026-10-29
 def execute():
 	"""Work out the stage of each work order from its saved values and store it."""
-	frappe.reload_doc("ftth_tracker", "doctype", "ftth_work_order")
+	frappe.reload_doc("ftth", "doctype", "ftth_work_order")  # 2026-11-24: module is FTTH now (was ftth_tracker)
 	for row in frappe.get_all("FTTH Work Order", fields=list(FIELDS)):
 		frappe.db.set_value("FTTH Work Order", row.name, "stage", compute_stage(row), update_modified=False)

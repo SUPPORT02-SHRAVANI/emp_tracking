@@ -16,7 +16,7 @@ BILLING_FIELDS = ("hoto_no", "hoto_date", "at_status", "hoto_signature_status", 
 # Date: 2026-10-29
 def execute():
 	"""Copy each linked Link Register's latest HOTO details onto its work orders."""
-	frappe.reload_doc("ftth_tracker", "doctype", "ftth_work_order")
+	frappe.reload_doc("ftth", "doctype", "ftth_work_order")  # 2026-11-24: module is FTTH now (was ftth_tracker)
 	hotos = {}
 	for h in frappe.get_all("FTTH Link HOTO", filters={"parenttype": "FTTH Link"},
 							fields=["parent", "hoto_no", "hoto_date", "year", "section_name"]):
