@@ -22,9 +22,17 @@
 #
 # Change log
 #   2026-10-31  Created.
+#   2026-11-24  Before anything is deleted, every New Project row, its team rows, comments and
+#               attachment list are written to <site>/private/backups/new_project_backup_<time>.json
+#               (backup_rows()). Other sites (Frappe Cloud) may hold real New Projects, unlike the
+#               4 test rows on newsite.local, so the data must stay recoverable.
 # ---------------------------------------------------------------------------------------------
 
+import json
+import os
+
 import frappe
+from frappe.utils import now_datetime
 
 NEW_PROJECT = "New Project"
 CHILD_DOCTYPES = ("Project Fiber Team Member", "Project Splicing Team Member")
@@ -45,10 +53,39 @@ REFERENCES = {
 }
 
 
+# Date: 2026-11-24
+def backup_rows():
+	"""Write all New Project data to a JSON file in the site's private backups folder.
+
+	Raw SQL, because the New Project controller code is gone. Nothing is written when there are no
+	rows. An error here (e.g. disk not writable) stops the patch, so nothing is deleted unsaved.
+	"""
+	if not frappe.db.table_exists(NEW_PROJECT):
+		return
+	data = {NEW_PROJECT: frappe.db.sql(f"select * from `tab{NEW_PROJECT}`", as_dict=True)}
+	if not data[NEW_PROJECT]:
+		return
+	for child in CHILD_DOCTYPES:
+		if frappe.db.table_exists(child):
+			data[child] = frappe.db.sql(f"select * from `tab{child}`", as_dict=True)  # nosemgrep: fixed names
+	data["Comment"] = frappe.get_all("Comment", filters={"reference_doctype": NEW_PROJECT}, fields=["*"])
+	data["File"] = frappe.get_all("File", filters={"attached_to_doctype": NEW_PROJECT}, fields=["*"])
+
+	folder = frappe.get_site_path("private", "backups")
+	os.makedirs(folder, exist_ok=True)
+	path = os.path.join(folder, f"new_project_backup_{now_datetime():%Y%m%d_%H%M%S}.json")
+	with open(path, "w", encoding="utf-8") as f:
+		json.dump(data, f, indent=1, default=str, ensure_ascii=False)
+	print(f"New Project: {len(data[NEW_PROJECT])} row(s) saved to {path} before removal")
+
+
 # Date: 2026-10-31
 def execute():
 	"""Delete the New Project data, the rows pointing at it, its DocTypes and its tables."""
 	doctypes = (NEW_PROJECT, *CHILD_DOCTYPES)
+
+	# 0: keep a copy first (2026-11-24); stops the patch if the copy cannot be written
+	backup_rows()
 
 	# 1 + 2: data. Plain SQL / File deletes: the New Project controller code no longer exists,
 	# so frappe.delete_doc on a New Project row would fail to import it.

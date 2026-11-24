@@ -2,6 +2,23 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-24: FTTH Work Order tests fixed; New Project removal keeps a backup
+
+- **Summary:**
+  - `test_ftth_work_order.py`: `setUp` now creates the Field Staff "Test Manager" before the GIS Node. GIS Node.area_manager is a Link to Field Staff, and the tests still passed plain text, so all 4 failed with `LinkValidationError`. They were already broken in the ftth_tracker app before the move.
+  - `patches/remove_new_project.py`: new `backup_rows()`. Before anything is deleted, it writes every New Project row, its Fiber / Splicing team rows, comments and attachment list to `<site>/private/backups/new_project_backup_<time>.json`. If the file cannot be written, the patch stops and nothing is deleted. If there are no rows, it does nothing.
+- **Reason:**
+  - CI "Run Tests" still failed (in 2 seconds) after the stub clean-up.
+  - The first deploy to the Frappe Cloud site (evision.mymagicerp.com, still on the old code) runs this patch. That site may hold real New Projects, unlike the 4 test rows on newsite.local.
+- **Files or modules affected:** `emp_tracking/ftth/doctype/ftth_work_order/test_ftth_work_order.py`, `emp_tracking/patches/remove_new_project.py`.
+- **Testing:**
+  - The 4 FTTH Work Order tests passed on newsite.local, run in one transaction with commit disabled and rolled back. Before the fix they failed with the same error. Afterwards there were 0 test work orders and no ZZT node left.
+  - `backup_rows()`:
+    - It wrote nothing when the table is missing (newsite.local).
+    - In a simulated run against the Area table it saved 175 of 175 rows. That test file was deleted.
+- **Not tested:** CI (runs after the push); the patch on the cloud site.
+- **Pending items:** Deploy on Frappe Cloud is done by the user (no access from here). Take a site backup there first.
+
 ## 2026-11-24: CI test run fixed (empty test stubs removed)
 
 - **Summary:**

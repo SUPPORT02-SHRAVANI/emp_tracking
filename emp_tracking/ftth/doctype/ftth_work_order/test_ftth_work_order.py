@@ -15,6 +15,11 @@ WO = "BAL-ANG-UASL-ROM-Maharashtra/PUNE/Capex/FTTH/B2C/New Rollout/Midrise/IBW/2
 
 class TestFTTHWorkOrder(FrappeTestCase):
 	def setUp(self):
+		# 2026-11-24: GIS Node.area_manager is a Link to Field Staff, so the manager must exist first
+		# (the tests still passed plain text and failed with LinkValidationError).
+		if not frappe.db.exists("Field Staff", "Test Manager"):
+			frappe.get_doc({"doctype": "Field Staff", "staff_name": "Test Manager", "staff_type": "Area Manager",
+							"contact_no": "9000000000"}).insert()
 		if not frappe.db.exists("GIS Node", "ZZT"):
 			frappe.get_doc({"doctype": "GIS Node", "gis_code": "ZZT", "area": "Test Area", "team": "Team 9",
 							"area_manager": "Test Manager", "area_manager_no": "9000000000"}).insert()
