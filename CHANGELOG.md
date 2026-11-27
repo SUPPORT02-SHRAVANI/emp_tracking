@@ -2,6 +2,18 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-27: Desk tiles hidden even when the menu rebuild fails
+
+- **Summary:** `after_migrate()` now runs `keep_only_desk_icons()` in its own try block. Until now it ran only as the last step of `make_navigation()`, so any earlier failure in the menu rebuild (logged as "rebuilding the desk menu after migrate failed") skipped the hiding.
+- **Reason:** After deploying on Frappe Cloud, the main site still showed Milestone. The cause there is not known yet (the site's Error Log has not been checked); this makes the hiding independent of the rest of the menu rebuild.
+- **Files or modules affected:** `page/workforce_dashboard/setup.py`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed.
+  - `after_migrate()` with `frappe.flags.in_migrate` set, as during a real migrate: the menu rebuild succeeded and only OverHead Project, NOC Helpdesk and Frappe HR stay visible.
+  - Without the flag (a plain `bench execute`), Frappe 16.54 refuses to save the archived Workspace Sidebars and the menu rebuild fails. The new block still hid the tiles.
+- **Not tested:** The Frappe Cloud site.
+- **Pending items:** On the main site: check that the site was updated after the deploy, check its Error Log for "emp_tracking" entries, and redeploy to pick up this commit.
+
 ## 2026-11-27: Desk home shows only OverHead Project, NOC Helpdesk and Frappe HR
 
 - **Summary:**

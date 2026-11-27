@@ -107,6 +107,8 @@ Change log:
 	2026-11-27  Desk home shows only OverHead Project, NOC Helpdesk and Frappe HR (user's request for
 	            the main site). Saved Desktop Layouts get every other top-level tile hidden
 	            (hide_others_in_saved_layouts), since Frappe 16.54 uses the layout's hidden flags.
+	2026-11-27  after_migrate() runs keep_only_desk_icons() in its own try block, so a failure in the
+	            menu rebuild no longer skips it (Milestone still showed on the Frappe Cloud site).
 """
 
 import os
@@ -315,6 +317,13 @@ def after_migrate():
 	except Exception:
 		# A menu problem must never fail a deploy; it is listed in the Error Log instead.
 		frappe.log_error(title="emp_tracking: rebuilding the desk menu after migrate failed")
+	# 2026-11-27: the desk home clean-up in its own try block. It is also the last step of
+	# make_navigation(), so any earlier failure in the block above skipped it, and the Frappe Cloud
+	# site still showed Milestone after a deploy. Running it twice is harmless.
+	try:
+		keep_only_desk_icons()
+	except Exception:
+		frappe.log_error(title="emp_tracking: hiding desk tiles after migrate failed")
 
 
 # Date: 2026-11-23
