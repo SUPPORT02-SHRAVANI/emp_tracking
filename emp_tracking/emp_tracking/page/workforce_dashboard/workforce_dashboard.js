@@ -24,6 +24,7 @@
 //               coloured top strip on KPI tiles; line icons on the tabs; skeleton loading and
 //               icon empty states come from evision.css.
 //   2026-11-17  'EVision' tile back next to the module tiles: added to OH_SIDEBARS.
+//   2026-11-26  NOC tile renamed 'NOC Helpdesk' (setup.py NOC_TILE): OH_SIDEBARS follows.
 
 frappe.pages['workforce-dashboard'].on_page_load = function (wrapper) {
 	var page = frappe.ui.make_app_page({
@@ -800,7 +801,8 @@ var EV_SIDEBAR = 'Emp Tracking';
 // setup.py). 2026-10-24: Dashboard and OverHead Project are gone; FTTH Tracker added.
 // 2026-10-29: the three module menus plus their mirrors.
 // 2026-11-17: + 'EVision' (the tile with every module menu), so it stays open on this page.
-var OH_SIDEBARS = ['Emp Tracking', 'OverHead Project', 'NOC', 'EVision', 'Helpdesk NOC', 'FTTH Tracker'];
+// 2026-11-26: 'NOC' -> 'NOC Helpdesk' (NOC_TILE in setup.py).
+var OH_SIDEBARS = ['Emp Tracking', 'OverHead Project', 'NOC Helpdesk', 'EVision', 'Helpdesk NOC', 'FTTH Tracker'];
 
 // Menu link -> the doctype it opens. Team links are for leads, HR, finance and management only:
 // employees reach their own Employee record and leave allocation through the dashboard instead.

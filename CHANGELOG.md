@@ -2,6 +2,343 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-27: Office attendance: Present when 9 hours (15 min grace) are completed, whatever the punch times
+
+- **Summary:**
+  - The Shift Type "Office 09:30-18:30 (Mobile App)" now judges hours worked (first punch-in to last punch-out), not the clock times:
+    - 8 h 45 min or more = Present (a 9-hour day with 15 min grace; e.g. 10:00–19:00, 10:00–18:45, 07:00–16:00);
+    - 4.5 h to under 8 h 45 min = Half Day;
+    - under 4.5 h = Absent.
+  - Punches at any time of the day count (window 00:00–23:59; it used to be 08:30–21:30).
+  - The field shift (riders / splicers) is unchanged: any punch-in = Present.
+  - It is HRMS's own Auto Attendance with the Shift Type's working-hours thresholds; no HRMS code is changed.
+  - New sites get the values from `app_attendance.SHIFT_TYPES`. Existing sites get them from a one-time patch, because `ensure_shift_types()` never overwrites an existing Shift Type.
+- **Reason:** User's request: "if an employee punches in at 10 and out at 7 and office hours are completed, mark Present irrespective of shift". User's choices: 9 h full day, Half Day then Absent below it, office staff only; then "add 15 min grace, present from 8h45".
+- **Files or modules affected:** `app_attendance.py`, new patch `patches/office_shift_hours_rule.py`, `patches.txt`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed.
+  - `bench run-patch emp_tracking.patches.office_shift_hours_rule` succeeded, then was re-run with `--force` after the grace was added. The Shift Type now has 570 / 329 min, Half Day threshold 8.75 h, Absent 4.5 h, and the patch is in Patch Log.
+  - HRMS `ShiftType.get_attendance` on sample punches (9 h rule, before the grace): 09:30–18:30 and 07:00–16:00 → Present 9.0 h; 12:00–21:30 → Present 9.5 h.
+  - With the grace:
+    - 10:00–19:00 → Present 9.0 h; 10:00–18:59 → Present 8.98 h; 10:00–18:45 → Present 8.75 h.
+    - 10:00–18:44 → Half Day 8.73 h; 10:00–17:00 → Half Day 7.0 h; 10:00–14:30 → Half Day 4.5 h.
+    - 10:00–13:00 → Absent 3.0 h.
+  - Punches at 00:05, 07:00 and 23:50 all match the office shift (window 00:00–23:59). Checked with an employee's Default Shift set temporarily and rolled back.
+- **Not tested:** A full run of the hourly Auto Attendance job on real punches. No active employee has Mode of Attendance = Mobile App yet, and there are no November attendance records.
+- **Pending items:**
+  - Days are counted from midnight to midnight, so a day that crosses midnight is split across two dates.
+  - Not committed or deployed.
+
+## 2026-11-27: Map: building points, and hovering a building or violet route highlights its routes
+
+- **Summary:**
+  - **Hover highlight:** on the NOC Dashboard Map tab, hovering a violet (other building) route makes every route to that same building bold and full colour, drawn on top. Moving away restores them. The tooltip follows the mouse and names the building (Site's `site_name`). A route with no building lights up alone.
+  - **Building points:**
+    - Each building of the node is a cyan square at its KMZ pin (Site has no coordinates), so it differs from the round complaint dots in both shape and colour.
+    - The complaint's own building is larger, with a blue border.
+    - Hovering a building lights up its routes and shows its name and route count.
+    - The side panel says how many buildings are shown and how many have no pin.
+  - **Layer order fixed with map panes:** routes < buildings < closed complaint dots < open complaint pins, so buildings never cover complaints.
+  - The map key has three new lines (building, the complaint's building, hover).
+  - `get_complaint_route` now returns `site` / `site_name` per route, plus `buildings` and `no_pin`.
+- **Reason:** User's requests: "when I hover over building purple line highlight it" and "add building point with different color".
+- **Files or modules affected:** `page/noc_dashboard/noc_dashboard.js`, `page/noc_dashboard/noc_dashboard.py`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` and `node --check` passed.
+  - `get_complaint_route("CMP-2610-02729")`: node V0N, 222 routes, 118 buildings with a pin, 0 without. The own building is SITE-01774 "Vastu Anand Apartment".
+  - Headless-browser screenshot, with the hover fired from script on "Shree Ram Residency": cyan squares drawn, its 6 routes bold, tooltip "Shree Ram Residency · SITE-01756, 6 fibre routes", and the map key updated.
+- **Not tested:** A real mouse hover in a real browser.
+- **Pending items:** Reload the page (and restart bench if the Python change isn't picked up). Not committed or deployed.
+
+## 2026-11-26: NOC Performance redesigned; map shows open complaints and the complaint's node routes
+
+- **Summary:**
+  - **NOC Performance redesigned:**
+    - What the user didn't like in the first version: 18 cut-off columns, and a chart that was one big block.
+    - Now each period (and team / splicer) is a bold total row, with a "Day calls" and a "Night calls" row under it.
+    - 7 columns: Calls, Closed, Still open, In SLA, Out of SLA, In SLA %, Avg MTTR (h).
+    - Cards: Day / Night calls, In SLA % and average MTTR.
+    - Chart: with one period, day vs night split into In SLA / Out of SLA / still open; with several, day and night calls per period. Whole numbers on the y axis.
+  - **Fluid report tables removed again:** `evision.noc_fluid_table`, added earlier the same day, squeezed grouped (tree) tables into unreadable columns and left them empty. The Pending / Performance reports get wider fixed columns instead.
+  - **Map: open complaints stand out:**
+    - a dot with a pulsing ring (red after 4 hours) and an age badge ("30d");
+    - counts above the map (open, over 4 h, oldest);
+    - the side panel lists open complaints oldest first, and a click zooms to one.
+  - **Map: the complaint's node route:**
+    - Opening a complaint draws its GIS Node's KMZ routes. Routes to its own building are thick blue, the node's other routes thin violet.
+    - The node comes from the Node ID, GIS Node ID, Site's node or LINKID's Network Link.
+    - The view fits the building's routes, else the node's routes within 3 km.
+    - Buttons: "Open node on KMZ Map", "Hide routes". New API `get_complaint_route`.
+- **Reason:** User's feedback and requests on 2026-11-26.
+- **Files or modules affected:**
+  - `report/noc_performance` (.py/.js), `report/noc_pending_summary/noc_pending_summary.py` (widths)
+  - the report .js files (fluid option removed)
+  - `public/js/evision.js`, `hooks.py` (`EV_ASSET_VERSION` 20261126k)
+  - `page/noc_dashboard` (.py/.js)
+- **Testing (newsite.local):**
+  - `py_compile` and `node --check` passed.
+  - Headless-browser screenshots:
+    - NOC Performance for Team 1, Sep–Nov: one bold row (93 calls) with Day 78 / Night 15 rows, 7 readable headers and a filled chart.
+    - Month-wise Jun–Sep chart.
+    - Pending Summary table and chart.
+    - Map: 4 open complaints with pulsing rings and age badges, and the open list.
+    - Complaint CMP-2610-02729: "Node V0N: 222 fibre routes drawn, 2 to this building", zoomed to the building with the thick blue route.
+- **Not tested:** In a real browser. Complaints whose node has no KMZ routes (the panel says so).
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-26: NOC points: vendor rule, cut team summary, performance, team availability, field hours, complaints map
+
+- **Summary (user's NOC points):**
+  - **Vendor rule:** when a complaint is assigned to a vendor, Rider / Splicer / 2nd Rider / 2nd Splicer are hidden (form) and emptied.
+    - The form empties them when a vendor is picked.
+    - The server empties them only when the vendor is newly set, so the 39 old closed complaints that name both keep their history.
+  - **NOC Cut Team Summary (new report):** per day and team, every SR counted, with "Closed by" (splicer with count). NOC Unique Cut Summary also gets "Closed by".
+  - **NOC Performance (new report):** month-wise or day-wise, optionally per team or splicer, with day calls and night calls side by side. A day call is one received 08:00–19:59 (the user's choice). For each: received, closed, In/Out of SLA, In-SLA % and average MTTR.
+  - **Team members and NOC Team Availability (new report):** new child table Maintenance Team Member (employee, role, active) on Maintenance Team. Per day and team the report shows:
+    - members and splicers;
+    - who was Present in Attendance;
+    - SRs received;
+    - who was sent (with counts);
+    - present members with no call.
+  - **Field Staff Location Hours (new report):** hours at home / office / complaint sites / other per field employee per day, using the same rules as the dashboard's Employee sheet.
+  - **NOC Dashboard Map tab:** complaints only, coloured by status. Clicking one shows its details with an "Open complaint" button.
+    - Position: the complaint's own coordinates, else the operator's, else its LINKID's Network Link, else a KMZ pin of its site.
+    - Complaints without any of these are counted under the map, not drawn.
+  - **Reports look:**
+    - An empty period shows a message (no complaints between the dates, and the latest complaint date) instead of an empty chart and rows of dashes.
+    - "Closed within 4 h" shows "–" when nothing was closed.
+    - Tables with few columns stretch to the full width.
+    - Any `…_pct` column is coloured by SLA.
+  - **Menu:** NOC Helpdesk gets "Cut Team Summary" and a new section "Performance & Teams".
+- **Reason:** User's requests on 2026-11-26.
+- **Files or modules affected:**
+  - `noc_reports.py`
+  - new reports `noc_cut_team_summary`, `noc_performance`, `noc_team_availability`, `field_staff_location_hours`
+  - `noc_pending_summary` / `noc_unique_cut_summary` / `noc_unique_cut_master` / `noc_major_outage_closure` / `noc_sla_tat_summary`
+  - new doctype `maintenance_team_member`; `maintenance_team` (.json/.py)
+  - `complaint_information` (.json/.py/.js)
+  - `page/noc_dashboard` (.py/.js)
+  - `page/workforce_dashboard/setup.py`
+  - `public/js/evision.js`, `hooks.py` (`EV_ASSET_VERSION` 20261126i)
+- **Testing (newsite.local, on the server):**
+  - `py_compile`, `node --check` and JSON checks passed. `bench migrate` passed: the 4 reports, the Members table, the vendor `depends_on` and the menu are all there.
+  - Report results (April 2026):
+    - Cut Team Summary: 210 rows; "Closed by" filled (e.g. Team 1, 1 Apr: Rohan Tupe (4), Aakash Nawadi (1)).
+    - Performance: April 675 day + 142 night calls = 817 SRs, the same as Pending Summary. Day In-SLA 44.1%, night 16.9%.
+    - Team Availability: 202 rows; shows who was sent; "Members not set" because no team has members yet.
+    - Field Staff Location Hours: 63 rows (Sep–Nov 2026 pings).
+    - November (no data) shows the message.
+  - Vendor rule, checked as a real save would see it (`load_doc_before_save`), with nothing saved and the transaction rolled back: a newly set vendor empties the people, and an unrelated edit to an old vendor complaint keeps its splicer.
+  - Map tab, in a headless-browser screenshot: 4 of 6 open complaints drawn, details panel filled on click, and "2 not on the map" shown.
+  - **New complaints show up live.**
+    - Test: one complaint was inserted for today (Team 3, no RFO, like a real new complaint) and then rolled back; it no longer exists.
+    - It appeared at once in the Performance tab (received 0 → 1), NOC Performance (1 day call), Team Availability (Team 3, who was sent), the Map (4 → 5) and Live complaints (6 → 7).
+  - **Fix found by that test:** "Own fibre faults only" used to keep only RFO = Own Fiber Issue. RFO is filled only at closing, so new open complaints were left out of the reports.
+    - A blank RFO now counts.
+    - Only complaints marked with another RFO are left out.
+- **Not tested:** These screens in a real browser. The vendor rule through the form by a user. Team Availability with real member lists and attendance.
+- **Pending items:**
+  - Fill each Maintenance Team's Members list, or Team Availability cannot show who was present.
+  - Only 2 of 28,661 complaints have coordinates, and Areas / GIS Nodes have none, so old complaints cannot be placed on the map. New complaints appear when NOC fills LINKID / Site / coordinates. Giving Areas coordinates would let old complaints show at their area (not done; needs a decision).
+  - Not committed or deployed.
+
+## 2026-11-26: Month bands on charts, NOC reports full screen, one OverHead sidebar for FTTH
+
+- **Summary:**
+  - **Month bands:** day-by-day charts covering more than one month get a light band behind every other month, with the month's name. This applies to the NOC Pending / Unique Cut Summary reports and the NOC Dashboard's "Day by day" chart.
+    - New helper `evision.month_bands()` draws the bands into the chart's SVG and redraws them after a resize.
+    - Labels are day numbers, and the chart shows every n-th one.
+    - Frappe's report page overwrites a chart's `axisOptions`. The reports therefore send theirs as `ev_axis`, and `evision.noc_report_after_render` merges it in and draws the chart once more.
+  - **NOC reports full screen:**
+    - A "Full screen" button shows the report page alone on the whole screen (browser Fullscreen API).
+    - The table now fills the screen height (`100vh - 150px`; Frappe's default box left empty space below).
+    - Major Outage Closure columns were narrowed to about 1,455 px, so it fits a desktop screen. A missing 2nd splicer shows blank, not "Na".
+  - **OverHead Project / FTTH:**
+    - The cause: the FTTH module, moved into emp_tracking on 2026-11-24, had no Sidebar document, so Frappe 16.54 computed an "FTTH" sidebar (hammer icon) listing the same work-order screens as OverHead Project.
+    - The OverHead Project Sidebar now belongs to module FTTH (`SHELL_MODULES` in setup.py). Frappe no longer builds the copy, and FTTH screens open inside OverHead Project.
+- **Reason:** User's requests: a light background per month on charts, "make it full screen", and "why overhead and ftth is same?".
+- **Files or modules affected:**
+  - `public/js/evision.js`, `public/css/evision.css`, `hooks.py` (`EV_ASSET_VERSION` 20261126g)
+  - `report/noc_*/*.js`, `report/noc_pending_summary/noc_pending_summary.py`, `report/noc_major_outage_closure/noc_major_outage_closure.py`
+  - `page/noc_dashboard/noc_dashboard.js`
+  - `page/workforce_dashboard/setup.py`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` and `node --check` passed.
+  - `make_navigation()` ran with the migrate flag. The app's shells are now Emp Tracking, NOC Helpdesk and OverHead Project (module FTTH), and the computed "FTTH" shell is gone.
+  - In headless Chromium screenshots:
+    - Pending Summary over August–October shows three month bands and readable day labels.
+    - Major Outage Closure has the Full screen button, and its table is 850 px tall at a 940 px window. At 1,740 px with the desk sidebar open it is 33 px wider than the screen; it fits with the sidebar collapsed or in full screen.
+    - An FTTH Work Order opens with the OverHead Project sidebar.
+- **Not tested:** The Full screen button in a real browser (the headless one cannot enter full screen).
+- **Pending items:** Unrelated error seen in the Error Log: "Report execution failed for: FTTH GIS Summary" (2026-11-26 10:34, filter GIS = 03W). Not investigated.
+
+## 2026-11-26: NOC dashboard and reports redesigned; tabs on the dashboard and the Complaint form
+
+- **Summary:**
+  - **EVision colours fixed in both themes.** In Frappe 16.54 the Espresso "ink" colours are pale tints in light mode and deep shades in dark mode. Every EVision accent built on them (icons, coloured figures, bars) washed out on white and disappeared on dark cards.
+    - `evision.css` now uses explicit accent colours for light and dark.
+    - This affects every EVision page, not only NOC.
+  - **NOC Dashboard in tabs:** Live complaints (with the open-cut count), Performance and Employee sheet.
+    - The last tab is remembered.
+    - Performance and Employee sheet load when they are first opened.
+  - **Performance redesigned:**
+    - It opens with a carry-forward strip (opening + received − closed = pending, the NOC sheet's own rule) and the In/Out SLA split.
+    - Quick ranges (This month / Last month / Last 3 months).
+    - The team table shows SLA bars.
+    - Time to close is one split bar with a legend.
+    - Busiest days are grouped by month.
+    - Labels are in sentence case and chart colours follow the theme.
+  - **Reports restyled:**
+    - Shared cell colours (`evision.noc_formatter`): In SLA green, Out of SLA red, pending amber, zeros shown as "–".
+    - Shared scope filters (`evision.noc_scope_filters`).
+    - Short column names.
+    - Pending / Unique Cut Summary team-wise and Major Outage Closure are trees (day or month rows with their teams under them).
+    - Readable chart labels. The SLA/TAT chart is split by the first row key that has more than one value.
+  - **Complaint Information form in tabs:** Complaint / Location / Assignment / Closure & SLA. Time & SLA is no longer collapsed.
+  - **Bug fix:** `frappe.datetime.month_start()` ignores its argument, so "last 3 months" defaults (dashboard quick range and Major Outage report) used this month. They now use moment.
+- **Reason:** User's requests: the dashboard and reports "don't look good", and asked for tabs on the dashboard and the complaint form.
+- **Files or modules affected:**
+  - `public/css/evision.css`, `public/js/evision.js`, `hooks.py` (`EV_ASSET_VERSION` 20261126c)
+  - `emp_tracking/page/noc_dashboard/noc_dashboard.js`, `noc_reports.py` (`kpis.opening`)
+  - `emp_tracking/report/noc_*` (.py / .js)
+  - `doctype/complaint_information/complaint_information.json` (4 Tab Breaks; the diff only adds them) and `.py` (file history)
+- **Testing (newsite.local, on the server):**
+  - `py_compile` and `node --check` passed. `bench migrate` passed, and the four Tab Break fields are in the DocType.
+  - Reviewed in headless Chromium screenshots (logged in as Administrator):
+    - the dashboard's Live and Performance tabs, in light and dark mode;
+    - Pending Summary (team-wise tree), SLA TAT Summary, Major Outage Closure and Unique Cut Master;
+    - a closed complaint's form with its tabs.
+  - The quick range and tab buttons worked when clicked in that browser.
+- **Not tested:** A real user's browser and phone-width layouts. The Employee sheet tab with an employee picked.
+- **Pending items:** As in the entry below (missing workbook complaints, Unique Cut grouping).
+
+## 2026-11-26: NOC reports and dashboard laid out like the NOC report workbook
+
+- **Summary:**
+  - Five new Script Reports. Each one is a tab of the client's NOC workbook:
+    - **NOC Pending Summary** (PENDING SUMMARY; with "Team Wise", TEAM WISE PENDING SUMMARY)
+    - **NOC Unique Cut Summary** (UNIQUE CUT TEAM SUMMARY)
+    - **NOC Unique Cut Master** (UNIQUE CUT MASTER)
+    - **NOC Major Outage Closure** (MAJOR OUTAGE CLOSURE)
+    - **NOC SLA TAT Summary** (the ALL TEAM SUMMARY pivots; "Rows" picks the pivot layout)
+  - All five are in a new "NOC Reports" section of the NOC Helpdesk menu.
+  - The NOC Dashboard has a new **Performance** section, with From / To / Team filters. It shows KPI tiles, a daily received / closed / pending chart, a team-wise table, TAT buckets and the major outage days. It also has a "NOC Reports" button menu that opens each report with the same dates.
+  - Every number comes from one module, `emp_tracking/noc_reports.py`, so the dashboard and the reports always agree. The rules are copied from the workbook's LOGIC / CUT LOGIC notes.
+  - New field **Unique Cut** on Complaint Information. If left blank, it is set to the Complaint Code. The NOC import fills it from UNIQUE CUT.
+  - Patch `backfill_unique_cut` filled it for the existing complaints from their "Unique cut:" detail line, then the code, then the name.
+- **Reason:** User's request ("this is how you have to show dashboard and … reports"), with the NOC workbook as the layout.
+- **Default scope = the workbook's scope:** own teams only, RFO "Own Fiber Issue" only, no terminations. Checked against the workbook: 3,555 of the 3,576 complaints in both are Own Fiber Issue. Both scope checks can be switched off in every report.
+- **Differences from the workbook (on purpose):**
+  - The first day's opening carry-forward is the real backlog. The workbook started from 0.
+  - Days ≥ 3 are labelled "3+ Days". The workbook says ">3 Days" for 3 days too.
+  - A Closed complaint with no Team SR closed time counts at its Company close time. With neither time it is left out (46 imported 2025 complaints).
+  - The workbook's PRESENT TEAM COUNT / AVAILABLE SPLICER were typed by hand. The report shows "Splicers Working", counted from the complaints.
+- **Files or modules affected:**
+  - `emp_tracking/noc_reports.py` (new)
+  - `emp_tracking/emp_tracking/report/noc_*` (5 new reports)
+  - `emp_tracking/emp_tracking/page/noc_dashboard/noc_dashboard.js`
+  - `emp_tracking/emp_tracking/doctype/complaint_information/complaint_information.{json,py}`
+  - `emp_tracking/noc_complaint_import.py`
+  - `emp_tracking/patches/backfill_unique_cut.py`
+  - `emp_tracking/patches.txt`
+  - `emp_tracking/emp_tracking/page/workforce_dashboard/setup.py` (menu)
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed for every changed Python file. `node --check` passed for every JS file. All JSON files parse.
+  - `bench migrate` passed. The patch ran: no empty Unique Cut is left, and 506 differ from the Complaint Code. All 5 reports exist, and the NOC Helpdesk menu shows the NOC Reports section.
+  - All 5 reports ran for April 2026, in 0.1–0.4 s each.
+  - Against the workbook's PENDING SUMMARY:
+    - 2 Apr (77 / 31) and 5 Apr (24 / 57) received / closed match exactly. 1, 3 and 4 Apr are within 1–4.
+    - Closing pending on 30 Apr is 8, as in the workbook.
+  - `get_performance` returns in 0.2 s.
+- **Not tested:** The reports and the dashboard section in a browser (layout, chart, buttons).
+- **Pending items:**
+  - 462 complaints in the workbook (April–September 2026) are not in the app, so app totals are lower than the workbook's.
+  - The app's Unique Cut mostly equals the Complaint Code, while the workbook groups about 15% of SRs into shared cuts. Until those are imported, cut counts ≈ SR counts.
+  - The dashboard opens on the current month. newsite.local has no complaints after 2026-10-27, so it shows zeros until the dates are changed.
+
+## 2026-11-26: Separate workspace icons for OverHead Project and NOC (NOC tile renamed "NOC Helpdesk")
+
+- **Summary:**
+  - Each module tile now writes its own Frappe 16.54 `Sidebar` ("shell") through the new `make_shell()` in `make_navigation()`. Each one has its own header icon and menu:
+    - OverHead Project: `radio-tower`
+    - Emp Tracking: `dashboard`
+    - NOC Helpdesk: `monitor-cog`
+  - The NOC tile is renamed **NOC Helpdesk** (`NOC_TILE`). The old "NOC" Desktop Icon, archived Workspace Sidebar and Sidebar are deleted through `OLD_SIDEBARS`.
+  - The NOC desk tile picture is renamed to `noc_helpdesk.svg` (solid and subtle) and recoloured orange (`#EA580C`). It was the same purple as EVision.
+- **Reason:**
+  - User's request: OverHead Project and NOC showed the same workspace icon.
+  - Cause: Frappe 16.54's migration merged the "OverHead Project", "Emp Tracking" and "NOC" sidebars into one `Sidebar` called "Emp Tracking" (see its `merged_from`). All three tiles therefore showed its single "dashboard" icon.
+  - Why the rename: a shell's name is its URL segment, and `/desk/noc` already belongs to the NOC DocType. With a shell named "NOC", routes would be read as NOC records.
+- **Files or modules affected:**
+  - `emp_tracking/emp_tracking/page/workforce_dashboard/setup.py`
+  - `emp_tracking/emp_tracking/page/workforce_dashboard/workforce_dashboard.js` (`OH_SIDEBARS`)
+  - `emp_tracking/public/icons/desktop_icons/{solid,subtle}/noc.svg` → `noc_helpdesk.svg`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed for `setup.py`. `node --check` passed for `workforce_dashboard.js`.
+  - Before the change, the merged "Emp Tracking" sidebar items were backed up to `~/backups/sidebar_emp_tracking_items_2026-11-26.tsv`.
+  - Ran `make_navigation()` with `frappe.flags.in_migrate` set, as `after_migrate` would. The boot `module_sidebars` then had three shells:
+    - Emp Tracking (`dashboard`, Dashboards)
+    - OverHead Project (`radio-tower`, FTTH / Fiber Store / Network / Teams & Vendors)
+    - NOC Helpdesk (`monitor-cog`, Complaints)
+  - The "NOC" Desktop Icon, Workspace Sidebar and Sidebar are gone. "NOC Helpdesk" exists. No new Error Log entries.
+- **Follow-up (same day): tiles added to saved desk layouts**
+  - The new tiles were still missing from the desk home. Frappe 16.54 draws only what a user's saved Desktop Layout lists, and never appends icons created later. Administrator's layout (saved 2026-11-24) had "Emp Tracking" only.
+  - New `add_desk_icons_to_saved_layouts()` runs from `keep_only_desk_icons()` after every migrate. It adds each missing `DESK_ICONS` tile as a visible entry after "Emp Tracking" and drops a stale "NOC" entry. The user's other entries, their order and their hidden flags are left alone.
+  - Before the change, Administrator's layout was backed up to `~/backups/desktop_layout_administrator_2026-11-26.json` on the server.
+  - Ran it on newsite.local: the layout went from 42 to 45 entries, and the visible top level now has Emp Tracking, OverHead Project, NOC Helpdesk and EVision. A second run changed nothing. `py_compile` passed.
+- **Not tested:** The desk home, sidebar header and tile clicks in a browser.
+- **Pending items:**
+  - Outside `bench migrate`, Frappe 16.54 refuses writes to the archived Workspace Sidebar. A plain `bench execute ...make_navigation` therefore fails in `make_tile()`. `after_migrate` works.
+  - The `Sidebar` writes also need developer mode or migrate.
+  - EVision has no Sidebar of its own, because the Module Def "Evision" blocks that title. Its tile behaves as before.
+
+## 2026-11-25: Milestone tile removed from the desk home
+
+- **Summary:** "Milestone" was taken out of `DESK_ICONS`. `keep_only_desk_icons()` now hides its desk tile, like every other non-EVision icon. Only the tile is hidden: milestone_app (BNI Milestone) and its data stay installed.
+- **Reason:** User's request. Milestone belongs to milestone_app (BNI) and is not an EVision module. It was on the desk home only because it was in the keep list since 2026-10-29.
+- **Files or modules affected:** `emp_tracking/emp_tracking/page/workforce_dashboard/setup.py`.
+- **Testing (newsite.local):**
+  - `py_compile` passed.
+  - `keep_only_desk_icons()` ran, and the cache was cleared.
+  - The visible top-level tiles are now EVision, NOC, Emp Tracking and OverHead Project. Milestone has `hidden = 1`.
+- **Follow-up (same day):**
+  - The tile was still shown for Administrator. Administrator had a saved **Desktop Layout** (2026-11-24) in which Milestone was `hidden: 0`, and Frappe 16 draws the desk home from that saved layout.
+  - Only the Milestone entry in that layout was set to `hidden: 1`. This was a data change on newsite.local, with no code change.
+  - Checked afterwards: it reads `hidden = 1`. It is the only Desktop Layout on the site.
+- **Not tested:** The desk home in the browser.
+- **Pending items:**
+  - `keep_only_desk_icons()` does not update saved Desktop Layouts. A user who saved an arrangement before an icon was hidden keeps seeing that icon until they reset their layout.
+  - To show Milestone again, put "Milestone" back in `DESK_ICONS`, set the icon's `hidden` to 0, and unhide it in the user's layout.
+
+## 2026-11-25: Weekly Shift Roster tool
+
+- **Summary:**
+  - New **Weekly Roster** button on the Shift Assignment list. The dialog takes:
+    - employees;
+    - a shift rotation (1 or more Shift Types, in order);
+    - a start date (defaults to next Monday);
+    - a number of weeks (1–26).
+  - **Preview** shows the plan. **Create** makes one submitted Shift Assignment per employee per week.
+  - Week *i* gets rotation row *i mod n*. With one row, the employee gets the same shift every week.
+  - A week is **skipped** if the employee already has an active submitted Shift Assignment that overlaps it. It is also skipped if the employee is not Active. Existing assignments are never changed, so running it again is safe.
+  - Each week is created in its own savepoint. A failed week is shown as "Failed" with the error, and the weeks before it are kept.
+  - HRMS's own list `onload` ("Shift Tools" button) is kept.
+- **Reason:** HRMS 16.53.0 has no Shift Assignment Schedule. Before this, a different shift each week had to be entered by hand, one assignment per week. User asked for a weekly roster tool.
+- **Files or modules affected:** `emp_tracking/shift_roster.py` (new), `emp_tracking/public/js/shift_assignment_list.js` (new), `emp_tracking/hooks.py` (`doctype_list_js`).
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed for `shift_roster.py` and `hooks.py`. `node --check` passed for the JS.
+  - Ran `create_weekly_roster` on demo employee HR-EMP-00066 in one transaction, rolled back afterwards. The Shift Assignment count was 5 before and 5 after.
+    - Dry run, 6 weeks: the 4 existing demo weeks were Skipped, and weeks 5–6 were To Create.
+    - Real run with JSON arguments (as the browser sends them): 2 created (Office, then Field), 4 skipped.
+    - Re-run with the same input: 0 created, 6 skipped.
+    - Empty employees, an unknown Shift Type and 99 weeks were all rejected with clear messages.
+  - `bench --site newsite.local clear-cache` was run.
+- **Not tested:**
+  - The dialog in the browser.
+  - The "Failed" path: no HRMS validation error was produced in the test.
+  - A non-Administrator user's permissions.
+- **Pending items:** Try the button in the browser. The demo records (employee HR-EMP-00066 and HR-SHA-26-11-00002 … 00005) are still on newsite.local and can be removed when no longer needed.
+
 ## 2026-11-24: FTTH Work Order tests fixed; New Project removal keeps a backup
 
 - **Summary:**

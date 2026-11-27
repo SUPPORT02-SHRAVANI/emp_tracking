@@ -24,6 +24,8 @@
 # Change log
 #   2026-10-27  Created (user asked to add the sheet's complaints so the Employee Performance
 #               page shows calls per splicer / area with their times).
+#   2026-11-26  UNIQUE CUT also goes into the new Unique Cut field (NOC reports count cuts by it);
+#               it stays in the complaint details too.
 # ---------------------------------------------------------------------------------------------
 
 import re
@@ -228,6 +230,8 @@ def build(row, lk):
 	values = {
 		"noc_sheet_no": int(row["NO"]),
 		"complaint_code": clean(row.get("COMPLAINT CODE"))[:DATA_LIMIT] or None,
+		# 2026-11-26: blank -> the controller uses the Complaint Code (set_unique_cut)
+		"unique_cut": clean(row.get("UNIQUE CUT"))[:DATA_LIMIT] or None,
 		"request_type": "Termination" if str(row.get("TYPE (TERMINATION?)") or "").strip().upper().startswith("YE") else "Complaint",
 		"operatorcustomer": operator,
 		"complaint_type": LINK_TYPES.get(clean(row.get("LINK TYPE")).upper()),

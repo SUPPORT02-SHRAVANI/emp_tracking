@@ -14,7 +14,9 @@
   "team_leader",
   "team_leader_name",
   "manager_name",
-  "status"
+  "status",
+  "sec_members",
+  "members"
  ],
  "fields": [
   {
@@ -68,12 +70,24 @@
    "label": "Status",
    "options": "Active\nInactive",
    "reqd": 1
+  },
+  {
+   "description": "The team's splicers and riders. Members marked Present in Attendance on a day are the team's available people in NOC Team Availability.",
+   "fieldname": "sec_members",
+   "fieldtype": "Section Break",
+   "label": "Members"
+  },
+  {
+   "fieldname": "members",
+   "fieldtype": "Table",
+   "label": "Members",
+   "options": "Maintenance Team Member"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-09 12:00:00.000000",
+ "modified": "2026-11-26 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Maintenance Team",

@@ -28,6 +28,9 @@
  *   2026-11-02  FTTH Work Order list: stage pipeline strip, warning flag, muted dash (section 4).
  *   2026-11-02  Stepper summary header (.ev-hero, .ev-badge, .ev-fact); form card layout
  *               (section 5); FTTH dashboard workspace polish (section 6).
+ *   2026-11-26  Accent tokens are explicit colours in light and dark mode. In Frappe 16.54 the
+ *               Espresso inks are pale tints in light mode and deep shades in dark mode, so
+ *               coloured figures washed out on white and disappeared on dark cards.
  *   2026-11-02  Stage pipeline strip styles (.ev-pipeline / .ev-pipe) removed with the strip.
  *   2026-11-02  Tracker and form restyled to the look the user chose: header + step card with a
  *               status bar and notices (sections 3, 3b); flat form sections instead of cards (5).
@@ -50,36 +53,82 @@
 	--ev-text-5: var(--ink-gray-4, #999);
 	--ev-text-6: var(--ink-gray-3, #c7c7c7);
 
-	--ev-accent: var(--ink-blue-3, #007be0);
-	--ev-accent-bg: var(--surface-blue-2, #e6f4ff);
-	--ev-accent-border: var(--outline-blue-1, #a7d7fd);
-	--ev-ok: var(--ink-green-3, #278f5e);
-	--ev-ok-bg: var(--surface-green-2, #e4faeb);
-	--ev-ok-border: var(--outline-green-1, #a6efc0);
-	--ev-warn: var(--ink-amber-3, #db7706);
-	--ev-warn-bg: var(--surface-amber-2, #fff7d3);
-	--ev-warn-border: var(--outline-amber-1, #fbdb73);
-	--ev-bad: var(--ink-red-3, #e03636);
-	--ev-bad-bg: var(--surface-red-2, #ffe7e7);
-	--ev-bad-border: var(--outline-red-1, #fdc2c2);
-	--ev-violet: var(--ink-violet-1, #6846e3);
-	--ev-violet-bg: var(--surface-violet-1, #f0ebff);
+	/* 2026-11-26: explicit colours. Frappe 16.54's light Espresso inks (--ink-blue-3 ...) are pale
+	   tints, so figures and bars drawn with them were washed out on white (see the dark block). */
+	--ev-accent: #2563eb;
+	--ev-accent-bg: #eff4ff;
+	--ev-accent-border: #bfd3fe;
+	--ev-ok: #15803d;
+	--ev-ok-bg: #ecfdf3;
+	--ev-ok-border: #a7f3c4;
+	--ev-warn: #c2410c;
+	--ev-warn-bg: #fff4e5;
+	--ev-warn-border: #fcd9a8;
+	--ev-bad: #dc2626;
+	--ev-bad-bg: #fef1f1;
+	--ev-bad-border: #fcc9c9;
+	--ev-violet: #6d28d9;
+	--ev-violet-bg: #f4f0ff;
 	--ev-cyan: #0891b2;
 
 	--ev-radius: 12px;
 	--ev-shimmer: rgba(255, 255, 255, 0.6);
 }
 
-/* Dark mode: Espresso's dark "-3" inks are pale (good as text, weak behind white button text),
-   so solid accents use the deeper "-2" inks; cyan has no deep Espresso ink, hence the hex. */
+/* Dark mode.
+   2026-11-26: explicit colours. In Frappe 16.54 the dark Espresso inks (--ink-blue-2/3 ...) are
+   deep shades (#063465 / #074783), so every accent drawn from them vanished on the dark cards
+   (icons the colour of their tile, unreadable coloured numbers). Accents are now light enough to
+   read on #171717 and their tints are translucent, so they no longer depend on Frappe's palette. */
 [data-theme="dark"] {
-	--ev-accent: var(--ink-blue-2, #3294e3);
-	--ev-ok: var(--ink-green-2, #1ba964);
-	--ev-warn: var(--ink-amber-2, #e37d00);
-	--ev-bad: var(--ink-red-3, #e43838);
+	--ev-accent: #6ea8ff;
+	--ev-accent-bg: rgba(110, 168, 255, 0.14);
+	--ev-accent-border: rgba(110, 168, 255, 0.35);
+	--ev-ok: #4ade80;
+	--ev-ok-bg: rgba(74, 222, 128, 0.13);
+	--ev-ok-border: rgba(74, 222, 128, 0.35);
+	--ev-warn: #fbbf24;
+	--ev-warn-bg: rgba(251, 191, 36, 0.13);
+	--ev-warn-border: rgba(251, 191, 36, 0.35);
+	--ev-bad: #f87171;
+	--ev-bad-bg: rgba(248, 113, 113, 0.14);
+	--ev-bad-border: rgba(248, 113, 113, 0.35);
+	--ev-violet: #a78bfa;
+	--ev-violet-bg: rgba(167, 139, 250, 0.15);
 	--ev-cyan: #3cb8dc;
 	--ev-shimmer: rgba(255, 255, 255, 0.06);
 }
+
+/* ---- 1b. NOC report cells (evision.noc_formatter, 2026-11-26) ------------------------------- */
+.ev-r-zero { color: var(--ev-text-6); }
+.ev-r-ok { color: var(--ev-ok); }
+.ev-r-bad { color: var(--ev-bad); }
+.ev-r-warn { color: var(--ev-warn); }
+.ev-r-strong { font-weight: 600; }
+.ev-r-group { font-weight: 600; color: var(--ev-text); }
+.ev-r-chip {
+	display: inline-block;
+	min-width: 38px;
+	text-align: center;
+	font-size: 11px;
+	font-weight: 600;
+	border-radius: 10px;
+	padding: 1px 8px;
+}
+.ev-r-chip-ok { color: var(--ev-ok); background: var(--ev-ok-bg); }
+.ev-r-chip-bad { color: var(--ev-bad); background: var(--ev-bad-bg); }
+.ev-r-chip-warn { color: var(--ev-warn); background: var(--ev-warn-bg); }
+
+/* NOC reports in full screen (evision.noc_report_onload, 2026-11-26): the page alone, scrollable */
+#page-query-report:fullscreen {
+	background: var(--bg-color, var(--ev-card));
+	overflow: auto;
+	padding: 0 16px 16px;
+}
+
+/* Month bands on day-by-day charts (evision.month_bands, 2026-11-26) */
+.ev-month-bands .ev-band { fill: var(--ev-accent-bg); opacity: 0.7; }
+.ev-month-bands .ev-band-label { fill: var(--ev-text-4); font-size: 11px; font-weight: 600; }
 
 /* ---- 2a. Skeleton loading ------------------------------------------------------------------- */
 /* "body" raises specificity over the pages' own *-loading rules (inline <style>, loaded later). */

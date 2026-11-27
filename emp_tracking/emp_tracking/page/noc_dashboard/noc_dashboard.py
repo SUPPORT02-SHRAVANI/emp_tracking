@@ -1,12 +1,31 @@
 # Copyright (c) 2026, Frappe Technologies and contributors
 # For license information, please see license.txt
 
+# ---------------------------------------------------------------------------------------------
+# NOC Dashboard page: server side
+#
+# How this file works
+#   get_dashboard_data: open complaints right now (Live complaints tab).
+#   get_employee_sheet: one employee's month, hours by place and complaints (Employee sheet tab).
+#   get_complaint_map: complaints on a map with their details (Map tab).
+#   The Performance tab is served by emp_tracking/noc_reports.py (get_performance).
+#
+# Change log (creation date not recorded in this file; earlier history is in git)
+#   2026-11-27  get_complaint_route also returns each route's building (site, site_name), so the Map tab can
+#               highlight all routes of one building on hover. It also returns building points
+#               (each building's KMZ pin; Site has no coordinates) for the map.
+#   2026-11-26  get_complaint_route: the clicked complaint's node and its KMZ routes on the Map tab.
+#   2026-11-26  Header added. get_complaint_map for the new Map tab (user's request: a map with
+#               only complaints; clicking one shows its details).
+# ---------------------------------------------------------------------------------------------
+
 import math
 
 import frappe
 from frappe import _
 from frappe.utils import (
 	add_days,
+	flt,
 	formatdate,
 	get_datetime,
 	get_first_day,
@@ -309,3 +328,138 @@ def add_complaint_counts(days, employee, start, end):
 		day["restored"] += 1
 		day["in_sla" if seconds <= MTTR_LIMIT_HOURS * 3600 else "out_sla"] += 1
 		day["restore_seconds"].append(seconds)
+
+
+# ---- complaints map (2026-11-26) -----------------------------------------------------------
+
+MAP_LIMIT = 5000
+MAP_FIELDS = [
+	"name", "workflow_state", "link_status", "operatorcustomer", "complaint_type", "priority", "complaint_code",
+	"unique_cut", "incident_number", "complaint_date_and_time", "evision_closed_on", "evision_sla", "evision_mttr",
+	"maintenance_team", "mapped_vendor", "splicer", "rider", "area", "linkid", "site", "society_name",
+	"link_as_reported", "location", "latitude", "longitude", "operator_latitude", "operator_longitude",
+]
+
+
+# Date: 2026-11-26
+@frappe.whitelist()
+def get_complaint_map(from_date=None, to_date=None, status="Open", team=None):
+	"""Complaints for the Map tab, each with its details and the best known position:
+	its own latitude / longitude, else the operator's (Vodafone), else its LINKID's Network Link,
+	else a KMZ pin of its Site. Open = every open complaint (dates ignored); Closed / All = received
+	between the dates. Complaints with none of these positions are counted in `missing`, not drawn.
+	get_list applies the user's permissions."""
+	filters = [["docstatus", "<", 2]]
+	if status == "Open":
+		filters.append(["workflow_state", "not in", CLOSED_STATES])
+	else:
+		start, end = getdate(from_date or get_first_day(now_datetime())), getdate(to_date or now_datetime())
+		filters.append(["complaint_date_and_time", "between", [start, end]])
+		if status == "Closed":
+			filters.append(["workflow_state", "in", CLOSED_STATES])
+	if team:
+		filters.append(["maintenance_team", "=", team])
+	rows = frappe.get_list("Complaint Information", filters=filters, fields=MAP_FIELDS,
+		order_by="complaint_date_and_time desc", limit_page_length=MAP_LIMIT)
+
+	def coords(lat, lon):
+		lat, lon = float(lat or 0), float(lon or 0)
+		return (lat, lon) if lat and lon else None
+
+	links = {r.name: coords(r.latitude, r.longitude) for r in frappe.get_all("Network Link",
+		filters={"name": ["in", list({r.linkid for r in rows if r.linkid})]}, fields=["name", "latitude", "longitude"])} \
+		if any(r.linkid for r in rows) else {}
+	pins = {}
+	sites = list({r.site for r in rows if r.site})
+	for p in frappe.get_list("KMZ Point", filters={"custom_site": ["in", sites]}, fields=["custom_site", "latitude", "longitude"],
+			limit_page_length=0) if sites else []:
+		pins.setdefault(p.custom_site, coords(p.latitude, p.longitude))
+	people = {r.splicer for r in rows} | {r.rider for r in rows}
+	people.discard(None)
+	names = dict(frappe.get_all("Employee", filters={"name": ["in", list(people)]}, fields=["name", "employee_name"],
+		as_list=True)) if people else {}
+
+	now = now_datetime()
+	points, missing = [], 0
+	for r in rows:
+		for source, pos in (("Complaint", coords(r.latitude, r.longitude)), ("Operator", coords(r.operator_latitude, r.operator_longitude)),
+				("LINKID", links.get(r.linkid)), ("Site pin", pins.get(r.site))):
+			if pos:
+				break
+		else:
+			missing += 1
+			continue
+		received = get_datetime(r.complaint_date_and_time) if r.complaint_date_and_time else None
+		is_open = r.workflow_state not in CLOSED_STATES
+		age = time_diff_in_seconds(now, received) if is_open and received else None
+		points.append({
+			"name": r.name, "lat": round(pos[0], 6), "lng": round(pos[1], 6), "source": source,
+			"open": is_open, "overdue": bool(age and age > MTTR_LIMIT_HOURS * 3600), "age": age,
+			"state": r.workflow_state, "link_status": r.link_status, "operator": r.operatorcustomer,
+			"type": r.complaint_type, "priority": r.priority, "code": r.complaint_code, "cut": r.unique_cut,
+			"inc": r.incident_number, "received": str(r.complaint_date_and_time or ""), "closed": str(r.evision_closed_on or ""),
+			"sla": r.evision_sla, "mttr": r.evision_mttr, "team": r.maintenance_team, "vendor": r.mapped_vendor,
+			"splicer": names.get(r.splicer) or r.splicer, "rider": names.get(r.rider) or r.rider, "area": r.area,
+			"linkid": r.linkid, "site": r.society_name or r.site, "link": r.link_as_reported, "place": r.location,
+		})
+	return {"points": points, "missing": missing, "total": len(rows), "limited": len(rows) >= MAP_LIMIT,
+		"mttr_limit_hours": MTTR_LIMIT_HOURS}
+
+
+# Date: 2026-11-26
+# Map tab: the clicked complaint's node and its KMZ fibre routes (user's request: "show the
+# complaint's node route on the map").
+ROUTE_LIMIT = 400
+
+
+@frappe.whitelist()
+def get_complaint_route(complaint):
+	"""The complaint's GIS Node, worked out from its Node ID, else its GIS Node ID, else its Site's
+	node, else its LINKID's Network Link; then that node's KMZ Routes as [[lat, lon], ...] lines.
+	Routes of the complaint's own Site (building) are flagged so the map can draw them stronger."""
+	from emp_tracking.emp_tracking.page.kmz_map.kmz_map import route_coords
+
+	doc = frappe.get_doc("Complaint Information", complaint)
+	doc.check_permission("read")
+	candidates = [doc.get("node_id"), doc.get("gis_node_id")]
+	if doc.site:
+		candidates.append(frappe.db.get_value("Site", doc.site, "node"))
+	if doc.linkid:
+		link = frappe.db.get_value("Network Link", doc.linkid, ["gis_node_id", "node_id"], as_dict=True) or {}
+		candidates += [link.get("gis_node_id"), link.get("node_id")]
+	node = next((c for c in candidates if c and frappe.db.exists("GIS Node", c)), None)
+	if not node:
+		return {"node": None, "routes": [], "site": doc.site}
+
+	rows = frappe.get_list("KMZ Route", filters={"gis": node}, fields=["name", "route_name", "location", "length_m", "custom_site"],
+		limit_page_length=ROUTE_LIMIT + 1)
+	# building names for the hover tooltip, fetched in one query
+	site_ids = list({r.custom_site for r in rows if r.custom_site})
+	site_names = dict(frappe.get_all("Site", filters={"name": ["in", site_ids]}, fields=["name", "site_name"],
+		as_list=True)) if site_ids else {}
+	routes = []
+	for r in rows[:ROUTE_LIMIT]:
+		coords = route_coords(r.location)
+		if len(coords) >= 2:
+			routes.append({"name": r.name, "title": r.route_name, "coords": coords, "length_m": r.length_m,
+				"site": r.custom_site, "site_name": site_names.get(r.custom_site),
+				"own_site": bool(doc.site and r.custom_site == doc.site)})
+
+	# 2026-11-27: building points. Site has no coordinates, so a building's position is its first
+	# KMZ Point (pin) with that site; buildings without a pin are only counted (no_pin).
+	pin_sites = set(site_ids) | ({doc.site} if doc.site else set())
+	pins = {}
+	for p in frappe.get_list("KMZ Point", filters={"custom_site": ["in", list(pin_sites)]},
+			fields=["custom_site", "latitude", "longitude"], limit_page_length=0) if pin_sites else []:
+		if flt(p.latitude) and flt(p.longitude):
+			pins.setdefault(p.custom_site, [round(flt(p.latitude), 6), round(flt(p.longitude), 6)])
+	if doc.site and doc.site not in site_names:
+		site_names[doc.site] = frappe.db.get_value("Site", doc.site, "site_name")
+	route_count = {}
+	for r in routes:
+		if r["site"]:
+			route_count[r["site"]] = route_count.get(r["site"], 0) + 1
+	buildings = [{"site": s, "site_name": site_names.get(s), "lat": pos[0], "lng": pos[1],
+		"routes": route_count.get(s, 0), "own_site": s == doc.site} for s, pos in pins.items()]
+	return {"node": node, "site": doc.site, "routes": routes, "limited": len(rows) > ROUTE_LIMIT,
+		"buildings": buildings, "no_pin": len(pin_sites - set(pins))}

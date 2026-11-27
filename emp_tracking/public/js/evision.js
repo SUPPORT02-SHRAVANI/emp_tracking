@@ -23,6 +23,13 @@
 // Change log
 //   2026-11-02  Created: stepper().
 //   2026-11-02  stepper() opts.hero (summary header); form_style().
+//   2026-11-26  noc_scope_filters() and noc_formatter(): shared filters and cell colours of the
+//               NOC reports.
+//   2026-11-26  month_bands(): light band behind every other month on day-by-day charts.
+//   2026-11-26  noc_report_onload() / noc_report_after_render(): "Full screen" button and a
+//               full-height table on the NOC reports.
+//   2026-11-26  noc_fluid_table() (stretched "fluid" report tables) removed again: it squeezed
+//               grouped (tree) tables into unreadable columns. Reports use wider columns instead.
 //   2026-11-02  New look chosen by the user: header above a step card with a "Waiting on you" /
 //               "Now with" status bar (replaces the "Current stage / Step N of M" head);
 //               opts.after and notice_html() for warnings / actions; hero figure tiles dropped.
@@ -155,4 +162,145 @@ evision.hero_html = function (hero) {
 evision.form_style = function (frm) {
 	if (frm && frm.wrapper && frm.wrapper.classList) frm.wrapper.classList.add("ev-form");
 	else if (frm && frm.wrapper && frm.wrapper.addClass) frm.wrapper.addClass("ev-form");
+};
+
+// Date: 2026-11-26
+// Shared look of the five NOC reports (report/noc_*): the scope filters every report has, and a
+// cell formatter that colours by meaning only. Green = In SLA, red = Out SLA, amber = pending,
+// zero counts fade to "–" so the numbers that matter stand out; group rows (tree view) are bold.
+evision.noc_scope_filters = function () {
+	return [
+		{
+			fieldname: "own_fiber_only", label: __("Own fibre faults only"), fieldtype: "Check", default: 1,
+			description: __("RFO Own Fiber Issue, no terminations: the NOC sheet's scope"),
+		},
+		{
+			fieldname: "own_teams_only", label: __("Own teams only"), fieldtype: "Check", default: 1,
+			description: __("Leave out vendors"),
+		},
+	];
+};
+
+evision.noc_formatter = function (value, row, column, data, default_formatter) {
+	var html = default_formatter(value, row, column, data);
+	if (!data || !column) return html;
+	var f = column.fieldname;
+	var raw = data[f];
+	var wrap = (cls, inner) => '<div class="' + cls + '">' + (inner == null ? html : inner) + "</div>";
+	var right = (text) => '<div style="text-align:right">' + text + "</div>";
+
+	if (column.fieldtype === "Int" && raw === 0) return wrap("ev-r-zero", right("–"));
+	if (f === "sla" && raw) {
+		var tone = raw === "OUT" ? "bad" : raw === "IN" ? "ok" : "warn";
+		return '<span class="ev-r-chip ev-r-chip-' + tone + '">' + frappe.utils.escape_html(raw) + "</span>";
+	}
+	// 2026-11-26: any "..._pct" SLA column (NOC Performance has day_pct / night_pct / all_pct)
+	if ((f === "sla_pct" || /_pct$/.test(f)) && raw != null) html = wrap(raw >= 80 ? "ev-r-ok ev-r-strong" : "ev-r-bad ev-r-strong");
+	else if (f === "in_sla" || /_in$/.test(f)) html = wrap("ev-r-ok");
+	else if (f === "out_sla" || /_out$/.test(f)) html = wrap("ev-r-bad");
+	else if ((f === "closing" || f === "open") && raw > 0) html = wrap("ev-r-warn ev-r-strong");
+	if (data.is_group) html = wrap("ev-r-group");
+	return html;
+};
+
+// Date: 2026-11-26
+// Light background band behind every other month of a day-by-day Frappe chart, with the month's
+// name at its top, so a range over several months reads month by month (user's request). Frappe
+// Charts has no x-bands, so they are drawn into the chart's own SVG: chart.state.xAxis.positions
+// are the days' x centres inside chart.drawArea, chart.height is the plot height. `dates` are the
+// ISO dates of the chart's labels, in order. Does nothing for a single month. A resize redraws the
+// whole SVG, so a MutationObserver puts the bands back each time.
+evision.month_bands = function (chart, dates) {
+	if (!chart || !dates || !dates.length) return;
+	var months = dates.map((d) => String(d).slice(0, 7));
+	if (new Set(months).size < 2) return;
+	var NS = "http://www.w3.org/2000/svg";
+
+	var draw = function () {
+		var area = chart.drawArea;
+		var st = chart.state;
+		if (!area || !st || !st.xAxis || !st.xAxis.positions || area.querySelector(".ev-month-bands")) return;
+		var pos = st.xAxis.positions;
+		var w = st.unitWidth || 0;
+		var g = document.createElementNS(NS, "g");
+		g.setAttribute("class", "ev-month-bands");
+		var start = 0;
+		var n = 0;
+		for (var i = 1; i <= months.length; i++) {
+			if (i < months.length && months[i] === months[start]) continue;
+			var x0 = pos[start] - w / 2;
+			var x1 = pos[i - 1] + w / 2;
+			if (n % 2 === 0) {
+				var rect = document.createElementNS(NS, "rect");
+				rect.setAttribute("class", "ev-band");
+				rect.setAttribute("x", x0);
+				rect.setAttribute("y", 0);
+				rect.setAttribute("width", Math.max(x1 - x0, 0));
+				rect.setAttribute("height", chart.height);
+				g.appendChild(rect);
+			}
+			var label = document.createElementNS(NS, "text");
+			label.setAttribute("class", "ev-band-label");
+			label.setAttribute("x", x0 + 6);
+			label.setAttribute("y", 12);
+			label.textContent = moment(dates[start]).format(x1 - x0 > 70 ? "MMMM YYYY" : "MMM");
+			g.appendChild(label);
+			start = i;
+			n++;
+		}
+		area.insertBefore(g, area.firstChild); // behind the bars and lines
+	};
+
+	draw();
+	var box = chart.parent || (chart.svg && chart.svg.parentNode);
+	if (box && window.MutationObserver) {
+		if (box._evBands) box._evBands.disconnect(); // one observer per chart box
+		box._evBands = new MutationObserver(() => draw());
+		box._evBands.observe(box, { childList: true, subtree: true });
+	}
+};
+
+// NOC reports: bands on the report's chart, from the ISO dates the report sends as chart.dates
+evision.noc_report_month_bands = function () {
+	var qr = frappe.query_report;
+	if (qr && qr.chart && qr.raw_data && qr.raw_data.chart) evision.month_bands(qr.chart, qr.raw_data.chart.dates);
+};
+
+// Date: 2026-11-26
+// NOC reports, "full screen" (user's request). Frappe uses one report page for every report, so
+// nothing here changes the page for other reports:
+//   onload: a "Full screen" button that shows the report page alone on the whole screen
+//           (browser Fullscreen API; Esc or the button again leaves it).
+//   after_datatable_render: this report's table fills the screen height (Frappe's default box is
+//           shorter and left empty space below), and the month bands on its chart.
+evision.noc_report_onload = function (report) {
+	report.page.add_inner_button(__("Full screen"), () => {
+		var el = report.page.wrapper[0];
+		if (document.fullscreenElement) document.exitFullscreen();
+		else if (el.requestFullscreen) el.requestFullscreen().catch(() => frappe.show_alert(__("Full screen is blocked in this browser")));
+	});
+};
+
+evision.noc_report_after_render = function (datatable) {
+	if (datatable && datatable.bodyScrollable) {
+		datatable.bodyScrollable.style.height = "calc(100vh - 150px)";
+	}
+	// Frappe's report page replaces a chart's axisOptions with its own (query_report.js
+	// get_chart_options), so the report's own ones (xIsSeries: show every n-th date label instead
+	// of squeezing all into "0..") are merged back and the chart drawn once more.
+	var qr = frappe.query_report;
+	// own key "ev_axis": Frappe overwrites axisOptions on the very object the report sent
+	var own = qr && qr.raw_data && qr.raw_data.chart && qr.raw_data.chart.ev_axis;
+	if (own && qr.chart_options && !qr.chart_options._ev_axis) {
+		var extra = Object.assign({}, own);
+		// 2026-11-26: "integer": counts on the y axis as whole numbers (not "100.00")
+		if (extra.integer) {
+			delete extra.integer;
+			extra.numberFormatter = (v) => String(Math.round(v));
+		}
+		qr.chart_options.axisOptions = Object.assign({}, qr.chart_options.axisOptions, extra);
+		qr.chart_options._ev_axis = 1;
+		qr.render_chart(qr.chart_options);
+	}
+	evision.noc_report_month_bands();
 };

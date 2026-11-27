@@ -13,6 +13,8 @@
 #   2026-10-09  Added Team Leader / Supervisor Name and Manager Name; leader name from Employee.
 #   2026-10-31  Header: New Project (which copied the leader / manager names) was merged into
 #               FTTH Work Order; a work order's Network Link takes the team named in its Team field.
+#   2026-11-26  Members table (Maintenance Team Member: employee, role, active), read by the NOC
+#               Team Availability report (who was present / assigned per team per day).
 # ---------------------------------------------------------------------------------------------
 
 import frappe

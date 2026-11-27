@@ -15,9 +15,12 @@ How it works:
 - Who: only employees with Mode of Attendance (custom_mode_of_attendance) = "Mobile App" (user's
   decision, 2026-11-23). Unolo / Biometric / blank employees are never given these shifts, so HRMS
   does not mark them Absent.
-- Two Shift Types (user's decision, 2026-11-23), both "Present if punched in" (no half-day / absent
-  hour thresholds) and "Last Sync of Checkin" kept current by HRMS (auto_update_last_sync):
-    * OFFICE_SHIFT 09:30-18:30.
+- Two Shift Types (user's decision, 2026-11-23), "Last Sync of Checkin" kept current by HRMS
+  (auto_update_last_sync):
+    * OFFICE_SHIFT 09:30-18:30, judged on hours worked whatever the clock times (2026-11-27):
+      punches at any time of the day count; 8 h 45 min or more from first punch-in to last
+      punch-out = Present (9 h with 15 min grace), 4.5 h to under 8 h 45 min = Half Day,
+      under 4.5 h = Absent.
     * FIELD_SHIFT for riders, splicers and the maintenance team: a 12-hour day counted from their own
       punch-in time. HRMS shifts have fixed clock times, so this shift accepts a punch-in at any time
       of the day (06:00-18:00 with 6 h before / 6 h after allowed = 00:00-23:59); any punch-in that
@@ -35,6 +38,10 @@ hrms/hr/doctype/shift_type/shift_type.py.
 
 Change log:
 	2026-11-23  Created.
+	2026-11-27  Office shift: Present when 9 hours are completed, irrespective of the shift's times
+	            (user's request); Half Day / Absent below that. Existing sites get it from the patch
+	            emp_tracking.patches.office_shift_hours_rule.
+	2026-11-27  15 minutes' grace (user's request): Present from 8 h 45 min.
 """
 
 import re
@@ -49,7 +56,13 @@ OFFICE_SHIFT = "Office 09:30-18:30 (Mobile App)"
 FIELD_SHIFT = "Field 12 Hours (Mobile App)"
 OUR_SHIFTS = (OFFICE_SHIFT, FIELD_SHIFT)
 
-# Settings shared by both shifts. Thresholds 0 = not used, so any punch IN marks the day Present.
+# Office staff: hours from first punch-in to last punch-out needed for Present (user, 2026-11-27):
+# a 9-hour day with 15 minutes' grace, so Present from 8 h 45 min.
+OFFICE_FULL_DAY_HOURS = 9
+OFFICE_GRACE_HOURS = 0.25
+
+# Settings shared by both shifts. Thresholds 0 = not used, so any punch IN marks the day Present
+# (the office shift sets its own thresholds in SHIFT_TYPES).
 COMMON_SHIFT_SETTINGS = {
 	"enable_auto_attendance": 1,
 	# HRMS processes only checkins before "Last Sync of Checkin"; let HRMS move it forward itself.
@@ -68,8 +81,17 @@ SHIFT_TYPES = {
 	OFFICE_SHIFT: {
 		"start_time": "09:30:00",
 		"end_time": "18:30:00",
-		"begin_check_in_before_shift_start_time": 60,  # punches from 08:30 count
-		"allow_check_out_after_shift_end_time": 180,  # punch-outs until 21:30 count
+		# 2026-11-27 (user's decision): office staff are judged on hours worked, not on the shift's
+		# clock times (e.g. 10:00-19:00 is a full day). Punches anywhere in 00:00-23:59 count:
+		# 570 min before 09:30 and 329 min after 18:30; 540 + 570 + 329 = 1439 min stays under HRMS's
+		# 24-hour limit (ShiftType.validate_circular_shift).
+		"begin_check_in_before_shift_start_time": 570,
+		"allow_check_out_after_shift_end_time": 329,
+		# First check-in to last check-out: 8.75 h or more = Present (9 h less 15 min grace),
+		# 4.5 h to under 8.75 h = Half Day, under 4.5 h = Absent (HRMS ShiftType.get_attendance).
+		# Overrides COMMON_SHIFT_SETTINGS.
+		"working_hours_threshold_for_half_day": OFFICE_FULL_DAY_HOURS - OFFICE_GRACE_HOURS,
+		"working_hours_threshold_for_absent": OFFICE_FULL_DAY_HOURS / 2,
 		"color": "Blue",
 	},
 	FIELD_SHIFT: {

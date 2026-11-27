@@ -23,3 +23,7 @@ emp_tracking.patches.remove_new_project
 emp_tracking.ftth.patches.set_work_order_stage
 emp_tracking.ftth.patches.fill_billing_from_link_register
 emp_tracking.ftth.patches.ftth_settings_defaults
+# 2026-11-26: Complaint Information.unique_cut from the imported "Unique cut:" lines (NOC reports)
+emp_tracking.patches.backfill_unique_cut
+# 2026-11-27: office shift: Present when 9 h are completed, whatever the punch times (app_attendance.py)
+emp_tracking.patches.office_shift_hours_rule

@@ -37,6 +37,7 @@
 //   2026-11-02  Workflow stage tracker at the top of the form (complaint_stage_tracker, drawn by
 //               evision.stepper from public/js/evision.js).
 //   2026-11-02  Card layout for the form (evision.form_style).
+//   2026-11-26  Picking a vendor empties Rider / Splicer / 2nd Rider / 2nd Splicer (hidden then).
 // ---------------------------------------------------------------------------------------------
 
 // Workflow states after which a complaint no longer counts as open (for the duplicate check).
@@ -118,6 +119,16 @@ const OPERATOR_TYPES = {
 };
 
 frappe.ui.form.on("Complaint Information", {
+	// Date: 2026-11-26
+	// A vendor sends its own people: picking a vendor empties Rider / Splicer / 2nd Rider /
+	// 2nd Splicer (the fields are hidden while a vendor is set; the server does the same on save).
+	mapped_vendor(frm) {
+		if (!frm.doc.mapped_vendor) return;
+		["rider", "splicer", "second_rider", "second_splicer"].forEach((f) => {
+			if (frm.doc[f]) frm.set_value(f, null);
+		});
+	},
+
 	// Date: 2026-09-30
 	// Runs once when the form is built: set which LINKIDs and Sites can be picked.
 	setup(frm) {

@@ -31,6 +31,13 @@
 #               - Worked out on save: delay in aligning the team, EVisions / Company MTTR,
 #                 SLA In/Out (4 hours), waiting for confirmation, aging.
 #               - update_open_aging() runs hourly (hooks.py) for open complaints.
+#   2026-11-26  Unique Cut field (NOC sheet UNIQUE CUT): left blank, set_unique_cut() fills it with
+#               the Complaint Code (or the record name), so every complaint counts as one cut in
+#               the NOC reports (emp_tracking/noc_reports.py).
+#   2026-11-26  Form in tabs (user's request, .json only): Complaint / Location / Assignment /
+#               Closure & SLA; Time & SLA no longer collapsed (it has its own tab).
+#   2026-11-26  Vendor assigned -> no Rider / Splicer (user's request): the four person fields are
+#               hidden on the form and cleared when a vendor is newly set (clear_people_for_vendor).
 #   2026-10-09  Transport removed as a link type: the client counts it as Backbone.
 # ---------------------------------------------------------------------------------------------
 
@@ -88,6 +95,24 @@ class ComplaintInformation(Document):
 		self.set_people()
 		self.stamp_workflow_times()
 		self.set_times_and_sla()
+		self.set_unique_cut()
+		self.clear_people_for_vendor()
+
+	# Date: 2026-11-26
+	def clear_people_for_vendor(self):
+		"""A vendor sends its own people, so no Rider / Splicer is assigned on a vendor complaint
+		(user's request; the form hides those fields). Only done when the vendor is newly set, so
+		the 39 old closed complaints that name both keep their history on a re-save."""
+		if not self.mapped_vendor or not (self.is_new() or self.has_value_changed("mapped_vendor")):
+			return
+		for field in ("rider", "splicer", "second_rider", "second_splicer"):
+			self.set(field, None)
+
+	# Date: 2026-11-26
+	def set_unique_cut(self):
+		"""Several complaints on one fibre cut share a Unique Cut (typed by NOC). With none typed,
+		the complaint is its own cut: its Complaint Code, or its name before a code exists."""
+		self.unique_cut = (self.unique_cut or "").strip() or self.complaint_code or self.name
 
 	# Date: 2026-10-09
 	def set_people(self):

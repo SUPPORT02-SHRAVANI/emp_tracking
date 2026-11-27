@@ -88,6 +88,22 @@ Change log:
 	2026-11-23  "Allow Punch From Anywhere" checkbox retired: Punch-In Location = "Anywhere" is the one
 	            setting (user's request). after_migrate() runs retire_allow_punch_from_anywhere(), which
 	            moves ticked employees to "Anywhere" and then deletes the custom field.
+	2026-11-25  "Milestone" (milestone_app) removed from DESK_ICONS, so keep_only_desk_icons() hides
+	            its desk tile on migrate (user's request: not an EVision module).
+	2026-11-26  OverHead Project and NOC get different workspace icons (user's request): each module
+	            tile writes its own Frappe 16.54 `Sidebar` (make_shell) with its own header icon
+	            (radio-tower / dashboard / monitor-cog) and menu, undoing Frappe's merge of the three
+	            into one "Emp Tracking" Sidebar. The NOC tile is renamed "NOC Helpdesk" (NOC_TILE): the
+	            shell name is its URL segment and "noc" is taken by the NOC DocType. The old "NOC"
+	            tile/sidebars are deleted via OLD_SIDEBARS.
+	2026-11-26  Saved Desktop Layouts get the missing DESK_ICONS tiles (add_desk_icons_to_saved_layouts),
+	            because Frappe 16.54 draws only what a user's saved layout lists (user's request: show
+	            OverHead Project and NOC Helpdesk on the desk home).
+	2026-11-26  NOC Helpdesk menu: "NOC Reports" section with the five NOC workbook reports.
+	2026-11-26  NOC Helpdesk menu: Cut Team Summary, and a "Performance & Teams" section (NOC Performance,
+	            Team Availability, Field Staff Location Hours, Maintenance Teams).
+	2026-11-26  OverHead Project Sidebar is the FTTH module's sidebar (SHELL_MODULES), so Frappe no
+	            longer builds a second "FTTH" sidebar with the same screens.
 """
 
 import os
@@ -116,11 +132,15 @@ NOC_TILE_ROLES = ["NOC Head", "Maintenance Agent", "Management", "System Manager
 # Earlier names of the menu; their tiles and sidebars are deleted by make_navigation()
 # 2026-10-29: "EVision" added; "OverHead Project" removed (it is a module tile again).
 # 2026-11-17: "EVision" taken out again: it is a tile once more (EVISION_TILE).
-OLD_SIDEBARS = ("Workforce", "Dashboard")
+# 2026-11-26: + "NOC" (renamed to NOC_TILE); its tile, archived sidebar and Sidebar are deleted.
+OLD_SIDEBARS = ("Workforce", "Dashboard", "NOC")
 # 2026-11-17: the "EVision" tile, shown next to the module tiles. Its sidebar is all module menus
 # together, in this order (section names in oh_menu() are unique across modules, so no clash).
 EVISION_TILE = "EVision"
-EVISION_MODULES = ("Emp Tracking", "OverHead Project", "NOC")
+# 2026-11-26: the NOC tile is "NOC Helpdesk" (was "NOC"). Frappe 16.54 makes a tile's Sidebar name
+# its URL segment, and "noc" is already the NOC DocType's URL, so /desk/noc/... would open NOC records.
+NOC_TILE = "NOC Helpdesk"
+EVISION_MODULES = ("Emp Tracking", "OverHead Project", NOC_TILE)
 # 2026-10-24: tiles folded into EVision. They are made by Frappe for other workspaces/apps, so they
 # are only hidden (hidden=1), never deleted, and re-hidden after every migrate.
 # 2026-10-29: "Helpdesk NOC" hidden too; the NOC tile replaces it (its sidebar stays, with the NOC menu).
@@ -129,7 +149,10 @@ HIDDEN_ICONS = ("FTTH Tracker", "WorkForce", "Helpdesk NOC")
 # hidden after each migrate by keep_only_desk_icons(). Their pictures are SVGs in
 # <app>/public/icons/desktop_icons/{solid,subtle}/<scrubbed label>.svg (emp_tracking, milestone_app).
 # 2026-11-17: + EVision.
-DESK_ICONS = ("OverHead Project", "Emp Tracking", "NOC", EVISION_TILE, "Milestone")
+# 2026-11-25: - Milestone (milestone_app / BNI, not part of EVision; user's request). Only its desk
+# tile is hidden; the app and its data stay installed.
+# 2026-11-26: "NOC" -> NOC_TILE.
+DESK_ICONS = ("OverHead Project", "Emp Tracking", NOC_TILE, EVISION_TILE)
 # Icons hidden by keep_only_desk_icons(), kept so the change can be undone (show_hidden_desk_icons()).
 DESK_HIDDEN_KEY = "emp_tracking_desk_hidden_icons"
 HOME_PAGE = "app/workforce-dashboard"
@@ -590,7 +613,7 @@ NOC_SIDEBAR = "Helpdesk NOC"
 # 2026-10-24: sidebars that carry the EVision menu besides EVision itself. Frappe may open the
 # FTTH Tracker sidebar for an FTTH screen, so it gets the same menu and nothing changes on screen.
 # 2026-10-29: sidebar -> the module tile whose menu it copies.
-MIRROR_SIDEBARS = {NOC_SIDEBAR: "NOC", "FTTH Tracker": "OverHead Project"}
+MIRROR_SIDEBARS = {NOC_SIDEBAR: NOC_TILE, "FTTH Tracker": "OverHead Project"}
 
 
 # Date: 2026-10-09
@@ -667,10 +690,27 @@ def oh_menu():
 				page("Employee Performance", "employee-performance"),
 			],
 		},
-		"NOC": {
+		NOC_TILE: {
 			"Complaints": [
 				page("NOC Dashboard", "noc-dashboard"),
 				doctype("Complaints", "Complaint Information"),
+			],
+			# 2026-11-26: the NOC workbook's tabs as reports (emp_tracking/noc_reports.py)
+			"NOC Reports": [
+				report("Pending Summary", "NOC Pending Summary"),
+				# 2026-11-26: every SR counted per team and day, with who closed
+				report("Cut Team Summary", "NOC Cut Team Summary"),
+				report("Unique Cut Summary", "NOC Unique Cut Summary"),
+				report("Unique Cut Master", "NOC Unique Cut Master"),
+				report("Major Outage Closure", "NOC Major Outage Closure"),
+				report("SLA / TAT Summary", "NOC SLA TAT Summary"),
+			],
+			# 2026-11-26: performance (month / day, day and night calls) and people
+			"Performance & Teams": [
+				report("Performance (Day / Night)", "NOC Performance"),
+				report("Team Availability", "NOC Team Availability"),
+				report("Field Staff Location Hours", "Field Staff Location Hours"),
+				doctype("Maintenance Teams", "Maintenance Team"),
 			],
 		},
 	}
@@ -679,11 +719,14 @@ def oh_menu():
 # Date: 2026-10-29
 # Desk tile settings per module: (icon, roles that see the tile).
 # 2026-11-17: + the EVision tile (every module), seen by TILE_ROLES like the old EVision tile.
+# 2026-11-26: OverHead Project and NOC get their own Lucide icons (radio-tower: overhead fiber
+# routes; monitor-cog: network operations centre), used as the header icon of their own Sidebar
+# (make_shell), so the two workspaces no longer look alike (user's request).
 def module_tiles():
 	return {
-		"OverHead Project": ("project", OH_TILE_ROLES),
+		"OverHead Project": ("radio-tower", OH_TILE_ROLES),
 		"Emp Tracking": ("dashboard", TILE_ROLES),
-		"NOC": ("support", NOC_TILE_ROLES),
+		NOC_TILE: ("monitor-cog", NOC_TILE_ROLES),
 		EVISION_TILE: ("dashboard", TILE_ROLES),
 	}
 
@@ -731,11 +774,16 @@ def make_navigation():
 			frappe.delete_doc("Desktop Icon", old, force=True, ignore_permissions=True)
 		if frappe.db.exists("Workspace Sidebar", old):
 			frappe.delete_doc("Workspace Sidebar", old, force=True, ignore_permissions=True)
+		# 2026-11-26: Frappe 16.54 Sidebar of the same name (e.g. the old "NOC" shell)
+		if frappe.db.exists("DocType", "Sidebar") and frappe.db.exists("Sidebar", old):
+			frappe.delete_doc("Sidebar", old, force=True, ignore_permissions=True)
 
 	menus = {}
 	for idx, (tile, menu) in enumerate(oh_menu().items()):
 		menus[tile] = oh_menu_items(menu)
 		icon, roles = tiles[tile]
+		# 2026-11-26: the Sidebar (Frappe 16.54+) gets a copy, made before make_tile adds layout keys
+		make_shell(tile, [dict(i) for i in menus[tile]], icon)
 		make_tile(tile, menus[tile], icon=icon, color="blue", roles=roles, idx=idx)
 	# 2026-11-17: the EVision tile, after the module tiles; copies, since set_sidebar_items adds
 	# layout keys to each row.
@@ -748,6 +796,37 @@ def make_navigation():
 			set_sidebar_items(frappe.get_doc("Workspace Sidebar", name), [dict(i) for i in menus[tile]])
 	hide_replaced_icons()
 	keep_only_desk_icons()
+
+
+# Date: 2026-11-26
+# Frappe 16.54 draws the desk sidebar, its header icon and the tile's route from `Sidebar`
+# documents (one "shell" each, named by title) and no longer reads Workspace Sidebar. Its
+# migration merged our OverHead Project, Emp Tracking and NOC sidebars into one "Emp Tracking"
+# Sidebar (merged_from), so all three tiles showed that one "dashboard" icon and menu. Each module
+# tile gets its own Sidebar again (module Emp Tracking, which allows several), with its own header
+# icon and menu.
+# Not used for EVision: a Sidebar title may not be a Module Def name, and Frappe has "Evision".
+# Sidebar only accepts writes in developer mode or during migrate/install (after_migrate runs
+# under in_migrate), so a failure is logged and the other shells are still written.
+# 2026-11-26: OverHead Project belongs to module FTTH (SHELL_MODULES). A module without a Sidebar
+# document gets one computed by Frappe, so FTTH had its own "FTTH" sidebar (hammer icon) listing
+# the same work-order screens as OverHead Project (user: "why overhead and ftth is same?").
+# With OverHead Project as FTTH's sidebar that copy is gone, and FTTH screens open in OverHead.
+SHELL_MODULES = {"OverHead Project": "FTTH"}
+
+
+def make_shell(name, items, icon):
+	if not frappe.db.exists("DocType", "Sidebar"):
+		return  # older Frappe: the Workspace Sidebar made by make_tile() is what the desk shows
+	module = SHELL_MODULES.get(name)
+	if not (module and frappe.db.exists("Module Def", module)):
+		module = SIDEBAR
+	try:
+		shell = frappe.get_doc("Sidebar", name) if frappe.db.exists("Sidebar", name) else frappe.new_doc("Sidebar")
+		shell.update({"title": name, "module": module, "header_icon": icon, "standard": 0})
+		set_sidebar_items(shell, items)
+	except Exception:
+		frappe.log_error(title=f"emp_tracking: writing the {name} Sidebar failed")
 
 
 # Date: 2026-10-29
@@ -765,8 +844,46 @@ def keep_only_desk_icons():
 	for name in to_hide:
 		frappe.db.set_value("Desktop Icon", name, "hidden", 1, update_modified=False)
 	frappe.db.set_default(DESK_HIDDEN_KEY, json.dumps(sorted(hidden_before | set(to_hide))))
+	add_desk_icons_to_saved_layouts()
 	frappe.cache.delete_key("desktop_icons")
 	frappe.cache.delete_key("bootinfo")
+
+
+# Date: 2026-11-26
+# Frappe 16.54 draws a user's desk home only from their saved Desktop Layout once they have one;
+# icons created later are never appended (desktop_icons.bundle.js, arrange_layout). Administrator's
+# layout of 2026-11-24 had "Emp Tracking" but not OverHead Project / NOC Helpdesk / EVision, so
+# those tiles never showed. Each missing DESK_ICONS tile is added as a visible top-level entry,
+# right after the user's "Emp Tracking" entry (or at the end). Nothing else in the layout changes:
+# the user's own order and hidden flags stay. Old "NOC" entries (renamed NOC_TILE) are removed.
+LAYOUT_KEYS = ("label", "bg_color", "link", "link_type", "app", "icon_type", "parent_icon", "icon", "link_to",
+	"idx", "standard", "logo_url", "hidden", "name", "restrict_removal", "icon_image")
+
+
+def add_desk_icons_to_saved_layouts():
+	import json
+
+	if not frappe.db.exists("DocType", "Desktop Layout"):
+		return
+	for name in frappe.get_all("Desktop Layout", pluck="name"):
+		try:
+			layout = json.loads(frappe.db.get_value("Desktop Layout", name, "layout") or "[]")
+		except ValueError:
+			continue  # a layout we cannot read is left as it is
+		layout = [i for i in layout if not (i.get("name") == "NOC" and i.get("app") == "emp_tracking")]
+		present = {i.get("name") for i in layout} | {i.get("label") for i in layout}
+		missing = [n for n in DESK_ICONS if n not in present and frappe.db.exists("Desktop Icon", n)]
+		if not missing:
+			continue
+		at = next((k + 1 for k, i in enumerate(layout) if i.get("name") == SIDEBAR), len(layout))
+		for n in missing:
+			icon = frappe.get_doc("Desktop Icon", n)
+			entry = {key: icon.get(key) for key in LAYOUT_KEYS}
+			entry.update({"hidden": 0, "parent_icon": None, "child_icons": []})
+			layout.insert(at, entry)
+			at += 1
+		# Written straight to the database: the layout belongs to the user, no controller logic applies
+		frappe.db.set_value("Desktop Layout", name, "layout", json.dumps(layout), update_modified=False)
 
 
 # Date: 2026-10-29

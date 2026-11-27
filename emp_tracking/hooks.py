@@ -34,7 +34,12 @@ app_license = "mit"
 # installed on the Evision site, so other sites on the bench do not load them.
 # 2026-11-02: "?v=" makes browsers fetch a changed file (assets are cached for 12 hours); raise
 # EV_ASSET_VERSION whenever evision.css / evision.js change.
-EV_ASSET_VERSION = "20261102c"
+# 2026-11-26: "20261126a" dark-mode token fix; "20261126b" NOC report cell styles / formatter;
+# "20261126c" light-mode tokens; "20261126d" month bands on charts;
+# "20261126e" NOC reports full screen; "20261126f"/"g" report chart axis options; "20261126h" fluid report tables;
+# "20261126i" SLA % colours on any _pct column; "20261126j" whole-number chart axis;
+# "20261126k" fluid tables removed
+EV_ASSET_VERSION = "20261126k"
 app_include_css = f"/assets/emp_tracking/css/evision.css?v={EV_ASSET_VERSION}"
 app_include_js = f"/assets/emp_tracking/js/evision.js?v={EV_ASSET_VERSION}"
 
@@ -63,7 +68,11 @@ doctype_js = {
 }
 # 2026-11-02: FTTH Work Order list: stage pipeline strip and clearer columns (extends FTTH
 # Tracker's own list settings; runs after them).
-doctype_list_js = {"FTTH Work Order": "public/js/ftth_work_order_list.js"}
+# 2026-11-25: Shift Assignment list: "Weekly Roster" button (keeps HRMS's own list onload).
+doctype_list_js = {
+	"FTTH Work Order": "public/js/ftth_work_order_list.js",
+	"Shift Assignment": "public/js/shift_assignment_list.js",
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
