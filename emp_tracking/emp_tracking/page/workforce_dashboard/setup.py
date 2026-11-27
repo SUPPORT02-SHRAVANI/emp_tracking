@@ -104,6 +104,9 @@ Change log:
 	            Team Availability, Field Staff Location Hours, Maintenance Teams).
 	2026-11-26  OverHead Project Sidebar is the FTTH module's sidebar (SHELL_MODULES), so Frappe no
 	            longer builds a second "FTTH" sidebar with the same screens.
+	2026-11-27  Desk home shows only OverHead Project, NOC Helpdesk and Frappe HR (user's request for
+	            the main site). Saved Desktop Layouts get every other top-level tile hidden
+	            (hide_others_in_saved_layouts), since Frappe 16.54 uses the layout's hidden flags.
 """
 
 import os
@@ -152,7 +155,10 @@ HIDDEN_ICONS = ("FTTH Tracker", "WorkForce", "Helpdesk NOC")
 # 2026-11-25: - Milestone (milestone_app / BNI, not part of EVision; user's request). Only its desk
 # tile is hidden; the app and its data stay installed.
 # 2026-11-26: "NOC" -> NOC_TILE.
-DESK_ICONS = ("OverHead Project", "Emp Tracking", NOC_TILE, EVISION_TILE)
+# 2026-11-27: only OverHead Project, NOC Helpdesk and Frappe HR (hrms' App tile) stay (user's request
+# for the main site). Emp Tracking and EVision tiles are still built (their sidebars and routes keep
+# working, e.g. the Workforce Dashboard home page) but hidden from the desk home.
+DESK_ICONS = ("OverHead Project", NOC_TILE, "Frappe HR")
 # Icons hidden by keep_only_desk_icons(), kept so the change can be undone (show_hidden_desk_icons()).
 DESK_HIDDEN_KEY = "emp_tracking_desk_hidden_icons"
 HOME_PAGE = "app/workforce-dashboard"
@@ -843,8 +849,14 @@ def keep_only_desk_icons():
 	to_hide = [i.name for i in icons if i.name not in keep and i.parent_icon not in keep and not i.hidden]
 	for name in to_hide:
 		frappe.db.set_value("Desktop Icon", name, "hidden", 1, update_modified=False)
-	frappe.db.set_default(DESK_HIDDEN_KEY, json.dumps(sorted(hidden_before | set(to_hide))))
+	# 2026-11-27: a tile that joins DESK_ICONS later (Frappe HR) may have been hidden here before;
+	# it and its own child icons are shown again. Only icons this function hid are touched.
+	to_show = {i.name for i in icons if i.name in hidden_before and (i.name in keep or i.parent_icon in keep)}
+	for name in to_show:
+		frappe.db.set_value("Desktop Icon", name, "hidden", 0, update_modified=False)
+	frappe.db.set_default(DESK_HIDDEN_KEY, json.dumps(sorted((hidden_before | set(to_hide)) - to_show)))
 	add_desk_icons_to_saved_layouts()
+	hide_others_in_saved_layouts()
 	frappe.cache.delete_key("desktop_icons")
 	frappe.cache.delete_key("bootinfo")
 
@@ -884,6 +896,38 @@ def add_desk_icons_to_saved_layouts():
 			at += 1
 		# Written straight to the database: the layout belongs to the user, no controller logic applies
 		frappe.db.set_value("Desktop Layout", name, "layout", json.dumps(layout), update_modified=False)
+
+
+# Date: 2026-11-27
+# Frappe 16.54 takes the hidden flags of a user's saved Desktop Layout, not the Desktop Icon's
+# (desktop_icons.bundle.js: "its order, folders and hidden flags are the user's"), so a tile hidden
+# by keep_only_desk_icons() still showed for anyone who had saved a layout (e.g. Milestone).
+# Every entry that is not in DESK_ICONS is hidden in each saved layout, and DESK_ICONS entries are
+# shown, with the modules inside them (Frappe HR's Leaves, Payroll, ... had been hidden while Frappe
+# HR was not kept). Entries inside a hidden app are hidden too, since Frappe draws them loose on
+# the desk home once their app tile is hidden (seen on newsite.local: Accounting, Users, Build, ...).
+# The user can still un-hide a tile in edit mode; the next migrate hides it again.
+def hide_others_in_saved_layouts():
+	import json
+
+	if not frappe.db.exists("DocType", "Desktop Layout"):
+		return
+	keep = set(DESK_ICONS)
+	for name in frappe.get_all("Desktop Layout", pluck="name"):
+		try:
+			layout = json.loads(frappe.db.get_value("Desktop Layout", name, "layout") or "[]")
+		except ValueError:
+			continue  # a layout we cannot read is left as it is
+		changed = False
+		for entry in layout:
+			kept = entry.get("name") in keep or entry.get("label") in keep or entry.get("parent_icon") in keep
+			hidden = 0 if kept else 1
+			if entry.get("hidden") != hidden:
+				entry["hidden"] = hidden
+				changed = True
+		if changed:
+			# Written straight to the database, like add_desk_icons_to_saved_layouts()
+			frappe.db.set_value("Desktop Layout", name, "layout", json.dumps(layout), update_modified=False)
 
 
 # Date: 2026-10-29

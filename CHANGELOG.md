@@ -2,6 +2,25 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-27: Desk home shows only OverHead Project, NOC Helpdesk and Frappe HR
+
+- **Summary:**
+  - `DESK_ICONS` is now OverHead Project, NOC Helpdesk and Frappe HR (it was OverHead Project, Emp Tracking, NOC Helpdesk and EVision). After every migrate, `keep_only_desk_icons()` hides all other desk tiles.
+  - The Emp Tracking and EVision tiles are still built, so their sidebars and pages (e.g. the Workforce Dashboard home page) keep working, but they are hidden from the desk home.
+  - **Why tiles such as Milestone still showed:** in Frappe 16.54 the desk home follows the hidden flags of a user's saved Desktop Layout, not the Desktop Icon's. The new `hide_others_in_saved_layouts()` therefore sets, in every saved layout:
+    - the three tiles and the modules inside them (e.g. Frappe HR's Leaves, Payroll) to shown;
+    - everything else to hidden, including the modules of hidden apps, which Frappe otherwise draws loose on the home screen (Accounting, Users, Build, ...).
+  - Frappe HR and its modules, hidden by this app before, are shown again in Desktop Icon too.
+- **Reason:** User's request: "just keep overhead, noc and hr on the screen on main site" (screenshot of the main site showed Flow, Frappe Framework, Underground, WorkForce, Emp Tracking, ERPNext, Milestone, EVision and Studio as well).
+- **Files or modules affected:** `page/workforce_dashboard/setup.py`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed.
+  - Ran `keep_only_desk_icons()`. Administrator's saved layout and the Desktop Icons now show only OverHead Project, NOC Helpdesk and Frappe HR at the top level.
+  - Headless-browser screenshot of `/desk`: exactly those three tiles. Clicking Frappe HR shows its 9 modules (Expenses, HR Setup, Leaves, Payroll, Performance, Recruitment, Shift & Attendance, Tax & Benefits, Tenure).
+  - A first version left the hidden apps' modules loose on the home screen and HR's modules hidden; both were fixed and retested.
+- **Not tested:** The main site (it has apps newsite.local doesn't, e.g. Underground; the rule hides any tile not in the list). Users other than Administrator.
+- **Pending items:** On the main site: pull and run `bench --site <main-site> migrate`. Staff who used the Emp Tracking tile no longer see it; their login home page (Workforce Dashboard) is unchanged. Not committed.
+
 ## 2026-11-27: Office attendance: Present when 9 hours (15 min grace) are completed, whatever the punch times
 
 - **Summary:**
