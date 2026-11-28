@@ -39,3 +39,5 @@ emp_tracking.patches.locality_team_areas
 emp_tracking.patches.maintenance_team_colours
 # 2026-11-28: updated team areas map (Evision team (1).kmz): boundaries and everything placed again
 emp_tracking.patches.team_areas_v2
+# 2026-11-28: default complaint list colours (only the missing rows are added)
+emp_tracking.patches.complaint_list_colour_defaults

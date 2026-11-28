@@ -8,6 +8,8 @@
 #
 # Change log
 #   2026-11-27  Created (user's request: "give option to add colors, they all look grey").
+#   2026-11-28  set_defaults adds only the missing default rows; "Load default colours" button
+#               (load_defaults) and patch complaint_list_colour_defaults (main site table was empty).
 # ---------------------------------------------------------------------------------------------
 
 import frappe
@@ -65,11 +67,25 @@ def get_colours():
 
 
 def set_defaults():
-	"""Fills the table with DEFAULT_COLOURS when it is empty (patch / first use)."""
+	"""Adds every DEFAULT_COLOURS row that is not in the table yet (2026-11-28: was "only when the
+	table is empty"); rows already there, with their colours, are kept. Returns how many were added."""
 	doc = frappe.get_single("Complaint List Colours")
-	if doc.colours:
-		return
+	have = {(r.column_name, (r.value or "").strip().lower()) for r in doc.colours}
+	added = 0
 	for column, values in DEFAULT_COLOURS.items():
 		for value, colour in values.items():
-			doc.append("colours", {"column_name": column, "value": value, "colour": colour})
-	doc.save(ignore_permissions=True)
+			if (column, value.lower()) not in have:
+				doc.append("colours", {"column_name": column, "value": value, "colour": colour})
+				added += 1
+	if added:
+		doc.save(ignore_permissions=True)
+	return added
+
+
+# Date: 2026-11-28
+@frappe.whitelist(methods=["POST"])
+def load_defaults():
+	"""The page's "Load default colours" button: adds the missing default rows (user: main site
+	table was empty). Needs write access to the page."""
+	frappe.get_single("Complaint List Colours").check_permission("write")
+	return set_defaults()

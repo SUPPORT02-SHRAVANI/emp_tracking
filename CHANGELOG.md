@@ -2,6 +2,21 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-28: Default complaint list colours for the main site
+
+- **Summary** (user, with a screenshot of the main site's empty Complaint List Colours: "fill this on the main site"). The default colours came from the patch `complaint_list_colours`, which was held back because it also changes old complaints. Now:
+  - `set_defaults` adds every default row that is **missing** (it used to work only when the table was empty). Rows already there keep their colour.
+  - New patch `complaint_list_colour_defaults` runs it on deploy.
+  - New **"Load default colours"** button on the Complaint List Colours page (`load_defaults`, needs write access) does the same at any time.
+  - The defaults: Status (12 workflow states), Operator, Link Status, Link Type (FTTH blue, Backbone violet …), Area 1-6, EVisions SLA (In green, Out red); 48 rows.
+- **Files or modules affected:**
+  - `doctype/complaint_list_colours/` (py, new js)
+  - new `patches/complaint_list_colour_defaults.py`, `patches.txt`
+- **Testing (newsite.local):**
+  - `py_compile` / `node --check` passed.
+  - With 2 Status rows removed (rolled back), `set_defaults` added 2 (46 → 48), and a second run added 0.
+- **Not tested:** The button in the browser; the main site.
+
 ## 2026-11-28: Empty complaint list on the main site: list made fail-safe; one Area Manager on Area
 
 - **Summary:**
