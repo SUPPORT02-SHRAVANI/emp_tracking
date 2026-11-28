@@ -109,11 +109,15 @@ Change log:
 	            (hide_others_in_saved_layouts), since Frappe 16.54 uses the layout's hidden flags.
 	2026-11-27  after_migrate() runs keep_only_desk_icons() in its own try block, so a failure in the
 	            menu rebuild no longer skips it (Milestone still showed on the Frappe Cloud site).
+	2026-11-27  OverHead Project menu: "FTTH Master Data" under FTTH.
 	2026-11-27  NOC Helpdesk menu: "Settings" (EVision Settings, Complaint List Colours, Areas).
-	2026-11-28  "Team Map" page in NOC Performance & Teams.
+	2026-11-28  OverHead Project > Teams & Vendors: "Fiber Teams" back on the menu; "Areas" opens the tree.
+	2026-11-28  "Team Map" page in OverHead Teams & Vendors and NOC Performance & Teams.
 	2026-11-28  "NOC Summary" page (all report dashboards in tabs) first in NOC Reports.
-	2026-11-28  "Master Data" section in the NOC sidebar: Areas, GIS Nodes, Sites, Network Links,
-	            EVisions Teams, Vendors, Field Staff (NOC roles get Field Staff read).
+	2026-11-28  "Master Data" section, the same in the OverHead and NOC sidebars: Areas, GIS Nodes,
+	            Sites, Network Links, EVisions Teams, Vendors, Field Staff (NOC roles get Field
+	            Staff read); OverHead keeps Network (Link Register, KMZ Map, Upload KMZ, Team Map)
+	            and Teams (Fiber Teams).
 	2026-11-28  "Areas" opens the list again (user: tree on click); the tree is the list's "Team view" button.
 """
 
@@ -695,24 +699,26 @@ def oh_menu():
 				workspace("FTTH Dashboard", "FTTH Tracker"),  # FTTH number cards and charts
 				doctype("Work Orders", "FTTH Work Order"),
 				doctype("FTTH Imports", "FTTH Import"),
+				# 2026-11-27: one row per FTTH site, from the Master Data sheet (9,730 ODN sites)
+				doctype("FTTH Master Data", "FTTH Master Data"),
 			],
 			# 2026-10-26: cable drum register on ERPNext stock (emp_tracking/fiber_store.py)
 			"Fiber Store": [
 				url("Fiber Dashboard", "/app/dashboard-view/Fiber%20Store", "Stock Entry"),
 				url("Cable Inward / Outward", "/app/stock-entry?custom_fiber_direction=%5B%22is%22%2C%22set%22%5D", "Stock Entry"),
 			],
+			# 2026-11-28: GIS Nodes / Sites moved to Master Data; the FTTH-only network screens stay
 			"Network": [
-				doctype("GIS Nodes", "GIS Node"),  # 2026-10-24: the one node master (Node merged in)
 				doctype("Link Register", "FTTH Link"),
-				doctype("Sites", "Site"),
 				page("KMZ Map", "kmz-map"),  # 2026-10-26: routes and pins on a map, with filters
 				doctype("Upload KMZ", "KMZ Upload"),  # 2026-10-26: whole KMZ, matched to nodes
+				page("Team Map", "team-map"),  # 2026-11-28: which team covers what, on one map
 			],
-			"Teams & Vendors": [
-				doctype("Areas", "Area"),
-				doctype("EVisions Teams", "Maintenance Team"),
-				doctype("Vendors", "Maintenance Vendor"),
-				doctype("Field Staff", "Field Staff"),
+			# 2026-11-28: shared with NOC (Areas, nodes, sites, links, teams, vendors, field staff)
+			"Master Data": [dict(i) for i in master_data],  # own copy per sidebar
+			# 2026-11-28: back on the menu (user could not find it): each fiber team has its Team Area
+			"Teams": [
+				doctype("Fiber Teams", "Fiber Team"),
 			],
 		},
 		"Emp Tracking": {

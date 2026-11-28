@@ -10,6 +10,7 @@
  "engine": "InnoDB",
  "field_order": [
   "site_name",
+  "series_no",
   "node",
   "etipl_code",
   "column_break_site",
@@ -25,6 +26,18 @@
    "in_standard_filter": 1,
    "label": "Site Name",
    "reqd": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (SIT-00001, SIT-00002 ...). Search a link by it too."
   },
   {
    "description": "The GIS node this site is on (GIS Node master, shared with FTTH Tracker). One node has many sites.",
@@ -71,7 +84,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-24 16:45:00.000000",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Site",
@@ -128,7 +141,7 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "site_name,node,etipl_code",
+ "search_fields": "series_no,site_name,node,etipl_code",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",

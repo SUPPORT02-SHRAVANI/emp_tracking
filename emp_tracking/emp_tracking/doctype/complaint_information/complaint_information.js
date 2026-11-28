@@ -51,6 +51,7 @@
 //   2026-11-27  Rider / Splicer pickers list the chosen team's riders / splicers; a team's only
 //               rider / splicer is filled in (load_team_people).
 //   2026-11-28  No team and no vendor: the EVisions team of the node's team area is filled in.
+//   2026-11-28  "No Network Link has Node ID" is a note shown once per node (was two message boxes).
 // ---------------------------------------------------------------------------------------------
 
 // Workflow states after which a complaint no longer counts as open (for the duplicate check).
@@ -476,8 +477,12 @@ async function pick_link_by_node(frm, node) {
 		frappe.show_alert({ message: __("LINKID {0} is on node {1}", [links[0].name, node]), indicator: "green" });
 	} else if (links.length > 1) {
 		frappe.show_alert({ message: __("Several links are on node {0}. Please pick the LINKID.", [node]), indicator: "orange" });
-	} else {
-		frappe.msgprint(__("No Network Link has Node ID {0}. Add it to the right link first, or check the node name.", [node]));
+	} else if (frm.__no_link_node !== node) {
+		// 2026-11-28: once per node, as a note (the paste and the node change both ask, which
+		// showed the same message box twice); the complaint can still be saved without a LINKID
+		frm.__no_link_node = node;
+		frappe.show_alert({ message: __("No Network Link has Node ID {0}. Add it to the right link first, or check the node name.", [node]),
+			indicator: "orange" }, 10);
 	}
 }
 

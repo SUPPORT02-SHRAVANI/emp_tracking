@@ -9,6 +9,7 @@
  "engine": "InnoDB",
  "field_order": [
   "vendor_name",
+  "series_no",
   "vendor_code",
   "area",
   "contact_person",
@@ -24,6 +25,18 @@
    "label": "Vendor Name",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (VEN-00001, VEN-00002 ...). Search a link by it too."
   },
   {
    "fieldname": "vendor_code",
@@ -72,7 +85,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-29 11:05:17.154721",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Maintenance Vendor",
@@ -132,5 +145,6 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "title_field": "vendor_name"
+ "title_field": "vendor_name",
+ "search_fields": "series_no"
 }

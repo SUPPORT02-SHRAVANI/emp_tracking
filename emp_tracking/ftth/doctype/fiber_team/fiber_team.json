@@ -7,8 +7,12 @@
  "engine": "InnoDB",
  "field_order": [
   "team_name",
+  "series_no",
   "contact_no",
-  "is_active"
+  "team_area",
+  "is_active",
+  "sec_areas",
+  "areas_html"
  ],
  "fields": [
   {
@@ -21,16 +25,48 @@
    "unique": 1
   },
   {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (FBT-00001, FBT-00002 ...). Search a link by it too."
+  },
+  {
    "fieldname": "contact_no",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Contact No"
   },
   {
+   "fieldname": "team_area",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Team Area",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "The EVision team area (Area 1-6) this fiber team works in."
+  },
+  {
    "default": "1",
    "fieldname": "is_active",
    "fieldtype": "Check",
    "label": "Active"
+  },
+  {
+   "fieldname": "sec_areas",
+   "fieldtype": "Section Break",
+   "label": "Areas",
+   "depends_on": "team_area"
+  },
+  {
+   "fieldname": "areas_html",
+   "fieldtype": "HTML",
+   "label": "Areas"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -43,7 +79,7 @@
    "link_fieldname": "fiber_team"
   }
  ],
- "modified": "2026-11-24 14:40:00.000000",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "FTTH",
  "name": "Fiber Team",
@@ -90,5 +126,6 @@
  "sort_field": "team_name",
  "sort_order": "ASC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "search_fields": "series_no"
 }

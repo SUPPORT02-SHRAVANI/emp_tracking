@@ -27,17 +27,43 @@ emp_tracking.ftth.patches.ftth_settings_defaults
 emp_tracking.patches.backfill_unique_cut
 # 2026-11-27: office shift: Present when 9 h are completed, whatever the punch times (app_attendance.py)
 emp_tracking.patches.office_shift_hours_rule
-# 2026-11-28: Area as a tree (team areas with their localities under them)
-emp_tracking.patches.area_tree
+# 2026-11-27: FTTH Master Data (OverHead Project): 9,730 ODN sites from the Master Data sheet
+emp_tracking.ftth.patches.import_ftth_master_data
+# 2026-11-27: Network Links (LINKID by node on the Complaint form) from FTTH Master Data
+emp_tracking.patches.network_links_from_ftth_master
+# 2026-11-27: GIS Nodes, Sites and Link Register matched to FTTH Master Data (adds / fills blanks only)
+emp_tracking.ftth.patches.match_network_to_master
+# 2026-11-28: team areas placed again over the master data loaded just above (main site: placed before any links existed)
+emp_tracking.patches.team_areas_after_master_data
 # 2026-11-27: six EVision team areas (Area 1-6) with managers; GIS Nodes, Network Links and the KMZ Map placed by boundary
 emp_tracking.patches.evision_team_areas
 # 2026-11-27: complaints get Area and Area Manager (Field Staff) from their node's team area
 emp_tracking.patches.complaint_team_area_manager
 # 2026-11-27: localities get their team area; complaints with no node get that area's manager
 emp_tracking.patches.locality_team_areas
+# 2026-11-27: Complaint list colours (defaults) and Complaint Team Area
+emp_tracking.patches.complaint_list_colours
+# 2026-11-27: splicers and riders of TEAM 1-6 from the user's team sheet
+emp_tracking.patches.team_members_from_sheet
+# 2026-11-27: EVision Settings (business rules on screen) filled with the old fixed values
+emp_tracking.patches.evision_settings_defaults
+# 2026-11-28: EVision Settings call times as 12-hour IST labels
+emp_tracking.patches.evision_settings_ist_times
+# 2026-11-28: EVision Settings editable formulas (rows with today's formulas)
+emp_tracking.patches.evision_formulas
+# 2026-11-28: EVision Settings map Index rows and positions
+emp_tracking.patches.evision_map_index
+# 2026-11-28: Area as a tree (team areas with their localities under them)
+emp_tracking.patches.area_tree
 # 2026-11-28: Maintenance Team colours (TEAM N = Area N colour), leader name from the Employee
 emp_tracking.patches.maintenance_team_colours
+# 2026-11-28: NOC flow check fixes (link status, default team on open complaints, missing SLA)
+emp_tracking.patches.noc_flow_fixes
+# 2026-11-28: shared format-naming counter past the highest SITE number (new Sites collided)
+emp_tracking.patches.fix_site_series
 # 2026-11-28: updated team areas map (Evision team (1).kmz): boundaries and everything placed again
 emp_tracking.patches.team_areas_v2
+# 2026-11-28: Series No for existing masters (NOD-, ARE-, SIT-, LNK-, TEM-, VEN-, STF-, FBT-)
+emp_tracking.patches.master_series_numbers
 # 2026-11-28: default complaint list colours (only the missing rows are added)
 emp_tracking.patches.complaint_list_colour_defaults

@@ -16,6 +16,7 @@
   "routes_created",
   "points_created",
   "already_existed",
+  "polygons_created",
   "polygons_skipped",
   "cb_2",
   "matched_by_node",
@@ -92,6 +93,12 @@
    "fieldname": "already_existed",
    "fieldtype": "Int",
    "label": "Already Imported (node filled in if blank)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "polygons_created",
+   "fieldtype": "Int",
+   "label": "KMZ Polygons Created",
    "read_only": 1
   },
   {
@@ -179,7 +186,7 @@
  ],
  "istable": 0,
  "links": [],
- "modified": "2026-10-26 18:00:00.000000",
+ "modified": "2026-11-27 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "KMZ Upload",

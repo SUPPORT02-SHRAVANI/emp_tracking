@@ -10,6 +10,7 @@
  "field_order": [
   "basic_section",
   "linkid",
+  "series_no",
   "operator_link_id",
   "network_type",
   "status",
@@ -49,6 +50,18 @@
    "label": "LINKID",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (LNK-00001, LNK-00002 ...). Search a link by it too."
   },
   {
    "fieldname": "network_type",
@@ -217,7 +230,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-31 10:40:00.000000",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Network Link",
@@ -274,7 +287,7 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "node_id,operator_link_id,gis_node_id,node_a,node_b,section,society_building,location,area,operator",
+ "search_fields": "series_no,node_id,operator_link_id,gis_node_id,node_a,node_b,section,society_building,location,area,operator",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],

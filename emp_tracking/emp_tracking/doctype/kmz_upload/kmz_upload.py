@@ -22,14 +22,19 @@
 #
 # The records are FTTH Tracker's own KMZ Route / KMZ Point, with the same dedupe keys as its
 # FTTH Import, so loading a file through both never makes duplicates; a row that is already
-# there only gets its node filled in when it had none. Polygons are skipped (FTTH Tracker has
-# no polygon doctype). Custom Fields custom_site / custom_kmz_matched_by / custom_kmz_upload on
+# there only gets its node filled in when it had none. Polygons go to emp_tracking's own KMZ
+# Polygon (since 2026-11-27; FTTH Tracker has no polygon doctype). Custom Fields custom_site / custom_kmz_matched_by / custom_kmz_upload on
 # both doctypes (setup.py) record how each row was matched.
 #
 # Change log
 #   2026-10-26  Created.
 #   2026-10-26  Saves the full folder chain (custom_kmz_path) on each row, for the KMZ Map page.
 #   2026-10-27  Dedupe key moved into row_key(), shared with patches/backfill_kmz_path.py.
+#   2026-11-27  Rows that already existed are stamped with this upload (custom_kmz_upload), so the
+#               KMZ Map's KMZ File filter shows the whole file (user's report: "KMZ - Till -
+#               16.09.2026.kmz" showed nothing, as all its rows came from its 8 parts before).
+#   2026-11-27  Polygons are imported as KMZ Polygon rows, with their Google Earth line / fill
+#               colours (read_placemarks, import_polygons); they were skipped before.
 # ---------------------------------------------------------------------------------------------
 
 import re
@@ -88,8 +93,18 @@ def run_import(name):
 # ---------------------------------------------------------------- reading
 
 
+def kml_colour(text):
+	"""KML colour 'aabbggrr' -> ('#rrggbb', opacity 0..1); (None, None) when unreadable."""
+	text = (text or "").strip().lstrip("#")
+	if not re.fullmatch(r"[0-9a-fA-F]{8}", text):
+		return None, None
+	return f"#{text[6:8]}{text[4:6]}{text[2:4]}".lower(), round(int(text[0:2], 16) / 255, 2)
+
+
 def read_placemarks(path):
-	"""Every Point / LineString placemark: {kind, name, folders (outer -> inner), coords}."""
+	"""Every Point / LineString placemark: {kind, name, folders (outer -> inner), coords}, and
+	(2026-11-27) every Polygon placemark: {kind "polygon", name, folders, coords (outer ring),
+	line_colour, fill_colour, fill_opacity} from its Google Earth style."""
 	if path.lower().endswith(".kml"):
 		with open(path, "rb") as f:
 			xml = f.read()
@@ -116,10 +131,38 @@ def read_placemarks(path):
 				return pts
 		return []
 
-	out, polygons = [], 0
+	# 2026-11-27: shared styles (Style / StyleMap ids), for the polygons' line and fill colours
+	def style_of(st):
+		s = {}
+		for c in st.iter():
+			if tag(c) == "LineStyle":
+				s["line"] = kml_colour(child_text(c, "color"))[0]
+			elif tag(c) == "PolyStyle":
+				colour, opacity = kml_colour(child_text(c, "color"))
+				s["fill"], s["opacity"] = colour, opacity
+				if child_text(c, "fill") == "0":
+					s["opacity"] = 0
+		return s
+
+	styles, style_maps = {}, {}
+	for e in root.iter():
+		if tag(e) == "Style" and e.get("id"):
+			styles[e.get("id")] = style_of(e)
+		elif tag(e) == "StyleMap" and e.get("id"):
+			for pair in e:
+				if tag(pair) == "Pair" and child_text(pair, "key") == "normal":
+					style_maps[e.get("id")] = child_text(pair, "styleUrl").lstrip("#")
+
+	def placemark_style(pm):
+		inline = next((c for c in pm if tag(c) == "Style"), None)
+		if inline is not None:
+			return style_of(inline)
+		ref = child_text(pm, "styleUrl").lstrip("#")
+		return styles.get(style_maps.get(ref, ref), {})
+
+	out, polygons = [], []
 
 	def walk(e, folders):
-		nonlocal polygons
 		for c in e:
 			t = tag(c)
 			if t == "Folder":
@@ -132,7 +175,14 @@ def read_placemarks(path):
 				if geom is None:
 					continue
 				if tag(geom) == "Polygon":
-					polygons += 1
+					# 2026-11-27: kept (were skipped): the outer ring only, with its style
+					outer = next((b for b in geom if tag(b) == "outerBoundaryIs"), geom)
+					ring = coords(outer)
+					if len(ring) >= 3:
+						st = placemark_style(c)
+						polygons.append({"kind": "polygon", "name": (child_text(c, "name") or "(no name)")[:255],
+							"folders": tuple(folders), "coords": ring, "line_colour": st.get("line"),
+							"fill_colour": st.get("fill"), "fill_opacity": st.get("opacity")})
 					continue
 				pts = coords(geom)
 				kind = "route" if tag(geom) == "LineString" else "point"
@@ -152,6 +202,10 @@ def row_key(pm):
 
 	if pm["kind"] == "route":
 		return "KMZ Route", f"{norm(pm['name'])}|{round(round(line_length_m(pm['coords']), 1))}"[:255]
+	if pm["kind"] == "polygon":
+		# 2026-11-27: name, first corner and number of corners
+		lon, lat = pm["coords"][0]
+		return "KMZ Polygon", f"{norm(pm['name'])}|{lat:.5f}|{lon:.5f}|{len(pm['coords'])}"[:255]
 	lon, lat = pm["coords"][0]
 	return "KMZ Point", f"{norm(pm['name'])}|{lat:.5f}|{lon:.5f}"[:255]
 
@@ -245,6 +299,41 @@ class KMZMatcher:
 					pm["site"] = hit[1]
 					break
 
+	# Date: 2026-11-27
+	def import_polygons(self, polygons, label):
+		"""KMZ Polygon rows for the file's Polygon placemarks (area remarks, DSA / cluster and team
+		boundaries). Same dedupe idea as routes / pins: a shape already there only gets this upload
+		stamped, and its node filled when it had none. Returns how many were created."""
+		import json
+
+		if not frappe.db.exists("DocType", "KMZ Polygon"):
+			return 0
+		have = {r.dedupe_key: r for r in frappe.get_all("KMZ Polygon", fields=["name", "dedupe_key", "gis"])}
+		created, seen = 0, set()
+		for pm in polygons:
+			self.match(pm)  # node from a GIS-code folder above it, or a building name
+			_, key = row_key(pm)
+			if key in seen:
+				continue
+			seen.add(key)
+			old = have.get(key)
+			if old:
+				values = {"kmz_upload": self.doc.name}
+				if not old.gis and pm["gis"]:
+					values.update({"gis": pm["gis"], "matched_by": pm["by"]})
+				frappe.db.set_value("KMZ Polygon", old.name, values, update_modified=False)
+				continue
+			frappe.get_doc({
+				"doctype": "KMZ Polygon", "polygon_name": pm["name"], "gis": pm["gis"], "matched_by": pm["by"],
+				"boundary": json.dumps([[round(lat, 6), round(lon, 6)] for lon, lat in pm["coords"]], separators=(",", ":")),
+				"line_colour": pm["line_colour"], "fill_colour": pm["fill_colour"], "fill_opacity": pm["fill_opacity"],
+				"source_file": label, "kmz_upload": self.doc.name, "kmz_path": " / ".join(pm["folders"]),
+				"node_folder": (pm["folders"][-1] if pm["folders"] else "")[:140], "dedupe_key": key,
+			}).insert(ignore_permissions=True)
+			created += 1
+		frappe.db.commit()
+		return created
+
 	# Date: 2026-10-26
 	def run(self):
 		from emp_tracking.ftth.logic import feature_collection, line_feature, line_length_m, split_route_name
@@ -265,12 +354,13 @@ class KMZMatcher:
 			if not pm["gis"] and nodes and len(nodes) == 1:
 				pm.update({"gis": next(iter(nodes)), "by": "Same Folder"})
 
-		counts = {"placemarks": len(placemarks) + polygons, "polygons_skipped": polygons, "routes_created": 0,
+		counts = {"placemarks": len(placemarks) + len(polygons), "polygons_skipped": 0, "routes_created": 0,
 			"points_created": 0, "already_existed": 0, "matched_by_node": 0, "matched_by_building": 0,
 			"matched_by_folder": 0, "unmatched": 0}
-		have = {d: {r.dedupe_key: r for r in frappe.get_all(d, fields=["name", "dedupe_key", "gis", "custom_kmz_path"])}
-			for d in ("KMZ Route", "KMZ Point")}
+		have = {d: {r.dedupe_key: r for r in frappe.get_all(d, fields=["name", "dedupe_key", "gis", "custom_kmz_path",
+			"custom_kmz_upload"])} for d in ("KMZ Route", "KMZ Point")}
 		seen, unmatched = set(), []
+		restamp = {"KMZ Route": [], "KMZ Point": []}  # 2026-11-27: existing rows this file also holds
 		for i, pm in enumerate(placemarks):
 			doctype, key = row_key(pm)
 			if doctype == "KMZ Route":
@@ -295,6 +385,8 @@ class KMZMatcher:
 				elif not old.custom_kmz_path and path:
 					# rows from FTTH Import (or before 2026-10-26) get their folder chain for the KMZ Map
 					frappe.db.set_value(doctype, old.name, "custom_kmz_path", path, update_modified=False)
+				if old.custom_kmz_upload != self.doc.name:
+					restamp[doctype].append(old.name)
 				continue
 			values = {"doctype": doctype, "gis": pm["gis"], "source_file": label, "dedupe_key": key,
 				"node_folder": (pm["folders"][-1] if pm["folders"] else "")[:140], **extra}
@@ -309,6 +401,17 @@ class KMZMatcher:
 			frappe.get_doc(values).insert(ignore_permissions=True)
 			if i % 500 == 0:
 				frappe.db.commit()
+
+		# 2026-11-27: rows that were already there are stamped with this upload too, so the KMZ Map's
+		# KMZ File filter finds everything in this file, not only the rows it created. The row keeps
+		# its first source_file, so filtering on the older file still finds it as well.
+		for doctype, names in restamp.items():
+			for start in range(0, len(names), 1000):
+				frappe.db.sql(f"update `tab{doctype}` set custom_kmz_upload = %s where name in %s",
+					(self.doc.name, tuple(names[start:start + 1000])))
+		frappe.db.commit()
+
+		counts["polygons_created"] = self.import_polygons(polygons, label)
 
 		nodes = {pm["gis"] for pm in placemarks if pm["gis"]}
 		counts["nodes_found"] = len(nodes)

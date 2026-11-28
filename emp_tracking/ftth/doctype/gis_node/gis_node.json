@@ -8,6 +8,7 @@
  "engine": "InnoDB",
  "field_order": [
   "gis_code",
+  "series_no",
   "area",
   "team_area",
   "is_active",
@@ -31,6 +32,18 @@
    "label": "GIS Code",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (NOD-00001, NOD-00002 ...). Search a link by it too."
   },
   {
    "fieldname": "area",
@@ -141,11 +154,16 @@
   },
   {
    "group": "Sites & Links",
+   "link_doctype": "FTTH Master Data",
+   "link_fieldname": "gis"
+  },
+  {
+   "group": "Sites & Links",
    "link_doctype": "Network Link",
    "link_fieldname": "node_id"
   }
  ],
- "modified": "2026-11-27 16:00:00.000000",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "FTTH",
  "name": "GIS Node",
@@ -189,7 +207,7 @@
   }
  ],
  "quick_entry": 1,
- "search_fields": "area,team,area_manager",
+ "search_fields": "series_no,area,team,area_manager",
  "sort_field": "gis_code",
  "sort_order": "ASC",
  "states": [],

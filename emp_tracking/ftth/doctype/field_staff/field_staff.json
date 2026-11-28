@@ -8,6 +8,7 @@
  "engine": "InnoDB",
  "field_order": [
   "staff_name",
+  "series_no",
   "staff_type",
   "contact_no",
   "cb_1",
@@ -23,6 +24,18 @@
    "label": "Name",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (STF-00001, STF-00002 ...). Search a link by it too."
   },
   {
    "default": "Splicer",
@@ -77,7 +90,7 @@
    "link_fieldname": "supervisor"
   }
  ],
- "modified": "2026-11-24 14:40:00.000000",
+ "modified": "2026-11-28 23:50:00.000000",
  "modified_by": "Administrator",
  "module": "FTTH",
  "name": "Field Staff",
@@ -124,5 +137,6 @@
  "sort_field": "staff_name",
  "sort_order": "ASC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "search_fields": "series_no"
 }

@@ -9,6 +9,7 @@
  "engine": "InnoDB",
  "field_order": [
   "area_name",
+  "series_no",
   "area_code",
   "area_manager",
   "status",
@@ -32,6 +33,18 @@
    "label": "Area Name",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "series_no",
+   "fieldtype": "Data",
+   "label": "Series No",
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1,
+   "description": "Given automatically (ARE-00001, ARE-00002 ...). Search a link by it too."
   },
   {
    "fieldname": "area_code",
@@ -213,5 +226,6 @@
  "states": [],
  "title_field": "area_name",
  "is_tree": 1,
- "nsm_parent_field": "parent_area"
+ "nsm_parent_field": "parent_area",
+ "search_fields": "series_no"
 }

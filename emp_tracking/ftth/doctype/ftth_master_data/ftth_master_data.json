@@ -1,0 +1,495 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 0,
+ "autoname": "FMD-.#####",
+ "creation": "2026-11-27 12:30:00.000000",
+ "description": "One row per FTTH site (ODN sites), from the \"Master Data for Software - ODN sites only\" sheet: WO, survey, approval, fiber, splicing and RFS / Link ID.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sb_wo",
+  "company",
+  "month",
+  "year",
+  "wo_received_mode",
+  "wo_received_date",
+  "cb_1",
+  "wo",
+  "wo_date",
+  "hp",
+  "sb_site",
+  "end_location_name",
+  "end_location_lat_long",
+  "gis",
+  "area",
+  "cb_2",
+  "customer_name",
+  "customer_contact_no",
+  "ibd_team",
+  "ibd_team_no",
+  "company_engg_name",
+  "company_engg_no",
+  "sb_survey",
+  "survey_start_location",
+  "survey_start_lat_long",
+  "survey_distance_planning",
+  "cb_3",
+  "manager",
+  "team",
+  "area_manager",
+  "area_manager_no",
+  "sb_am_survey",
+  "survey_a_end",
+  "survey_b_end",
+  "survey_distance_am",
+  "cb_4",
+  "b_end_issue",
+  "new_b_end_location",
+  "survey_distance_new_b_end",
+  "sb_approval",
+  "mail_sent_date",
+  "approval_date",
+  "cb_5",
+  "mail_approval_snap",
+  "sb_fiber",
+  "fiber_team",
+  "fiber_id",
+  "route_video",
+  "cb_6",
+  "fiber_reading_a_end",
+  "fiber_reading_b_end",
+  "sb_splicing",
+  "splicing_team_required",
+  "splicer_name",
+  "assistant_splicer_name",
+  "cb_7",
+  "splicing_snap_a_end",
+  "splicing_snap_b_end",
+  "sb_done",
+  "final_distance",
+  "distance_shared_to_airtel",
+  "kmz",
+  "cb_8",
+  "rfs_date",
+  "evisions_link_id",
+  "fiber_type",
+  "sb_notes",
+  "data_match_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "sb_wo",
+   "fieldtype": "Section Break",
+   "label": "Work Order"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company"
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Date",
+   "label": "Month",
+   "description": "Completion month (ODN RFS month, else the last FTTH monthly sheet listing the site)"
+  },
+  {
+   "fieldname": "year",
+   "fieldtype": "Int",
+   "label": "Year",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "wo_received_mode",
+   "fieldtype": "Data",
+   "label": "WO Received Mode"
+  },
+  {
+   "fieldname": "wo_received_date",
+   "fieldtype": "Date",
+   "label": "WO Received Date"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "wo",
+   "fieldtype": "Data",
+   "label": "WO",
+   "length": 255
+  },
+  {
+   "fieldname": "wo_date",
+   "fieldtype": "Date",
+   "label": "WO Date"
+  },
+  {
+   "fieldname": "hp",
+   "fieldtype": "Data",
+   "label": "HP (Home Pass)"
+  },
+  {
+   "fieldname": "sb_site",
+   "fieldtype": "Section Break",
+   "label": "Site (A End)"
+  },
+  {
+   "fieldname": "end_location_name",
+   "fieldtype": "Data",
+   "label": "End Location Name",
+   "reqd": 1,
+   "bold": 1,
+   "in_list_view": 1,
+   "length": 255
+  },
+  {
+   "fieldname": "end_location_lat_long",
+   "fieldtype": "Data",
+   "label": "End Location Lat Long"
+  },
+  {
+   "fieldname": "gis",
+   "fieldtype": "Data",
+   "label": "GIS",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Area",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  },
+  {
+   "fieldname": "customer_contact_no",
+   "fieldtype": "Data",
+   "label": "Customer Contact No"
+  },
+  {
+   "fieldname": "ibd_team",
+   "fieldtype": "Data",
+   "label": "IBD Team"
+  },
+  {
+   "fieldname": "ibd_team_no",
+   "fieldtype": "Data",
+   "label": "IBD Team No"
+  },
+  {
+   "fieldname": "company_engg_name",
+   "fieldtype": "Data",
+   "label": "Company Engineer Name"
+  },
+  {
+   "fieldname": "company_engg_no",
+   "fieldtype": "Data",
+   "label": "Company Engineer No"
+  },
+  {
+   "fieldname": "sb_survey",
+   "fieldtype": "Section Break",
+   "label": "Survey"
+  },
+  {
+   "fieldname": "survey_start_location",
+   "fieldtype": "Data",
+   "label": "Survey Start Location (from Planning)",
+   "length": 255
+  },
+  {
+   "fieldname": "survey_start_lat_long",
+   "fieldtype": "Data",
+   "label": "Survey Start Location Lat Long (from Planning)"
+  },
+  {
+   "fieldname": "survey_distance_planning",
+   "fieldtype": "Data",
+   "label": "Survey Distance (from Planning)"
+  },
+  {
+   "fieldname": "cb_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manager",
+   "fieldtype": "Data",
+   "label": "Manager"
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Data",
+   "label": "Team",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "area_manager",
+   "fieldtype": "Data",
+   "label": "Area Manager",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "area_manager_no",
+   "fieldtype": "Data",
+   "label": "Area Manager No"
+  },
+  {
+   "fieldname": "sb_am_survey",
+   "fieldtype": "Section Break",
+   "label": "Survey by Area Manager"
+  },
+  {
+   "fieldname": "survey_a_end",
+   "fieldtype": "Data",
+   "label": "Survey A End",
+   "length": 255
+  },
+  {
+   "fieldname": "survey_b_end",
+   "fieldtype": "Data",
+   "label": "Survey B End",
+   "length": 255
+  },
+  {
+   "fieldname": "survey_distance_am",
+   "fieldtype": "Data",
+   "label": "Survey Distance (by Area Manager)"
+  },
+  {
+   "fieldname": "cb_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "b_end_issue",
+   "fieldtype": "Select",
+   "label": "B End Issue or Distance Issue",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "new_b_end_location",
+   "fieldtype": "Data",
+   "label": "New B End Location",
+   "length": 255
+  },
+  {
+   "fieldname": "survey_distance_new_b_end",
+   "fieldtype": "Data",
+   "label": "Survey Distance from New B End"
+  },
+  {
+   "fieldname": "sb_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "mail_sent_date",
+   "fieldtype": "Date",
+   "label": "Mail Sent to Planning (Date)"
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Date",
+   "label": "Approval Date (Planning / Deployment)"
+  },
+  {
+   "fieldname": "cb_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mail_approval_snap",
+   "fieldtype": "Attach Image",
+   "label": "Mail Approval Snap"
+  },
+  {
+   "fieldname": "sb_fiber",
+   "fieldtype": "Section Break",
+   "label": "Fiber"
+  },
+  {
+   "fieldname": "fiber_team",
+   "fieldtype": "Data",
+   "label": "Fiber Team"
+  },
+  {
+   "fieldname": "fiber_id",
+   "fieldtype": "Small Text",
+   "label": "Fiber ID"
+  },
+  {
+   "fieldname": "route_video",
+   "fieldtype": "Attach",
+   "label": "Total Route Tentative Video"
+  },
+  {
+   "fieldname": "cb_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiber_reading_a_end",
+   "fieldtype": "Int",
+   "label": "Fiber Reading A End"
+  },
+  {
+   "fieldname": "fiber_reading_b_end",
+   "fieldtype": "Int",
+   "label": "Fiber Reading B End"
+  },
+  {
+   "fieldname": "sb_splicing",
+   "fieldtype": "Section Break",
+   "label": "Splicing"
+  },
+  {
+   "fieldname": "splicing_team_required",
+   "fieldtype": "Int",
+   "label": "Splicing Team Required (No.)"
+  },
+  {
+   "fieldname": "splicer_name",
+   "fieldtype": "Data",
+   "label": "Splicer Name"
+  },
+  {
+   "fieldname": "assistant_splicer_name",
+   "fieldtype": "Data",
+   "label": "Assistant Splicer Name"
+  },
+  {
+   "fieldname": "cb_7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "splicing_snap_a_end",
+   "fieldtype": "Attach Image",
+   "label": "Power / OTDR / Pigtail / Splicing Snap A End"
+  },
+  {
+   "fieldname": "splicing_snap_b_end",
+   "fieldtype": "Attach Image",
+   "label": "Power / OTDR / Pigtail / Splicing Snap B End"
+  },
+  {
+   "fieldname": "sb_done",
+   "fieldtype": "Section Break",
+   "label": "Completion"
+  },
+  {
+   "fieldname": "final_distance",
+   "fieldtype": "Data",
+   "label": "Final Distance"
+  },
+  {
+   "fieldname": "distance_shared_to_airtel",
+   "fieldtype": "Data",
+   "label": "Distance Shared to Airtel"
+  },
+  {
+   "fieldname": "kmz",
+   "fieldtype": "Select",
+   "label": "KMZ",
+   "options": "\nYes\nNo",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rfs_date",
+   "fieldtype": "Date",
+   "label": "RFS Date",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "evisions_link_id",
+   "fieldtype": "Data",
+   "label": "Evisions Link ID",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "fiber_type",
+   "fieldtype": "Data",
+   "label": "Fiber Type"
+  },
+  {
+   "fieldname": "sb_notes",
+   "fieldtype": "Section Break",
+   "label": "Data Match Notes",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "data_match_notes",
+   "fieldtype": "Small Text",
+   "label": "Data Match Notes",
+   "read_only": 1,
+   "description": "How this row was matched across the source sheets (from the Master Data file)"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-11-27 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FTTH",
+ "name": "FTTH Master Data",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "FTTH Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1,
+   "import": 1
+  },
+  {
+   "role": "FTTH User",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "end_location_name,gis,area,wo,evisions_link_id",
+ "show_title_field_in_link": 1,
+ "sort_field": "rfs_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "end_location_name",
+ "track_changes": 1
+}

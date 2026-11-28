@@ -2,6 +2,24 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-28: Everything held back committed: OverHead code, master data loaders, NOC data fixes, Series No
+
+- **Summary:**
+  - The main site said "No Network Link has Node ID GGG": it had no Network Links, because the FTTH Master Data loaders were held back. The user asked for all of the NOC and master data to go to the main site, and chose "push the loaders + data files".
+  - **Committed now:**
+    - FTTH Master Data (doctype + 9,730-row data file and import), Network Links from it (8,237, incl. GGG's 24), GIS Nodes / Sites / Link Register matched to it.
+    - Team members from the sheet; complaint fixes (team area, link status, default team, SLA); default settings, formulas and map index; Site number fix; Series No on 8 masters.
+    - The remaining OverHead code: KMZ Map / Upload / Polygons, Fiber Team, OverHead menu, GIS Node Area dropdown, and the GIS Node → FTTH Master Data connection.
+  - **New patch `team_areas_after_master_data`**, right after the loaders. On the main site the team areas placement had already run before any links existed, so it runs the placement (`team_areas_v2`) again over the loaded data.
+  - **Complaint form:** "No Network Link has Node ID …" is now an orange note shown once per node. It used to be two message boxes (from the paste and the node change).
+  - `patches.txt` line endings normalised (it had mixed CRLF / LF).
+  - KMZ Routes / Pins (the map data) are not part of this: upload the KMZ on the main site.
+- **Testing (newsite.local):**
+  - migrate ran `team_areas_after_master_data`: same placement as before (nodes 375, links 7,102, localities 78, complaints 15,355).
+  - `node --check` / `py_compile` passed.
+  - All other patches had run and been checked on newsite earlier (see the entries below).
+- **Not tested:** A deploy on the main site. There, the loaders add only what is missing and keep the records the main site already has.
+
 ## 2026-11-28: Default complaint list colours for the main site
 
 - **Summary** (user, with a screenshot of the main site's empty Complaint List Colours: "fill this on the main site"). The default colours came from the patch `complaint_list_colours`, which was held back because it also changes old complaints. Now:
@@ -33,6 +51,36 @@ Created 2026-10-21. Earlier changes are recorded in git history and in the chang
 - **Pending items:**
   - Needs commit, push and deploy to reach the main site.
   - The browser console error from the main site would confirm the cause.
+
+## 2026-11-28: Series No on every master (NOD-00001, ARE-00001 …)
+
+- **Summary** (user: masters should be numbered in a series instead of Frappe's own IDs; chose "series as a second ID"):
+  - A read-only, unique **Series No** field is filled automatically and shown in the list and filters. It is also searchable, so every Link dropdown finds a master by its number and shows it in the description.
+
+    | Master | Series |
+    |---|---|
+    | GIS Node | NOD-00001 |
+    | Area | ARE-00001 |
+    | Site | SIT-00001 |
+    | Network Link | LNK-00001 |
+    | Maintenance Team | TEM-00001 |
+    | Maintenance Vendor | VEN-00001 |
+    | Field Staff | STF-00001 |
+    | Fiber Team | FBT-00001 |
+
+  - **IDs and links are unchanged** (GGG, Area 6, LINKID …), because the Airtel messages, KMZ folders and text node fields use them.
+  - New records get the next number on insert (`master_series.set_series_no`, doc event `before_insert`). Each series has its own counter (tabSeries "NOD-" …).
+  - Patch `master_series_numbers` numbers existing records oldest first and sets the counters.
+- **Files or modules affected:**
+  - new `master_series.py`; `hooks.py` (doc_events)
+  - the 8 doctype JSONs (field + search fields)
+  - new `patches/master_series_numbers.py`, `patches.txt`
+- **Testing (newsite.local):**
+  - Migrate numbered GIS Node 610, Area 181, Site 9,681, Network Link 8,237, Maintenance Team 7, Vendor 63, Field Staff 179, Fiber Team 2. Examples: GGG = NOD-00444, Area 1 = ARE-00176, Baner = ARE-00123, TEAM 6 = TEM-00006.
+  - In a rolled-back test, a new GIS Node got NOD-00611 and a new Area got ARE-00182.
+  - Link search: "NOD-00444" → GGG (Gultekadi, NOD-00444, Amar Belapurkar), "ARE-00176" → Area 1, "TEM-00006" → TEAM 6, "LNK-00001" → BLK-PUN-00001.
+- **Not tested:** The browser forms and lists. The Frappe Cloud site.
+- **Pending items:** Not committed or deployed.
 
 ## 2026-11-28: Commit of the team areas data (after the NOC commit 93b4423)
 

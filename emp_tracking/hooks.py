@@ -241,6 +241,9 @@ doc_events = {
 	"Salary Structure Assignment": {
 		"before_validate": "emp_tracking.overrides.salary_structure_assignment.before_validate"
 	},
+	# 2026-11-28: masters get a Series No (NOD-00001, ARE-00001 ...) on insert (master_series.py)
+	**{dt: {"before_insert": "emp_tracking.master_series.set_series_no"} for dt in (
+		"GIS Node", "Area", "Site", "Network Link", "Maintenance Team", "Maintenance Vendor", "Field Staff", "Fiber Team")},
 }
 
 # 2026-10-09: refresh the Aging of open complaints every hour.

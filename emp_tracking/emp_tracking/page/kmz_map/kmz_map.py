@@ -27,6 +27,15 @@
 #   2026-10-27  add_route: saves one route drawn on the map (Add Route button), no KMZ file needed.
 #   2026-10-27  preview_nearest / apply_nearest / undo_nearest: rows with no GIS Node get the node of
 #               the closest matched row within a chosen distance (Assign Nodes button).
+#   2026-11-27  get_map_data: each row ends with the index of its KMZ folder chain in "paths",
+#               for the page's "Map contents" folder tree (user's request: folders like Google Earth).
+#   2026-11-27  KMZ File filter also finds rows through their KMZ Upload (build_filters returns
+#               or_filters), and lists every completed upload: a full KMZ whose rows all existed
+#               already from its parts showed nothing (user's report "not everything is imported").
+#   2026-11-27  get_map_data also returns "polygons" (KMZ Polygon, the KMZ's shapes); get_item reads them.
+#   2026-11-27  Area filter: a node's EVision team area (GIS Node team_area, Area 1-6) or its locality.
+#   2026-11-27  Drawing limits from EVision Settings (kmz_route_limit / kmz_point_limit / kmz_polygon_limit).
+#   2026-11-28  Area filter on a team area also draws its boundary in the team's colour.
 # ---------------------------------------------------------------------------------------------
 
 import json
@@ -38,8 +47,12 @@ from frappe.utils import cint, flt
 from emp_tracking.emp_tracking.doctype.kmz_map_settings.kmz_map_settings import get_map_settings
 from emp_tracking.emp_tracking.page.network_topology.network_topology import CLOSED_STATES, site_parents
 
+# 2026-11-27: drawing limits from EVision Settings; ROUTE_LIMIT / POINT_LIMIT / POLYGON_LIMIT below are the defaults
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import setting
+
 ROUTE_LIMIT = 4000  # lines drawn at once; the page says when a filter hits it
 POINT_LIMIT = 8000  # pins drawn at once
+POLYGON_LIMIT = 1500  # 2026-11-27: shapes drawn at once (largest first)
 NOT_MATCHED = "Not Matched"
 DRAWN_SOURCE = "Drawn on KMZ Map"  # source_file / KMZ Path of routes made with add_route
 DRAWN_BY = "Drawn on Map"  # their Matched By (an option of custom_kmz_matched_by, setup.py)
@@ -54,21 +67,33 @@ def get_filter_options():
 
 	nodes = distinct("KMZ Route", "gis") | distinct("KMZ Point", "gis")
 	files = distinct("KMZ Route", "source_file") | distinct("KMZ Point", "source_file")
+	# 2026-11-27: also every uploaded KMZ, even one whose rows were all there already from earlier
+	# uploads (e.g. the full "KMZ - Till" file after its 8 parts), so it can be picked as a filter
+	files |= {f.rsplit("/", 1)[-1] for f in frappe.get_all("KMZ Upload", filters={"status": "Completed"}, pluck="kmz_file") if f}
 	# 2026-10-27: node -> area, so the page limits Area to the chosen node's area (and nodes to the chosen area)
-	node_area = {r.name: r.area for r in frappe.get_all("GIS Node", filters={"name": ["in", list(nodes)]},
-		fields=["name", "area"]) if r.area} if nodes else {}
+	# 2026-11-27: the EVision team area (Area 1-6) when the node has one, else its locality
+	node_area = {r.name: r.team_area or r.area for r in frappe.get_all("GIS Node", filters={"name": ["in", list(nodes)]},
+		fields=["name", "area", "team_area"]) if r.team_area or r.area} if nodes else {}
 	return {"nodes": sorted(nodes), "files": sorted(files), "areas": sorted(set(node_area.values())), "node_area": node_area,
 		"settings": get_map_settings()}  # 2026-10-27: pin types and colours (KMZ Map Settings)
 
 
 def build_filters(gis=None, area=None, source_file=None, path=None, matched_by=None, site=None):
-	filters = []
+	"""(filters, or_filters) for KMZ Route / KMZ Point. or_filters is only used by the KMZ File filter."""
+	filters, or_filters = [], []
 	if gis:
 		filters.append(["gis", "=", gis])
 	if area:
-		filters.append(["gis", "in", frappe.get_all("GIS Node", filters={"area": area}, pluck="name") or [""]])
+		# 2026-11-27: a team area (Area 1-6) or a locality
+		filters.append(["gis", "in", frappe.get_all("GIS Node", or_filters={"area": area, "team_area": area}, pluck="name") or [""]])
 	if source_file:
-		filters.append(["source_file", "=", source_file])
+		# 2026-11-27: a row keeps the name of the file that first created it, so a later file with the
+		# same routes / pins is found through its KMZ Upload, which stamps every row it holds
+		uploads = frappe.get_all("KMZ Upload", filters={"kmz_file": ["like", f"%/{source_file}"]}, pluck="name")
+		if uploads:
+			or_filters = [["source_file", "=", source_file], ["custom_kmz_upload", "in", uploads]]
+		else:
+			filters.append(["source_file", "=", source_file])
 	if path:
 		# the folder chain, so "C1U" or "Icon Residency" finds everything under that folder
 		filters.append(["custom_kmz_path", "like", f"%{path}%"])
@@ -78,7 +103,7 @@ def build_filters(gis=None, area=None, source_file=None, path=None, matched_by=N
 		filters.append(["custom_kmz_matched_by", "=", matched_by])
 	if site:
 		filters.append(["custom_site", "=", site])
-	return filters
+	return filters, or_filters
 
 
 def route_coords(location):
@@ -97,33 +122,79 @@ def route_coords(location):
 # Date: 2026-10-26
 @frappe.whitelist()
 def get_map_data(gis=None, area=None, source_file=None, path=None, matched_by=None, site=None, show="Routes and Pins"):
-	filters = build_filters(gis, area, source_file, path, matched_by, site)
-	out = {"routes": [], "points": [], "limit_hit": False}
+	filters, or_filters = build_filters(gis, area, source_file, path, matched_by, site)
+	site_filter = site  # the loops below reuse the name "site" for each row's site
+	# 2026-11-27: "paths" lists each KMZ folder chain once; every row ends with its index in it, so
+	# the page can draw the Google Earth style folder tree without repeating long paths per row
+	out = {"routes": [], "points": [], "limit_hit": False, "paths": []}
+	path_index = {}
+
+	def folder(kmz_path, file_name):
+		key = (kmz_path or "").strip() or (file_name or "").strip() or ""
+		if key not in path_index:
+			path_index[key] = len(out["paths"])
+			out["paths"].append(key)
+		return path_index[key]
 
 	# 2026-10-27: only what the map needs, as short arrays (all rows of all 8 KMZ parts were
 	# ~5.5 MB as full records); the popup loads the rest of a row on click (get_item)
 	if show != "Pins Only":
-		rows = frappe.get_list("KMZ Route", filters=filters, fields=["name", "gis", "route_name", "location", "custom_site"],
-			limit_page_length=ROUTE_LIMIT + 1, order_by="gis asc", as_list=True)
-		out["limit_hit"] |= len(rows) > ROUTE_LIMIT
-		for name, node, title, location, site in rows[:ROUTE_LIMIT]:
+		rows = frappe.get_list("KMZ Route", filters=filters, or_filters=or_filters, fields=["name", "gis", "route_name", "location", "custom_site",
+			"custom_kmz_path", "source_file"], limit_page_length=setting("kmz_route_limit") + 1, order_by="gis asc", as_list=True)
+		out["limit_hit"] |= len(rows) > setting("kmz_route_limit")
+		for name, node, title, location, site, kmz_path, file_name in rows[:setting("kmz_route_limit")]:
 			coords = route_coords(location)
 			if coords:
-				out["routes"].append([name, node or "", title, coords, site or ""])
+				out["routes"].append([name, node or "", title, coords, site or "", folder(kmz_path, file_name)])
 	if show != "Routes Only":
-		rows = frappe.get_list("KMZ Point", filters=filters, fields=["name", "gis", "point_name", "latitude", "longitude",
-			"custom_site"], limit_page_length=POINT_LIMIT + 1, order_by="gis asc", as_list=True)
-		out["limit_hit"] |= len(rows) > POINT_LIMIT
-		out["points"] = [[name, node or "", title, round(flt(lat), 6), round(flt(lon), 6), site or ""]
-			for name, node, title, lat, lon, site in rows[:POINT_LIMIT] if lat and lon]
+		rows = frappe.get_list("KMZ Point", filters=filters, or_filters=or_filters, fields=["name", "gis", "point_name", "latitude", "longitude",
+			"custom_site", "custom_kmz_path", "source_file"], limit_page_length=setting("kmz_point_limit") + 1, order_by="gis asc",
+			as_list=True)
+		out["limit_hit"] |= len(rows) > setting("kmz_point_limit")
+		out["points"] = [[name, node or "", title, round(flt(lat), 6), round(flt(lon), 6), site or "", folder(kmz_path, file_name)]
+			for name, node, title, lat, lon, site, kmz_path, file_name in rows[:setting("kmz_point_limit")] if lat and lon]
+
+	# 2026-11-27: KMZ Polygons (area remarks, DSA / cluster and team boundaries); none for a Site
+	# filter, as a shape belongs to no single site. Row: [name, gis, title, ring, line colour,
+	# fill colour, fill opacity, path index]
+	out["polygons"] = []
+	if not site_filter and show != "Pins Only" and frappe.db.exists("DocType", "KMZ Polygon"):
+		rename = {"custom_kmz_path": "kmz_path", "custom_kmz_upload": "kmz_upload", "custom_kmz_matched_by": "matched_by"}
+		poly = lambda fl: [[rename.get(f[0], f[0]), *f[1:]] for f in fl]
+		rows = frappe.get_list("KMZ Polygon", filters=poly(filters), or_filters=poly(or_filters), fields=["name", "gis",
+			"polygon_name", "boundary", "line_colour", "fill_colour", "fill_opacity", "kmz_path", "source_file"],
+			limit_page_length=setting("kmz_polygon_limit") + 1, order_by="area_sq_m desc", as_list=True)
+		out["limit_hit"] |= len(rows) > setting("kmz_polygon_limit")
+		for name, node, title, boundary, line, fill, opacity, kmz_path, file_name in rows[:setting("kmz_polygon_limit")]:
+			try:
+				ring = json.loads(boundary or "[]")
+			except ValueError:
+				continue
+			if len(ring) >= 3:
+				out["polygons"].append([name, node or "", title, ring, line or "", fill or "",
+					flt(opacity) if opacity is not None else None, folder(kmz_path, file_name)])
+
+	# 2026-11-28: Area filter on a team area (e.g. "View team on map"): that area's boundary, in the
+	# colour of the team working it (Maintenance Team > Team Colour); the area's own shape has no node
+	if area and show != "Pins Only" and frappe.db.get_value("Area", area, "is_team_area"):
+		boundary = frappe.db.get_value("Area", area, "boundary")
+		try:
+			ring = json.loads(boundary or "[]")
+		except ValueError:
+			ring = []
+		if len(ring) >= 3:
+			colour = frappe.db.get_value("Maintenance Team", {"area": area, "team_colour": ["is", "set"]}, "team_colour") or "#2563eb"
+			team = frappe.db.get_value("Maintenance Team", {"area": area}, "name")
+			out["polygons"].insert(0, [f"area-boundary-{area}", "", f"{area}{' · ' + team if team else ''}", ring, colour, colour,
+				0.06, folder("EVision Team Areas", None)])
 
 	# totals and the per-node list are counted in the database, not from the capped rows
 	def per_node(doctype):
-		return {r.gis or "": cint(r.n) for r in frappe.get_list(doctype, filters=filters,
+		return {r.gis or "": cint(r.n) for r in frappe.get_list(doctype, filters=filters, or_filters=or_filters,
 			fields=["gis", {"COUNT": "*", "as": "n"}], group_by="gis", limit_page_length=0)}
 
 	routes, points = per_node("KMZ Route"), per_node("KMZ Point")
-	length = frappe.get_list("KMZ Route", filters=filters, fields=[{"SUM": "length_m", "as": "m"}], limit_page_length=0)
+	length = frappe.get_list("KMZ Route", filters=filters, or_filters=or_filters, fields=[{"SUM": "length_m", "as": "m"}], limit_page_length=0)
 	nodes = sorted(set(routes) | set(points), key=lambda g: (-(routes.get(g, 0) + points.get(g, 0)), g))
 	out["summary"] = {
 		"routes": sum(routes.values()), "points": sum(points.values()),
@@ -193,9 +264,15 @@ def fault_overlay():
 @frappe.whitelist()
 def get_item(doctype, name):
 	"""One route / pin for the map popup: node, site, KMZ file and full KMZ path."""
-	if doctype not in ("KMZ Route", "KMZ Point"):
+	if doctype not in ("KMZ Route", "KMZ Point", "KMZ Polygon"):
 		frappe.throw(frappe._("Not a KMZ doctype"))
 	frappe.has_permission(doctype, "read", name, throw=True)
+	if doctype == "KMZ Polygon":
+		# 2026-11-27: same keys as a route / pin popup, so the page shows it the same way
+		r = frappe.db.get_value(doctype, name, ["name", "gis", "source_file", "node_folder", "kmz_path", "matched_by",
+			"polygon_name", "area_sq_m"], as_dict=True)
+		r.update({"custom_kmz_path": r.pop("kmz_path"), "custom_kmz_matched_by": r.pop("matched_by")})
+		return r
 	fields = ["name", "gis", "source_file", "node_folder", "custom_kmz_path", "custom_site", "custom_kmz_matched_by"]
 	fields += ["route_name", "length_m", "a_end", "b_end"] if doctype == "KMZ Route" else ["point_name", "latitude", "longitude"]
 	return frappe.db.get_value(doctype, name, fields, as_dict=True)
