@@ -29,3 +29,13 @@ emp_tracking.patches.backfill_unique_cut
 emp_tracking.patches.office_shift_hours_rule
 # 2026-11-28: Area as a tree (team areas with their localities under them)
 emp_tracking.patches.area_tree
+# 2026-11-27: six EVision team areas (Area 1-6) with managers; GIS Nodes, Network Links and the KMZ Map placed by boundary
+emp_tracking.patches.evision_team_areas
+# 2026-11-27: complaints get Area and Area Manager (Field Staff) from their node's team area
+emp_tracking.patches.complaint_team_area_manager
+# 2026-11-27: localities get their team area; complaints with no node get that area's manager
+emp_tracking.patches.locality_team_areas
+# 2026-11-28: Maintenance Team colours (TEAM N = Area N colour), leader name from the Employee
+emp_tracking.patches.maintenance_team_colours
+# 2026-11-28: updated team areas map (Evision team (1).kmz): boundaries and everything placed again
+emp_tracking.patches.team_areas_v2

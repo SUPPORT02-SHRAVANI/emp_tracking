@@ -2,6 +2,23 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-28: Commit of the team areas data (after the NOC commit 93b4423)
+
+- **Summary** (user: "commit the team areas data too"). The patches committed:
+  - `evision_team_areas` (+ `evision_team_areas.json`, the updated boundaries and managers)
+  - `complaint_team_area_manager`, `locality_team_areas`
+  - `maintenance_team_colours` (TEAM N colour = Area N colour)
+  - `team_areas_v2`
+  - On a fresh site they create Area 1-6 with boundaries and managers, put nodes, links, localities and complaints into them, and build the Areas tree.
+- **Changes for this commit:**
+  - `evision_team_areas` draws the KMZ Polygon shapes only when the KMZ Polygon doctype is in the app (held back with the OverHead KMZ code).
+  - `team_areas_v2` falls back to the Area "Pune" only when that Area exists.
+- **Not in this commit:** the FTTH Master Data import and what it makes, the team members from the sheet, complaint backfills, colour / settings defaults, the Site number fix, and the OverHead code.
+- **Testing:**
+  - The staged snapshot compiles, and every patch in `patches.txt` exists.
+  - On newsite the two patches were run again with KMZ Polygon treated as missing: nodes / links / localities / complaints placed stayed 375 / 7,102 / 78 / 15,355.
+- **Not tested:** A fresh site (the main site's first run).
+
 ## 2026-11-28: Commit of the NOC complaint work only (OverHead Project and data loaders held back)
 
 - **Summary** (user: "commit and push only NOC complaint, not OverHead project, and not data"; chose "NOC + what it needs" and left all data loaders out):
