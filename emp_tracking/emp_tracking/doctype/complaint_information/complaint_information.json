@@ -52,6 +52,9 @@
   "latitude",
   "cb_network",
   "area",
+  "team_area",
+  "area_manager_staff",
+  "area_manager_staff_no",
   "area_manager",
   "maintenance_responsibility",
   "longitude",
@@ -188,6 +191,15 @@
    "read_only": 1
   },
   {
+   "fieldname": "team_area",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Team Area",
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "description": "EVision team area (Area 1-6): the node's, else the locality's. Shown in the list's Area column."
+  },
+  {
    "fetch_from": "linkid.location",
    "fieldname": "location",
    "fieldtype": "Data",
@@ -224,7 +236,8 @@
    "fieldname": "team_leader_name",
    "fieldtype": "Data",
    "label": "Team Leader",
-   "read_only": 1
+   "read_only": 1,
+   "hidden": 1
   },
   {
    "fieldname": "sec_source",
@@ -284,12 +297,28 @@
    "label": "Assignment"
   },
   {
-   "description": "Filled from the Area. NOC can change it before assigning.",
+   "fieldname": "area_manager_staff",
+   "fieldtype": "Link",
+   "options": "Field Staff",
+   "label": "Area Manager",
+   "in_standard_filter": 1,
+   "description": "The team area's manager (Area 1-6), from the node's Team Area."
+  },
+  {
+   "fieldname": "area_manager_staff_no",
+   "fieldtype": "Data",
+   "label": "Area Manager No",
+   "options": "Phone",
+   "fetch_from": "area_manager_staff.contact_no",
+   "read_only": 1
+  },
+  {
+   "description": "The Area Manager's user account, when they have one. Filled from the Area.",
    "fetch_from": "area.area_manager",
    "fetch_if_empty": 1,
    "fieldname": "area_manager",
    "fieldtype": "Link",
-   "label": "Area Manager",
+   "label": "Area Manager (Login)",
    "options": "User",
    "read_only_depends_on": "eval:!(frappe.user_roles.includes('NOC Head')||frappe.user_roles.includes('Area Manager')||frappe.user_roles.includes('System Manager'))"
   },
@@ -724,7 +753,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-26 15:00:00.000000",
+ "modified": "2026-11-28 23:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Complaint Information",

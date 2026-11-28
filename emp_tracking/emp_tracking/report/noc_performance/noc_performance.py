@@ -23,6 +23,8 @@
 
 from frappe import _
 
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import sla_pct
+
 from emp_tracking.noc_reports import empty_message, performance
 
 FIGURES = ("received", "closed", "open", "in", "out", "pct", "mttr")
@@ -135,7 +137,7 @@ def summary(rows):
 		i, o = total(f"{prefix}_in"), total(f"{prefix}_out")
 		cards.append({"label": _("{0} calls").format(name), "value": calls, "datatype": "Int", "indicator": colour})
 		if i + o:
-			pct = round(100.0 * i / (i + o), 1)
+			pct = sla_pct(i, o)  # 2026-11-28: editable formula
 			cards.append({"label": _("{0} in SLA").format(name), "value": pct, "datatype": "Percent",
 				"indicator": "Green" if pct >= 80 else "Red"})
 		else:

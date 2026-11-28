@@ -23,9 +23,15 @@
 // Change log
 //   2026-11-02  Created: stepper().
 //   2026-11-02  stepper() opts.hero (summary header); form_style().
+//   2026-11-28  render_team_areas(): a team's area, manager and localities (Maintenance / Fiber Team forms);
+//               "Add row" picks unassigned areas (add_team_areas).
 //   2026-11-26  noc_scope_filters() and noc_formatter(): shared filters and cell colours of the
 //               NOC reports.
 //   2026-11-26  month_bands(): light band behind every other month on day-by-day charts.
+//   2026-11-28  NOC reports open on their dashboard (tiles + chart); "See summary" shows the table
+//               (noc_apply_table), user's request.
+//   2026-11-28  NOC report dashboard look: tiles as equal cards in one row, chart in a card, table
+//               footers hidden with the table (user: "fix summary ka dashboard").
 //   2026-11-26  noc_report_onload() / noc_report_after_render(): "Full screen" button and a
 //               full-height table on the NOC reports.
 //   2026-11-26  noc_fluid_table() (stretched "fluid" report tables) removed again: it squeezed
@@ -273,18 +279,171 @@ evision.noc_report_month_bands = function () {
 //           (browser Fullscreen API; Esc or the button again leaves it).
 //   after_datatable_render: this report's table fills the screen height (Frappe's default box is
 //           shorter and left empty space below), and the month bands on its chart.
+// 2026-11-28 (user: "first show dashboard, then a button on top to see the summary"): a NOC report
+// opens on its dashboard (tiles + chart) with the table hidden; "See summary" shows the table and
+// scrolls to it, "Hide summary" hides it again. Remembered per report while the browser tab is open.
+// Date: 2026-11-28
+// A team's area block, shared by the Maintenance Team and Fiber Team forms: the team area (Area
+// 1-6) with its manager and phone, and its localities as chips that open the Area. area_field =
+// the form's Link to Area; html_field = the HTML field to draw in.
+evision.render_team_areas = async function (frm, area_field, html_field) {
+	var field = frm.get_field(html_field);
+	if (!field) return;
+	var $w = field.$wrapper;
+	var esc = frappe.utils.escape_html;
+	var area = frm.doc[area_field];
+	if (!area) {
+		$w.html("");
+		return;
+	}
+	var res = await Promise.all([
+		frappe.db.get_value("Area", area, ["is_team_area", "field_manager", "field_manager_no"]),
+		frappe.db.get_list("Area", { filters: { team_area: area }, fields: ["name", "area_code", "status"], order_by: "name asc", limit: 500 }),
+	]);
+	var t = res[0].message || {};
+	var places = res[1];
+	if (!t.is_team_area) {
+		$w.html('<p class="text-muted small">' + __("{0} is a locality, not one of the team areas (Area 1-6).", [esc(area)]) + "</p>");
+		return;
+	}
+	// 2026-11-28 (user: "put the area list in this format", the Members table): a table like a
+	// Frappe child table, one row per area: No., Area, Area Code, Status, open icon
+	var rows = places.map((p, i) => {
+		var href = "/app/area/" + encodeURIComponent(p.name);
+		var status = p.status === "Inactive"
+			? '<span class="indicator-pill gray">' + __("Inactive") + "</span>"
+			: '<span class="indicator-pill green">' + __("Active") + "</span>";
+		return `<tr><td class="no">${i + 1}</td><td><a class="tm-name" href="${href}">${esc(p.name)}</a></td>
+			<td class="text-muted">${esc(p.area_code || "")}</td><td>${status}</td>
+			<td class="edit"><a href="${href}" title="${__("Open")}">${frappe.utils.icon("edit", "xs")}</a></td></tr>`;
+	}).join("");
+	$w.html(`<style>
+			.tm-areas-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+			.tm-areas-head .text-muted { font-size:var(--text-sm); }
+			.tm-grid { border:1px solid var(--border-color); border-radius:var(--border-radius-md, 8px); overflow:hidden; }
+			.tm-grid table { width:100%; border-collapse:collapse; font-size:var(--text-sm); }
+			.tm-grid th { background:var(--subtle-fg, var(--control-bg)); color:var(--text-muted); font-weight:400;
+				text-align:left; padding:8px 10px; border-bottom:1px solid var(--border-color); }
+			.tm-grid td { padding:9px 10px; border-bottom:1px solid var(--border-color); }
+			.tm-grid tr:last-child td { border-bottom:0; }
+			.tm-grid td + td, .tm-grid th + th { border-left:1px solid var(--border-color); }
+			.tm-grid .no { width:56px; text-align:center; color:var(--text-muted); }
+			.tm-grid .edit { width:44px; text-align:center; }
+			.tm-grid .tm-name { font-weight:600; color:var(--text-color); }
+		</style>
+		<div class="tm-areas-head">
+			<div><b>${esc(area)}</b> · ${__("{0} areas", [places.length])}
+				<span class="text-muted">· ${__("Area Manager")}: ${esc(t.field_manager || __("not set"))}${t.field_manager_no ? " (" + esc(t.field_manager_no) + ")" : ""}</span></div>
+			<a class="btn btn-xs btn-default" href="/app/area/view/tree">${__("Open Areas tree")}</a>
+		</div>
+		${places.length ? `<div class="tm-grid"><table>
+				<thead><tr><th class="no">${__("No.")}</th><th>${__("Area")}</th><th>${__("Area Code")}</th><th>${__("Status")}</th><th class="edit"></th></tr></thead>
+				<tbody>${rows}</tbody></table></div>`
+			: '<p class="text-muted small">' + __("No areas under {0} yet.", [esc(area)]) + "</p>"}
+		<button class="btn btn-xs btn-secondary tm-add" style="margin-top:10px">${__("Add row")}</button>`);
+	// 2026-11-28 (user: "add row, only from areas not assigned anywhere"): pick localities that are
+	// in no team area yet; they are put under this team area (area.add_to_team_area)
+	$w.find(".tm-add").on("click", () => evision.add_team_areas(frm, area, area_field, html_field));
+};
+
+// Date: 2026-11-28
+evision.add_team_areas = function (frm, area, area_field, html_field) {
+	var free = { is_team_area: 0, team_area: ["is", "not set"] };
+	var d = new frappe.ui.Dialog({
+		title: __("Add areas to {0}", [area]),
+		fields: [
+			{ fieldtype: "HTML", fieldname: "help",
+				options: '<p class="text-muted small">' + __("Only areas that are not in any team area yet are listed.") + "</p>" },
+			{ fieldtype: "MultiSelectList", fieldname: "areas", label: __("Areas"), reqd: 1,
+				get_data: (txt) => frappe.db.get_list("Area", {
+					filters: Object.assign({}, free, txt ? { name: ["like", "%" + txt + "%"] } : {}),
+					fields: ["name as value", "area_code as description"], order_by: "name asc", limit: 50,
+				}) },
+		],
+		primary_action_label: __("Add"),
+		primary_action: async (values) => {
+			var added = await frappe.xcall("emp_tracking.emp_tracking.doctype.area.area.add_to_team_area",
+				{ team_area: area, areas: values.areas || [] });
+			d.hide();
+			frappe.show_alert({ message: __("{0} areas added to {1}", [added.length, area]), indicator: "green" });
+			evision.render_team_areas(frm, area_field, html_field);
+		},
+	});
+	d.show();
+};
+
+evision.noc_table_shown = {};
+evision.noc_reports = new Set();
+
+evision.noc_apply_table = function (report) {
+	if (!report || !report.$report) return;
+	var shown = !!evision.noc_table_shown[report.report_name];
+	// a class, not .hide(): Frappe calls $report.show() again after after_datatable_render
+	if (!document.getElementById("ev-noc-hidden-style")) {
+		// 2026-11-28 (user: "fix summary ka dashboard"): NOC report pages only (.ev-noc-report):
+		// tiles as one row of equal cards that fill the width (no orphan tile on a second row),
+		// the chart in a matching card, and the table's footers hidden while the table is.
+		$(`<style id="ev-noc-hidden-style">
+			.report-wrapper.ev-noc-hidden { display: none !important; }
+			.ev-noc-report.ev-noc-table-hidden .report-footer,
+			.ev-noc-report.ev-noc-table-hidden .tree-footer { display: none !important; }
+			.ev-noc-report .report-summary { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+				gap: 12px; padding: 4px 0 0; margin: 4px 15px 16px; height: auto !important; border: 0; background: none; box-shadow: none; }
+			.ev-noc-report .report-summary .summary-separator { display: none; }
+			.ev-noc-report .report-summary .summary-item { margin: 0; padding: 14px 16px; text-align: left; min-width: 0;
+				height: auto !important; min-height: 84px; justify-content: flex-start !important;
+				border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-bg, var(--fg-color)); }
+			.ev-noc-report .report-summary .summary-label { display: block; flex-shrink: 0; height: auto; font-size: var(--text-sm);
+				color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+			.ev-noc-report .report-summary .summary-value { margin-top: 6px; font-size: 22px; font-weight: 600; line-height: 1.2;
+				white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+			.ev-noc-report .chart-wrapper { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 8px 4px;
+				margin: 0 15px 16px; background: var(--card-bg, var(--fg-color)); }
+		</style>`).appendTo("head");
+	}
+	report.$report.toggleClass("ev-noc-hidden", !shown);
+	report.page.wrapper.addClass("ev-noc-report").toggleClass("ev-noc-table-hidden", !shown);
+	if (report.__ev_table_btn) {
+		report.__ev_table_btn.text(shown ? __("Hide summary") : __("See summary"));
+		report.__ev_table_btn.toggleClass("btn-primary", !shown).toggleClass("btn-default", shown);
+	}
+};
+
 evision.noc_report_onload = function (report) {
+	evision.noc_reports.add(report.report_name);
+	report.__ev_table_btn = report.page.add_inner_button(__("See summary"), () => {
+		evision.noc_table_shown[report.report_name] = !evision.noc_table_shown[report.report_name];
+		evision.noc_apply_table(report);
+		if (evision.noc_table_shown[report.report_name]) {
+			// the table was hidden while the report drew, so let it size itself now
+			window.dispatchEvent(new Event("resize"));
+			setTimeout(() => report.$report[0].scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+		}
+	});
 	report.page.add_inner_button(__("Full screen"), () => {
 		var el = report.page.wrapper[0];
 		if (document.fullscreenElement) document.exitFullscreen();
 		else if (el.requestFullscreen) el.requestFullscreen().catch(() => frappe.show_alert(__("Full screen is blocked in this browser")));
 	});
+	evision.noc_apply_table(report);
+	// Frappe reuses one report page: another (non-NOC) report always gets its table back
+	if (!evision.__noc_route_hook) {
+		evision.__noc_route_hook = true;
+		frappe.router.on("change", () => setTimeout(() => {
+			var qr = frappe.query_report;
+			if (qr && qr.$report && !evision.noc_reports.has(qr.report_name)) {
+				qr.$report.removeClass("ev-noc-hidden");
+				qr.page.wrapper.removeClass("ev-noc-report ev-noc-table-hidden");
+			}
+		}, 300));
+	}
 };
 
 evision.noc_report_after_render = function (datatable) {
 	if (datatable && datatable.bodyScrollable) {
 		datatable.bodyScrollable.style.height = "calc(100vh - 150px)";
 	}
+	evision.noc_apply_table(frappe.query_report);
 	// Frappe's report page replaces a chart's axisOptions with its own (query_report.js
 	// get_chart_options), so the report's own ones (xIsSeries: show every n-th date label instead
 	// of squeezing all into "0..") are merged back and the chart drawn once more.

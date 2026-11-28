@@ -1,0 +1,304 @@
+{
+ "actions": [],
+ "creation": "2026-11-27 19:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_complaints",
+  "help",
+  "sb_rules",
+  "sla_hours",
+  "own_fiber_rfo",
+  "outage_days_per_month",
+  "cb_complaints",
+  "day_start_hour",
+  "night_start_hour",
+  "tab_office",
+  "office_full_day_hours",
+  "cb_office",
+  "office_grace_minutes",
+  "tab_location",
+  "location_radius_m",
+  "cb_location",
+  "max_ping_gap_minutes",
+  "tab_maps",
+  "kmz_route_limit",
+  "kmz_point_limit",
+  "kmz_polygon_limit",
+  "cb_maps",
+  "noc_map_limit",
+  "noc_route_limit",
+  "sb_index",
+  "kmz_index_position",
+  "kmz_index_start",
+  "cb_index",
+  "noc_index_position",
+  "noc_index_start",
+  "sb_index_rows",
+  "map_index_rows",
+  "tab_formulas",
+  "formula_table",
+  "formulas",
+  "tab_more",
+  "more"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_complaints",
+   "fieldtype": "Tab Break",
+   "label": "Complaints & SLA"
+  },
+  {
+   "fieldname": "help",
+   "fieldtype": "HTML",
+   "label": "Help",
+   "options": "<p class=\"text-muted\">Business rules of the EVision app. Change a value and save; it is used from the next report, map or complaint. Leave a field empty to go back to the default shown in its description.</p>"
+  },
+  {
+   "fieldname": "sb_rules",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sla_hours",
+   "fieldtype": "Float",
+   "label": "SLA (hours)",
+   "default": "4",
+   "description": "A complaint restored within this many hours is SLA In, later is Out; open complaints older than this are overdue. Default 4."
+  },
+  {
+   "fieldname": "own_fiber_rfo",
+   "fieldtype": "Data",
+   "label": "RFO counted as own fibre",
+   "default": "Own Fiber Issue",
+   "description": "NOC reports count only complaints with this Reason for Outage (and ones with none yet). Default: Own Fiber Issue."
+  },
+  {
+   "fieldname": "outage_days_per_month",
+   "fieldtype": "Int",
+   "label": "Major outage days per month",
+   "default": "2",
+   "description": "Major Outage Closure: the days with the most new cuts per team and month. Default 2."
+  },
+  {
+   "fieldname": "cb_complaints",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "day_start_hour",
+   "fieldtype": "Select",
+   "label": "Day calls start (IST)",
+   "default": "8:00 AM",
+   "description": "Received from this time is a day call. Default 8:00 AM.",
+   "options": "12:00 AM\n1:00 AM\n2:00 AM\n3:00 AM\n4:00 AM\n5:00 AM\n6:00 AM\n7:00 AM\n8:00 AM\n9:00 AM\n10:00 AM\n11:00 AM\n12:00 PM\n1:00 PM\n2:00 PM\n3:00 PM\n4:00 PM\n5:00 PM\n6:00 PM\n7:00 PM\n8:00 PM\n9:00 PM\n10:00 PM\n11:00 PM"
+  },
+  {
+   "fieldname": "night_start_hour",
+   "fieldtype": "Select",
+   "label": "Night calls start (IST)",
+   "default": "8:00 PM",
+   "description": "Received from this time is a night call, until the day start. Default 8:00 PM.",
+   "options": "12:00 AM\n1:00 AM\n2:00 AM\n3:00 AM\n4:00 AM\n5:00 AM\n6:00 AM\n7:00 AM\n8:00 AM\n9:00 AM\n10:00 AM\n11:00 AM\n12:00 PM\n1:00 PM\n2:00 PM\n3:00 PM\n4:00 PM\n5:00 PM\n6:00 PM\n7:00 PM\n8:00 PM\n9:00 PM\n10:00 PM\n11:00 PM"
+  },
+  {
+   "fieldname": "tab_office",
+   "fieldtype": "Tab Break",
+   "label": "Office Attendance"
+  },
+  {
+   "fieldname": "office_full_day_hours",
+   "fieldtype": "Float",
+   "label": "Office full day (hours)",
+   "default": "9",
+   "description": "First punch-in to last punch-out. Less than half of this is Absent. Default 9."
+  },
+  {
+   "fieldname": "cb_office",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "office_grace_minutes",
+   "fieldtype": "Int",
+   "label": "Grace (minutes)",
+   "default": "15",
+   "description": "Present from full day less this. Default 15 (Present from 8 h 45 min). Saved onto the office Shift Type."
+  },
+  {
+   "fieldname": "tab_location",
+   "fieldtype": "Tab Break",
+   "label": "Field Location"
+  },
+  {
+   "fieldname": "location_radius_m",
+   "fieldtype": "Int",
+   "label": "Home / office radius (metres)",
+   "default": "200",
+   "description": "A ping this close to the employee's home or office location counts as there, unless the location has its own radius. Default 200."
+  },
+  {
+   "fieldname": "cb_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_ping_gap_minutes",
+   "fieldtype": "Int",
+   "label": "Longest gap between pings (minutes)",
+   "default": "15",
+   "description": "Time between two pings counts only up to this gap (phone off or no signal otherwise). Default 15."
+  },
+  {
+   "fieldname": "tab_maps",
+   "fieldtype": "Tab Break",
+   "label": "Maps"
+  },
+  {
+   "fieldname": "kmz_route_limit",
+   "fieldtype": "Int",
+   "label": "KMZ Map: lines drawn at once",
+   "default": "4000",
+   "description": "The most route lines drawn together. If the filters match more, the map says so and draws the first ones: pick a GIS Node, Area or KMZ Path to see all of them. Too many slow the browser down."
+  },
+  {
+   "fieldname": "kmz_point_limit",
+   "fieldtype": "Int",
+   "label": "KMZ Map: pins drawn at once",
+   "default": "8000",
+   "description": "The most pins (buildings, ODF, poles ...) drawn together, as for lines."
+  },
+  {
+   "fieldname": "kmz_polygon_limit",
+   "fieldtype": "Int",
+   "label": "KMZ Map: shapes drawn at once",
+   "default": "1500",
+   "description": "The most shapes (area / DSA / cluster boundaries) drawn together, largest first."
+  },
+  {
+   "fieldname": "cb_maps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "noc_map_limit",
+   "fieldtype": "Int",
+   "label": "NOC map: complaints loaded",
+   "default": "5000",
+   "description": "The most complaints loaded on the NOC map for the chosen dates, newest first."
+  },
+  {
+   "fieldname": "noc_route_limit",
+   "fieldtype": "Int",
+   "label": "NOC map: routes per complaint",
+   "default": "400",
+   "description": "The most fibre routes drawn for one clicked complaint's node. More makes the map slower in the browser."
+  },
+  {
+   "fieldname": "sb_index",
+   "fieldtype": "Section Break",
+   "label": "Map index (legend)"
+  },
+  {
+   "fieldname": "kmz_index_position",
+   "fieldtype": "Select",
+   "label": "KMZ Map: Index position",
+   "options": "Bottom right\nBottom left\nTop right\nTop left\nHidden",
+   "default": "Bottom right"
+  },
+  {
+   "fieldname": "kmz_index_start",
+   "fieldtype": "Select",
+   "label": "KMZ Map: Index starts",
+   "options": "Open\nFolded",
+   "default": "Open"
+  },
+  {
+   "fieldname": "cb_index",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "noc_index_position",
+   "fieldtype": "Select",
+   "label": "NOC map: Index position",
+   "options": "Bottom right\nBottom left\nTop right\nTop left\nHidden",
+   "default": "Bottom left"
+  },
+  {
+   "fieldname": "noc_index_start",
+   "fieldtype": "Select",
+   "label": "NOC map: Index starts",
+   "options": "Open\nFolded",
+   "default": "Open"
+  },
+  {
+   "fieldname": "sb_index_rows",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "map_index_rows",
+   "fieldtype": "Table",
+   "label": "Index rows",
+   "options": "EVision Map Index Row",
+   "description": "Untick Show to leave a row out of the Index; change its label or colour (the colour is also used on the map). Empty label = default."
+  },
+  {
+   "fieldname": "tab_formulas",
+   "fieldtype": "Tab Break",
+   "label": "Formulas"
+  },
+  {
+   "fieldname": "formula_table",
+   "fieldtype": "Table",
+   "label": "Editable formulas",
+   "options": "EVision Formula",
+   "cannot_add_rows": 1,
+   "cannot_delete_rows": 1,
+   "description": "Change a formula and save; it is checked first. Copy the Default back to undo."
+  },
+  {
+   "fieldname": "formulas",
+   "fieldtype": "HTML",
+   "label": "Formulas"
+  },
+  {
+   "fieldname": "tab_more",
+   "fieldtype": "Tab Break",
+   "label": "Other Settings"
+  },
+  {
+   "fieldname": "more",
+   "fieldtype": "HTML",
+   "label": "Other settings"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-28 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "EVision Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "NOC Head",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "All",
+   "read": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

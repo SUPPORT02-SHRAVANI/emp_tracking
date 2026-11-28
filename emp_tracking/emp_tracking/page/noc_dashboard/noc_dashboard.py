@@ -35,6 +35,11 @@ from frappe.utils import (
 	time_diff_in_seconds,
 )
 
+# 2026-11-27: SLA hours, location radius / ping gap and map limits come from EVision Settings;
+# the constants below (MTTR_LIMIT_HOURS, DEFAULT_RADIUS_M, MAX_PING_GAP_SECONDS, MAP_LIMIT,
+# ROUTE_LIMIT) are only the documented defaults
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import setting
+
 # Dashboard status buckets, in display order, and the workflow states that fall in each.
 STATUS_BUCKETS = {
 	"NEED TO ASSIGN": ("New", "NOC Verification", "Assigned to Area Manager", "Rejected"),
@@ -98,12 +103,12 @@ def get_dashboard_data(closed_date=None):
 		row.worker = (names.get(worker) or worker or OTHER).upper()
 		row.age = max(time_diff_in_seconds(now, get_datetime(row.complaint_date_and_time)), 0)
 
-	overdue = [r for r in open_rows if r.age > MTTR_LIMIT_HOURS * 3600]
+	overdue = [r for r in open_rows if r.age > setting("sla_hours") * 3600]
 	wip = [r for r in open_rows if r.bucket == "WIP"]
 
 	return {
 		"closed_date": str(closed_date),
-		"mttr_limit_hours": MTTR_LIMIT_HOURS,
+		"mttr_limit_hours": setting("sla_hours"),
 		"status": status_summary(open_rows),
 		"status_description": grouped(open_rows, "bucket", "owner_group"),
 		"company": company_summary(open_rows),
@@ -274,7 +279,7 @@ def add_location_hours(days, employee, start, end):
 	for ping, following in zip(pings, pings[1:]):
 		gap = time_diff_in_seconds(following.timestamp, ping.timestamp)
 		day = getdate(ping.timestamp)
-		if 0 < gap <= MAX_PING_GAP_SECONDS and day == getdate(following.timestamp) and ping.latitude and ping.longitude:
+		if 0 < gap <= setting("max_ping_gap_minutes") * 60 and day == getdate(following.timestamp) and ping.latitude and ping.longitude:
 			days[day][location_type(ping)] += gap
 
 
@@ -282,7 +287,7 @@ def near(ping, places):
 	for place in places:
 		if place.get("latitude") and place.get("longitude"):
 			if distance_m(ping.latitude, ping.longitude, place["latitude"], place["longitude"]) <= (
-				place.get("radius") or DEFAULT_RADIUS_M
+				place.get("radius") or setting("location_radius_m")
 			):
 				return True
 	return False
@@ -326,7 +331,7 @@ def add_complaint_counts(days, employee, start, end):
 		day = days[getdate(row.modified)]
 		seconds = max(time_diff_in_seconds(row.modified, get_datetime(row.complaint_date_and_time)), 0)
 		day["restored"] += 1
-		day["in_sla" if seconds <= MTTR_LIMIT_HOURS * 3600 else "out_sla"] += 1
+		day["in_sla" if seconds <= setting("sla_hours") * 3600 else "out_sla"] += 1
 		day["restore_seconds"].append(seconds)
 
 
@@ -360,7 +365,7 @@ def get_complaint_map(from_date=None, to_date=None, status="Open", team=None):
 	if team:
 		filters.append(["maintenance_team", "=", team])
 	rows = frappe.get_list("Complaint Information", filters=filters, fields=MAP_FIELDS,
-		order_by="complaint_date_and_time desc", limit_page_length=MAP_LIMIT)
+		order_by="complaint_date_and_time desc", limit_page_length=setting("noc_map_limit"))
 
 	def coords(lat, lon):
 		lat, lon = float(lat or 0), float(lon or 0)
@@ -394,7 +399,7 @@ def get_complaint_map(from_date=None, to_date=None, status="Open", team=None):
 		age = time_diff_in_seconds(now, received) if is_open and received else None
 		points.append({
 			"name": r.name, "lat": round(pos[0], 6), "lng": round(pos[1], 6), "source": source,
-			"open": is_open, "overdue": bool(age and age > MTTR_LIMIT_HOURS * 3600), "age": age,
+			"open": is_open, "overdue": bool(age and age > setting("sla_hours") * 3600), "age": age,
 			"state": r.workflow_state, "link_status": r.link_status, "operator": r.operatorcustomer,
 			"type": r.complaint_type, "priority": r.priority, "code": r.complaint_code, "cut": r.unique_cut,
 			"inc": r.incident_number, "received": str(r.complaint_date_and_time or ""), "closed": str(r.evision_closed_on or ""),
@@ -402,14 +407,16 @@ def get_complaint_map(from_date=None, to_date=None, status="Open", team=None):
 			"splicer": names.get(r.splicer) or r.splicer, "rider": names.get(r.rider) or r.rider, "area": r.area,
 			"linkid": r.linkid, "site": r.society_name or r.site, "link": r.link_as_reported, "place": r.location,
 		})
-	return {"points": points, "missing": missing, "total": len(rows), "limited": len(rows) >= MAP_LIMIT,
-		"mttr_limit_hours": MTTR_LIMIT_HOURS}
+	return {"points": points, "missing": missing, "total": len(rows), "limited": len(rows) >= setting("noc_map_limit"),
+		"mttr_limit_hours": setting("sla_hours")}
 
 
 # Date: 2026-11-26
 # Map tab: the clicked complaint's node and its KMZ fibre routes (user's request: "show the
 # complaint's node route on the map").
 ROUTE_LIMIT = 400
+# 2026-11-27: get_complaint_route also returns the node's Encloser / JC pins (node_enclosures)
+# 2026-11-27: limits, SLA, radius and ping gap read from EVision Settings (setting(...))
 
 
 @frappe.whitelist()
@@ -432,13 +439,13 @@ def get_complaint_route(complaint):
 		return {"node": None, "routes": [], "site": doc.site}
 
 	rows = frappe.get_list("KMZ Route", filters={"gis": node}, fields=["name", "route_name", "location", "length_m", "custom_site"],
-		limit_page_length=ROUTE_LIMIT + 1)
+		limit_page_length=setting("noc_route_limit") + 1)
 	# building names for the hover tooltip, fetched in one query
 	site_ids = list({r.custom_site for r in rows if r.custom_site})
 	site_names = dict(frappe.get_all("Site", filters={"name": ["in", site_ids]}, fields=["name", "site_name"],
 		as_list=True)) if site_ids else {}
 	routes = []
-	for r in rows[:ROUTE_LIMIT]:
+	for r in rows[:setting("noc_route_limit")]:
 		coords = route_coords(r.location)
 		if len(coords) >= 2:
 			routes.append({"name": r.name, "title": r.route_name, "coords": coords, "length_m": r.length_m,
@@ -461,5 +468,28 @@ def get_complaint_route(complaint):
 			route_count[r["site"]] = route_count.get(r["site"], 0) + 1
 	buildings = [{"site": s, "site_name": site_names.get(s), "lat": pos[0], "lng": pos[1],
 		"routes": route_count.get(s, 0), "own_site": s == doc.site} for s, pos in pins.items()]
-	return {"node": node, "site": doc.site, "routes": routes, "limited": len(rows) > ROUTE_LIMIT,
-		"buildings": buildings, "no_pin": len(pin_sites - set(pins))}
+	return {"node": node, "site": doc.site, "routes": routes, "limited": len(rows) > setting("noc_route_limit"),
+		"buildings": buildings, "no_pin": len(pin_sites - set(pins)), "enclosures": node_enclosures(node)}
+
+
+# Date: 2026-11-27
+def node_enclosures(node):
+	"""The node's Encloser / JC pins (user's request: a symbol for the encloser on the complaint
+	map). A pin counts when its name has one of the words of the KMZ Map Settings type "Encloser /
+	JC" (default: encl*, jc, tapping; "encl*" = any word starting with encl)."""
+	import re
+
+	from emp_tracking.emp_tracking.doctype.kmz_map_settings.kmz_map_settings import get_map_settings
+
+	words = "encl*, jc, tapping"
+	for t in (get_map_settings() or {}).get("pin_types") or []:
+		if "encl" in (t.get("label") or "").lower() and (t.get("keywords") or "").strip():
+			words = t["keywords"]
+	parts = [re.escape(w.strip().rstrip("*")) + (r"\w*" if w.strip().endswith("*") else "") for w in words.split(",") if w.strip()]
+	if not parts:
+		return []
+	test = re.compile(r"\b(" + "|".join(parts) + r")\b", re.I)
+	return [{"name": p.name, "title": p.point_name, "lat": round(flt(p.latitude), 6), "lng": round(flt(p.longitude), 6)}
+		for p in frappe.get_list("KMZ Point", filters={"gis": node}, fields=["name", "point_name", "latitude", "longitude"],
+			limit_page_length=0)
+		if flt(p.latitude) and flt(p.longitude) and test.search(p.point_name or "")]

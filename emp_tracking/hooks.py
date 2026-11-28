@@ -39,7 +39,7 @@ app_license = "mit"
 # "20261126e" NOC reports full screen; "20261126f"/"g" report chart axis options; "20261126h" fluid report tables;
 # "20261126i" SLA % colours on any _pct column; "20261126j" whole-number chart axis;
 # "20261126k" fluid tables removed
-EV_ASSET_VERSION = "20261126k"
+EV_ASSET_VERSION = "20261128g"
 app_include_css = f"/assets/emp_tracking/css/evision.css?v={EV_ASSET_VERSION}"
 app_include_js = f"/assets/emp_tracking/js/evision.js?v={EV_ASSET_VERSION}"
 

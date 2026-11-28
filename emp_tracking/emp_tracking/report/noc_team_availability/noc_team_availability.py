@@ -15,6 +15,7 @@
 #
 # Change log
 #   2026-11-26  Created.
+#   2026-11-28  Dashboard: chart of members present and SRs per day for each team; more tiles.
 # ---------------------------------------------------------------------------------------------
 
 from frappe import _
@@ -57,16 +58,39 @@ def execute(filters=None):
 			"present_names": r.present_names if not r.no_members else _("Members not set"),
 			"idle_names": r.idle_names,
 		})
-	return cols, data, None, None, summary(rows)
+	return cols, data, None, chart(rows), summary(rows)
 
 
-# Date: 2026-11-26
+# Date: 2026-11-28
+def chart(rows):
+	"""Per team, on average per day: members present and SRs received (user: "make dashboard")."""
+	teams = {}
+	for r in rows:
+		t = teams.setdefault(r.team.title(), {"days": set(), "present": 0, "received": 0})
+		t["days"].add(r.date)
+		t["present"] += r.present
+		t["received"] += r.received
+	avg = lambda t, k: round(t[k] / len(t["days"]), 1) if t["days"] else 0
+	return {
+		"data": {"labels": list(teams), "datasets": [
+			{"name": _("Present per day"), "values": [avg(t, "present") for t in teams.values()]},
+			{"name": _("SRs per day"), "values": [avg(t, "received") for t in teams.values()]}]},
+		"type": "bar", "height": 220, "barOptions": {"spaceRatio": 0.5}, "colors": ["#3b82f6", "#f97316"],
+	}
+
+
+# Date: 2026-11-26 (2026-11-28: days, present per day, people sent added)
 def summary(rows):
 	set_up = {r.team for r in rows if not r.no_members}
 	missing = sorted({r.team for r in rows if r.no_members})
+	days = len({r.date for r in rows}) or 1
 	cards = [
 		{"label": _("Teams with members"), "value": len(set_up), "datatype": "Int", "indicator": "Blue"},
+		{"label": _("Days"), "value": len({r.date for r in rows}), "datatype": "Int", "indicator": "Blue"},
 		{"label": _("SRs received"), "value": sum(r.received for r in rows), "datatype": "Int", "indicator": "Blue"},
+		{"label": _("Present per day"), "value": f"{sum(r.present for r in rows) / days:.1f}", "datatype": "Data",
+			"indicator": "Green"},
+		{"label": _("People sent"), "value": sum(r.assigned for r in rows), "datatype": "Int", "indicator": "Orange"},
 	]
 	if missing:
 		cards.append({"label": _("Teams without a member list"), "value": len(missing), "datatype": "Int", "indicator": "Orange"})

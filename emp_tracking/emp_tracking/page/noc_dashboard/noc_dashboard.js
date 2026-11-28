@@ -38,6 +38,13 @@
 //   2026-11-27  Building points (user's request): cyan squares at each building's KMZ pin, the
 //               complaint's own building larger with a blue border; hovering one lights up its
 //               routes. Map panes fix the order: routes < buildings < complaints.
+//   2026-11-27  Map zooms to 22 (was stopped at 18); tiles enlarged past level 19.
+//   2026-11-27  "Hide routes" turns into "Show routes" and puts them back (user's request).
+//   2026-11-27  The node's Encloser / JC pins as yellow diamonds, with a map key row (user's request).
+//   2026-11-28  "Live complaints" tab (Complaints Overview) removed: the NOC summary reports show the
+//               same (user's request). Page opens on Map; no overview refresh timer any more.
+//   2026-11-28  Map key from EVision Settings > Maps: corner or hidden, open / folded, rows shown /
+//               hidden with their own labels; a changed colour is drawn on the map too (idx()).
 
 frappe.pages['noc-dashboard'].on_page_load = function (wrapper) {
 	var page = frappe.ui.make_app_page({
@@ -165,6 +172,8 @@ var NOC_STYLE = [
 	// 2026-11-27: building point, a cyan square (complaints are round); own building larger, blue border
 	'.noc-bldg{width:11px;height:11px;background:var(--ev-cyan);border:2px solid #fff;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.3);box-sizing:border-box;display:inline-block}',
 	'.noc-bldg.own{width:16px;height:16px;border:3px solid var(--ev-accent)}',
+	// 2026-11-27: Encloser / JC pin, a yellow diamond (differs from the cyan building squares and round complaints)
+	'.noc-encl{width:11px;height:11px;background:#eab308;border:2px solid #1f2937;transform:rotate(45deg);box-sizing:border-box;display:inline-block}',
 	'.noc-route b{color:var(--ev-text)}',
 	'.noc-mapstats b{font-size:18px;font-weight:600;margin-right:6px;font-variant-numeric:tabular-nums}',
 	// 2026-11-26: Performance section. Meaning colours, the same everywhere on it:
@@ -286,8 +295,9 @@ var NOC_ICONS = {
 };
 
 // 2026-11-26: one tab per section (user's request); the tab bar is the page's first row.
+// 2026-11-28: "Live complaints" (Complaints Overview) removed, user: "remove whole dashboard
+// because we already have summary reports". Its pane stays in the layout, hidden and not loaded.
 var NOC_TABS = [
-	['live', __('Live complaints')],
 	['perf', __('Performance')],
 	// 2026-11-26: complaints on a map, details on click (user's request)
 	['map', __('Map')],
@@ -383,7 +393,6 @@ class NocDashboard {
 		this.perfRanges();
 
 		page.set_primary_action(__('Refresh'), () => {
-			this.refresh();
 			this.stale = { perf: true, sheet: true, map: true };
 			this.refreshTab();
 		}, 'refresh');
@@ -399,11 +408,8 @@ class NocDashboard {
 		this.root.find('.noc-tabs button').on('click', (e) => this.showTab($(e.currentTarget).data('tab')));
 		var saved = null;
 		try { saved = localStorage.getItem(NOC_TAB_KEY); } catch (e) { /* storage blocked: start on the first tab */ }
-		this.showTab(NOC_TABS.some((t) => t[0] === saved) ? saved : 'live');
-		this.refresh();
-		this.timer = setInterval(() => {
-			if (frappe.get_route()[0] === 'noc-dashboard') this.refresh();
-		}, NOC_REFRESH_INTERVAL_MS);
+		// 2026-11-28: opens on the Map (the Live complaints overview was removed; it is not loaded)
+		this.showTab(NOC_TABS.some((t) => t[0] === saved) ? saved : 'map');
 	}
 
 	// ---- tabs (2026-11-26) -------------------------------------------------
@@ -436,7 +442,7 @@ class NocDashboard {
 		if (this.tab !== 'map') { this.stale.map = true; return; }
 		this.stale.map = false;
 		// Leaflet is loaded on demand in Frappe 16.54 (as on the KMZ Map page)
-		Promise.all([frappe.require('leaflet.bundle.js'), frappe.require('leaflet.bundle.css')]).then(() => {
+		Promise.all([frappe.require('leaflet.bundle.js'), frappe.require('leaflet.bundle.css'), this.loadIndex()]).then(() => {
 			frappe.call({
 				method: NOC_METHOD + 'get_complaint_map',
 				args: {
@@ -450,13 +456,32 @@ class NocDashboard {
 		});
 	}
 
+	// Date: 2026-11-28
+	// Map key settings (EVision Settings > Maps): corner or hidden, open / folded, and per row its
+	// label, shown or not and colour; a colour changed there is also drawn on the map (idx()).
+	loadIndex() {
+		if (this.nocIndex) return Promise.resolve();
+		return frappe.xcall('emp_tracking.emp_tracking.doctype.evision_settings.evision_settings.get_map_index', { map_name: 'NOC Map' })
+			.then((r) => { this.nocIndex = r; })
+			.catch(() => { this.nocIndex = { position: 'Bottom left', start: 'Open', rows: {} }; });
+	}
+
+	// the row's colour from EVision Settings when it was changed there, else the map's own colour
+	idx(key, fallback) {
+		var row = ((this.nocIndex || {}).rows || {})[key];
+		return (row && row.colour) || fallback;
+	}
+
 	makeMap() {
 		if (this.map) return;
 		var d = frappe.utils.map_defaults;
 		L.Icon.Default.imagePath = d.image_path;
-		this.map = L.map(this.slot('map')[0], { preferCanvas: true }).setView(d.center, 11);
-		var street = L.tileLayer(d.tiles.default_tile.url, d.tiles.default_tile.options).addTo(this.map);
-		var satellite = L.tileLayer(d.tiles.satellite_tile.url, d.tiles.satellite_tile.options);
+		// 2026-11-27: zoom to 22 (Frappe's tiles set no maxZoom, so Leaflet stopped at 18); past the
+		// tiles' last real level (19) the level-19 images are enlarged
+		this.map = L.map(this.slot('map')[0], { preferCanvas: true, maxZoom: 22 }).setView(d.center, 11);
+		var deep = (o) => Object.assign({}, o, { maxZoom: 22, maxNativeZoom: 19 });
+		var street = L.tileLayer(d.tiles.default_tile.url, deep(d.tiles.default_tile.options)).addTo(this.map);
+		var satellite = L.tileLayer(d.tiles.satellite_tile.url, deep(d.tiles.satellite_tile.options));
 		L.control.layers({ [__('Street')]: street, [__('Satellite')]: satellite }).addTo(this.map);
 		// 2026-11-27: own panes so the order is fixed: routes (overlay pane, 400) < building points
 		// (450) < closed complaint dots (500, own canvas) < open complaint pins (marker pane, 600)
@@ -476,23 +501,34 @@ class NocDashboard {
 		if (this.keyControl) return;
 		var swatch = (c) => '<i class="dot" style="background:' + c + '"></i>';
 		var line = (c, w) => '<i class="line" style="background:' + c + ';height:' + w + 'px"></i>';
-		var rows = [
-			[swatch(this.themeColour('--ev-warn', '#d97706')), __('Open complaint')],
-			[swatch(this.themeColour('--ev-bad', '#dc2626')), __('Open over {0} hours', [limitHours])],
-			[swatch(this.themeColour('--ev-ok', '#15803d')), __('Closed within SLA')],
-			[swatch('#94a3b8'), __('Closed late')],
-			['<i class="ring"></i>', __('Pulsing ring: still open')],
-			['<i class="badge">30d</i>', __('Badge: how long it has been open')],
-			[line(this.themeColour('--ev-accent', '#2563eb'), 5), __('Fibre route to the complaint\'s building')],
-			[line(this.themeColour('--ev-violet', '#7c3aed'), 2), __('Other fibre routes of its node')],
-			['<i class="noc-bldg"></i>', __('Building (KMZ pin)')],
-			['<i class="noc-bldg own"></i>', __('The complaint\'s building')],
-			[line(this.themeColour('--ev-violet', '#7c3aed'), 6), __('Hover a building or violet route: its routes light up')],
+		// 2026-11-28: [key, symbol, default label]; label / shown / colour from EVision Settings
+		var c = (key, fallback) => this.idx(key, fallback);
+		var all = [
+			['open', swatch(c('open', this.themeColour('--ev-warn', '#d97706'))), __('Open complaint')],
+			['overdue', swatch(c('overdue', this.themeColour('--ev-bad', '#dc2626'))), __('Open over {0} hours', [limitHours])],
+			['closed_sla', swatch(c('closed_sla', this.themeColour('--ev-ok', '#15803d'))), __('Closed within SLA')],
+			['closed_late', swatch(c('closed_late', '#94a3b8')), __('Closed late')],
+			['ring', '<i class="ring"></i>', __('Pulsing ring: still open')],
+			['badge', '<i class="badge">30d</i>', __('Badge: how long it has been open')],
+			['own_route', line(c('own_route', this.themeColour('--ev-accent', '#2563eb')), 5), __('Fibre route to the complaint\'s building')],
+			['other_route', line(c('other_route', this.themeColour('--ev-violet', '#7c3aed')), 2), __('Other fibre routes of its node')],
+			['building', '<i class="noc-bldg" style="' + (this.idx('building') ? 'background:' + this.idx('building') : '') + '"></i>', __('Building (KMZ pin)')],
+			['own_building', '<i class="noc-bldg own" style="' + (this.idx('own_building') ? 'border-color:' + this.idx('own_building') : '') + '"></i>', __('The complaint\'s building')],
+			['encloser', '<i class="noc-encl" style="' + (this.idx('encloser') ? 'background:' + this.idx('encloser') : '') + '"></i>', __('Encloser / JC')],
+			['hover', line(c('other_route', this.themeColour('--ev-violet', '#7c3aed')), 6), __('Hover a building or violet route: its routes light up')],
 		];
+		var cfg = this.nocIndex || { position: 'Bottom left', start: 'Open', rows: {} };
+		var rows = all.filter((r) => !cfg.rows[r[0]] || cfg.rows[r[0]].show).map((r) => {
+			var own = cfg.rows[r[0]] && cfg.rows[r[0]].label;
+			// the overdue label keeps its hours when it was not renamed
+			return [r[1], own && r[0] !== 'overdue' ? own : (r[0] === 'overdue' && own && own !== 'Open over the SLA hours' ? own : r[2])];
+		});
+		var corner = { 'Bottom right': 'bottomright', 'Bottom left': 'bottomleft', 'Top right': 'topright', 'Top left': 'topleft' }[cfg.position];
+		if (!corner || !rows.length) { this.keyControl = true; return; } // "Hidden", or every row unticked
 		var Key = L.Control.extend({
-			options: { position: 'bottomleft' },
+			options: { position: corner },
 			onAdd: () => {
-				var el = L.DomUtil.create('div', 'noc-mapkey');
+				var el = L.DomUtil.create('div', 'noc-mapkey' + (cfg.start === 'Folded' ? ' folded' : ''));
 				el.innerHTML = '<div class="kt">' + __('Map key') + '</div><div class="kb">' +
 					rows.map((r) => '<div class="kr"><span class="ks">' + r[0] + '</span>' + noc_esc(r[1]) + '</div>').join('') + '</div>';
 				L.DomEvent.disableClickPropagation(el);
@@ -509,6 +545,8 @@ class NocDashboard {
 	drawRoute(p) {
 		var box = this.slot('map-side').find('[data-route]');
 		this.routeLayer.clearLayers();
+		// 2026-11-27: routes may have been hidden with "Hide routes" for the last complaint
+		if (!this.map.hasLayer(this.routeLayer)) this.routeLayer.addTo(this.map);
 		frappe.call({
 			method: NOC_METHOD + 'get_complaint_route',
 			args: { complaint: p.name },
@@ -519,8 +557,8 @@ class NocDashboard {
 					return;
 				}
 				var own = d.routes.filter((x) => x.own_site).length;
-				var accent = this.themeColour('--ev-accent', '#2563eb');
-				var violet = this.themeColour('--ev-violet', '#7c3aed');
+				var accent = this.idx('own_route', this.themeColour('--ev-accent', '#2563eb'));
+				var violet = this.idx('other_route', this.themeColour('--ev-violet', '#7c3aed'));
 				// a node's routes can spread over the whole city, so the view fits the complaint with its
 				// own building's routes, else with the node's routes within 3 km of it
 				var near = (c) => this.map.distance([p.lat, p.lng], c) <= 3000;
@@ -557,13 +595,24 @@ class NocDashboard {
 						pane: 'nocBuildings',
 						icon: L.divIcon({
 							className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
-							html: '<div class="noc-bldg' + (b.own_site ? ' own' : '') + '"></div>',
+							// 2026-11-28: colours changed in EVision Settings > Maps
+							html: '<div class="noc-bldg' + (b.own_site ? ' own' : '') + '" style="' +
+								(this.idx('building') ? 'background:' + this.idx('building') + ';' : '') +
+								(b.own_site && this.idx('own_building') ? 'border-color:' + this.idx('own_building') : '') + '"></div>',
 						}),
 					}).bindTooltip('<b>' + noc_esc(b.site_name || b.site) + '</b>' + (b.site_name ? ' · ' + noc_esc(b.site) : '') +
 						'<br>' + (b.own_site ? __('This complaint\'s building') + ' · ' : '') + __('{0} fibre routes', [b.routes]))
 						.addTo(this.routeLayer);
 					pin.on('mouseover', () => light(b.site, true));
 					pin.on('mouseout', () => light(b.site, false));
+				});
+				// 2026-11-27: the node's Encloser / JC pins as yellow diamonds (user's request)
+				(d.enclosures || []).forEach((e) => {
+					L.marker([e.lat, e.lng], {
+						pane: 'nocBuildings',
+						icon: L.divIcon({ className: '', iconSize: [12, 12], iconAnchor: [6, 6], html: '<div class="noc-encl"' + (this.idx('encloser') ? ' style="background:' + this.idx('encloser') + '"' : '') + '></div>' }),
+					}).bindTooltip('<b>' + noc_esc(e.title || __('Encloser')) + '</b><br>' + __('Encloser / JC'))
+						.addTo(this.routeLayer);
 				});
 				if (focus.length > 1) this.map.fitBounds(focus, { padding: [50, 50], maxZoom: 17 });
 				else this.map.setView([p.lat, p.lng], Math.max(this.map.getZoom(), 15));
@@ -574,6 +623,7 @@ class NocDashboard {
 							(d.limited ? ' ' + __('(first 400 only)') : '')
 						: __('no KMZ routes uploaded for this node yet')) +
 					((d.buildings || []).length ? '; ' + __('{0} buildings shown', [d.buildings.length]) : '') +
+					((d.enclosures || []).length ? '; ' + __('{0} enclosers', [d.enclosures.length]) : '') +
 					(d.no_pin ? ' ' + __('({0} without a KMZ pin, not shown)', [d.no_pin]) : '') +
 					'<div style="margin-top:8px"><button class="btn btn-default btn-xs" data-kmz>' + __('Open node on KMZ Map') + '</button> ' +
 					(d.routes.length ? '<button class="btn btn-default btn-xs" data-hide>' + __('Hide routes') + '</button>' : '') + '</div>'
@@ -582,9 +632,13 @@ class NocDashboard {
 					frappe.route_options = { gis: d.node };
 					frappe.set_route('kmz-map');
 				});
-				box.find('[data-hide]').on('click', () => {
-					this.routeLayer.clearLayers();
-					box.find('[data-hide]').remove();
+				// 2026-11-27: one button that hides and shows the routes again (user's request); the
+				// routes stay loaded and are only taken off / put back on the map
+				box.find('[data-hide]').on('click', (e) => {
+					var shown = this.map.hasLayer(this.routeLayer);
+					if (shown) this.map.removeLayer(this.routeLayer);
+					else this.routeLayer.addTo(this.map);
+					$(e.currentTarget).text(shown ? __('Show routes') : __('Hide routes'));
 				});
 			},
 		});
@@ -592,8 +646,11 @@ class NocDashboard {
 
 	// open past the 4 h limit = red, open = amber, closed in SLA = green, closed late = grey
 	markerColour(p) {
-		if (p.open) return this.themeColour(p.overdue ? '--ev-bad' : '--ev-warn', p.overdue ? '#dc2626' : '#d97706');
-		return p.sla === 'In' ? this.themeColour('--ev-ok', '#15803d') : '#94a3b8';
+		// 2026-11-28: a colour changed in EVision Settings > Maps wins (idx)
+		if (p.open) {
+			return p.overdue ? this.idx('overdue', this.themeColour('--ev-bad', '#dc2626')) : this.idx('open', this.themeColour('--ev-warn', '#d97706'));
+		}
+		return p.sla === 'In' ? this.idx('closed_sla', this.themeColour('--ev-ok', '#15803d')) : this.idx('closed_late', '#94a3b8');
 	}
 
 	renderMap(d) {
@@ -905,7 +962,8 @@ class NocDashboard {
 		var sla = k.sla_pct == null
 			? '<div class="cap">' + __('Nothing closed in this period') + '</div>'
 			: '<div class="top"><div class="pct ' + (k.sla_pct >= 80 ? 'good' : 'poor') + '">' + k.sla_pct + '%</div>' +
-				'<div class="cap">' + __('closed within 4 hours') + '</div></div>' +
+				// 2026-11-28: the SLA hours from EVision Settings (was a fixed "4 hours")
+				'<div class="cap">' + __('closed within {0} hours', [k.sla_hours || 4]) + '</div></div>' +
 				'<div class="noc-split"><div class="in" style="width:' + inPct + '%"></div><div class="out" style="width:' + (100 - inPct) + '%"></div></div>' +
 				'<div class="noc-facts"><span><b>' + k.in_sla + '</b> ' + __('in SLA') + '</span><span><b>' + k.out_sla + '</b> ' + __('out of SLA') + '</span>' +
 				'<span>' + __('Average MTTR') + ' <b>' + (k.avg_mttr_hours == null ? '–' : k.avg_mttr_hours + ' h') + '</b></span>' +

@@ -11,7 +11,18 @@
   "area_name",
   "area_code",
   "area_manager",
-  "status"
+  "status",
+  "is_team_area",
+  "team_area",
+  "field_manager",
+  "field_manager_no",
+  "sb_boundary",
+  "boundary",
+  "parent_area",
+  "is_group",
+  "lft",
+  "rgt",
+  "old_parent"
  ],
  "fields": [
   {
@@ -45,12 +56,101 @@
    "label": "Status",
    "options": "Active\nInactive",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_team_area",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "EVision Team Area",
+   "description": "One of the six EVision team areas (Area 1-6). GIS Nodes and Network Links inside its boundary are filed under it."
+  },
+  {
+   "fieldname": "team_area",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Team Area",
+   "depends_on": "eval:!doc.is_team_area",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "The EVision team area (Area 1-6) this locality belongs to; complaints in this locality get its Area Manager."
+  },
+  {
+   "fieldname": "field_manager",
+   "fieldtype": "Link",
+   "options": "Field Staff",
+   "label": "Area Manager (Field Staff)",
+   "in_list_view": 1,
+   "depends_on": "is_team_area"
+  },
+  {
+   "fieldname": "field_manager_no",
+   "fieldtype": "Data",
+   "label": "Area Manager No",
+   "fetch_from": "field_manager.contact_no",
+   "read_only": 1,
+   "depends_on": "is_team_area"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "is_team_area",
+   "fieldname": "sb_boundary",
+   "fieldtype": "Section Break",
+   "label": "Boundary"
+  },
+  {
+   "fieldname": "boundary",
+   "fieldtype": "Long Text",
+   "label": "Boundary",
+   "read_only": 1,
+   "description": "Outer ring as JSON [[latitude, longitude], ...], from the team areas KMZ."
+  },
+  {
+   "fieldname": "parent_area",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Under team area",
+   "read_only": 1,
+   "description": "Set from Team Area (localities) so the tree shows each locality under its team area."
+  },
+  {
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "lft",
+   "fieldtype": "Int",
+   "label": "Left",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "rgt",
+   "fieldtype": "Int",
+   "label": "Right",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "old_parent",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Old Parent",
+   "hidden": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-29 11:05:16.495869",
+ "modified": "2026-11-28 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Area",
@@ -110,5 +210,7 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "title_field": "area_name"
+ "title_field": "area_name",
+ "is_tree": 1,
+ "nsm_parent_field": "parent_area"
 }

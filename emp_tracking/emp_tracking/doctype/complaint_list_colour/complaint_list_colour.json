@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "creation": "2026-11-27 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "modified": "2026-11-27 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "links": [],
+ "name": "Complaint List Colour",
+ "istable": 1,
+ "editable_grid": 1,
+ "permissions": [],
+ "field_order": [
+  "column_name",
+  "value",
+  "colour"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_name",
+   "fieldtype": "Select",
+   "label": "Column",
+   "options": "Status\nOperator\nLink Status\nLink Type\nArea\nEVisions SLA",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "label": "Value",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4,
+   "description": "Exactly as shown in the list, e.g. RESTORED, Airtel, Area 3"
+  },
+  {
+   "fieldname": "colour",
+   "fieldtype": "Select",
+   "label": "Colour",
+   "options": "Gray\nBlue\nGreen\nOrange\nRed\nViolet\nYellow\nCyan\nPink\nLight Blue",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  }
+ ]
+}

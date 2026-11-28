@@ -21,12 +21,42 @@
 //               (custom_kmz_imported), with route / point counts and links to them.
 //   2026-10-26  "KMZ Map" button: opens the KMZ Map page filtered to this node.
 //   2026-10-27  "Topology" button: opens the Network Topology page on this node.
+//   2026-11-28  Area dropdown (all Areas, with their team area) on the Area text field; a
+//               locality in a team area fills the Team Area; Team Area offers Area 1-6 only.
 // ---------------------------------------------------------------------------------------------
 
 // Form events: when a saved GIS Node is opened or reloaded, draw its site diagram.
 frappe.ui.form.on("GIS Node", {
+	// 2026-11-28: Team Area is one of the six team areas (its Area Manager then fills on save)
+	setup(frm) {
+		frm.set_query("team_area", () => ({ filters: { is_team_area: 1 } }));
+	},
+	// 2026-11-28 (user: "in GIS node no dropdown for area"): Area stays free text (242 nodes have
+	// spellings not in the Area list), with every Area offered as a dropdown while typing / on click
+	onload_post_render(frm) {
+		area_suggestions(frm);
+	},
+	// 2026-11-28: a locality that belongs to a team area fills the Team Area (Area Manager on save).
+	// A name that is not an Area yet asks "create it?" (user: "if adding new, always ask")
+	async area(frm) {
+		const typed = (frm.doc.area || "").trim();
+		if (!typed) return;
+		const found = await frappe.db.get_list("Area", { filters: { name: ["like", typed] }, fields: ["name", "team_area", "is_team_area"], limit: 1 });
+		if (!found.length) {
+			ask_create_area(frm, typed);
+			return;
+		}
+		const a = found[0];
+		if (a.name !== frm.doc.area) {
+			frm.set_value("area", a.name); // "hadapsar" -> "Hadapsar": the Area's own spelling
+			return;
+		}
+		const team = a.is_team_area ? a.name : a.team_area;
+		if (team && !frm.doc.team_area) frm.set_value("team_area", team);
+	},
 	// Date: 2026-10-07
 	refresh(frm) {
+		area_suggestions(frm);
 		// The field is missing until setup.py has run after a migrate; do nothing then.
 		if (!frm.is_new() && frm.get_field("custom_site_diagram")) render_site_diagram(frm);
 		// 2026-10-26: same guard for the KMZ list (field made by setup.py)
@@ -45,6 +75,58 @@ frappe.ui.form.on("GIS Node", {
 		}
 	},
 });
+
+// Date: 2026-11-28
+// Dropdown of Areas on the free-text Area field: all localities (A-Z) appear on click and narrow
+// down while typing; picking one fills the field. Loaded once per page.
+let GN_AREAS = null;
+async function area_suggestions(frm) {
+	const field = frm.fields_dict.area;
+	if (!field || !field.$input || field.$input.data("gn-areas")) return;
+	field.$input.data("gn-areas", 1);
+	if (!GN_AREAS) {
+		GN_AREAS = (await frappe.db.get_list("Area", { fields: ["name", "team_area", "is_team_area"], order_by: "name asc", limit: 1000 }))
+			.filter((a) => !a.is_team_area)
+			.map((a) => ({ label: a.team_area ? `${a.name}  ·  ${a.team_area}` : a.name, value: a.name }));
+	}
+	const aw = new Awesomplete(field.$input.get(0), { list: GN_AREAS, minChars: 0, maxItems: 50, autoFirst: true,
+		sort: false, filter: (text, input) => Awesomplete.FILTER_CONTAINS(text.label, input) });
+	field.$input.on("focus click", () => { if (!field.$input.val()) { aw.evaluate(); aw.open(); } });
+	field.$input.on("awesomplete-selectcomplete", (e) => {
+		frm.set_value("area", e.originalEvent ? e.originalEvent.text.value : field.$input.val());
+	});
+}
+
+// Date: 2026-11-28
+// A typed area that is not in the Area list: ask before creating it (user: "if adding new, always
+// ask should I create new"). Yes -> a new locality Area with its Team Area and a code; No -> the
+// typed text stays as it is.
+function ask_create_area(frm, name) {
+	const code = "NOC-" + name.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+	const d = new frappe.ui.Dialog({
+		title: __("Create new area?"),
+		fields: [
+			{ fieldtype: "HTML", fieldname: "q", options: `<p>${__("\"{0}\" is not in the Area list. Create it as a new area?", [frappe.utils.escape_html(name)])}</p>` },
+			{ fieldtype: "Data", fieldname: "area_name", label: __("Area Name"), default: name, reqd: 1 },
+			{ fieldtype: "Link", fieldname: "team_area", label: __("Team Area"), options: "Area", default: frm.doc.team_area,
+				get_query: () => ({ filters: { is_team_area: 1 } }), description: __("Area 1-6 this place belongs to") },
+			{ fieldtype: "Data", fieldname: "area_code", label: __("Area Code"), default: code, reqd: 1 },
+		],
+		primary_action_label: __("Yes, create"),
+		primary_action: async (v) => {
+			const doc = await frappe.db.insert({ doctype: "Area", area_name: v.area_name.trim(), area_code: v.area_code,
+				status: "Active", team_area: v.team_area || null });
+			d.hide();
+			GN_AREAS = null; // the dropdown reloads with the new area
+			frappe.show_alert({ message: __("Area {0} created", [doc.name]), indicator: "green" });
+			await frm.set_value("area", doc.name);
+			if (v.team_area && !frm.doc.team_area) frm.set_value("team_area", v.team_area);
+		},
+		secondary_action_label: __("No, keep as typed"),
+		secondary_action: () => d.hide(),
+	});
+	d.show();
+}
 
 // Top-down flow chart, like the team's Excel flow charts: node on top, each site under its feeder.
 const SITE_DIAGRAM_CSS = `

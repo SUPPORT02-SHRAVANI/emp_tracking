@@ -38,6 +38,19 @@
 //               evision.stepper from public/js/evision.js).
 //   2026-11-02  Card layout for the form (evision.form_style).
 //   2026-11-26  Picking a vendor empties Rider / Splicer / 2nd Rider / 2nd Splicer (hidden then).
+//   2026-11-27  Airtel PON TT messages: the society line ("DAD COMPLEX ..., BIBWEWADI") is read
+//               too (society_hint) and matched to the node's Sites and Network Links by words
+//               (match_building / best_building_match), so Society / Building and LINKID fill
+//               themselves when one building on the node clearly matches (user's request).
+//   2026-11-27  Reading no longer stops at the down time: in messages where the date comes first,
+//               the port (node) and society after it were lost.
+//   2026-11-27  Node or LINKID chosen: Area and Area Manager from the node's team area, Area 1-6
+//               (fill_team_area_manager; user's request "assign area manager according to area").
+//   2026-11-27  A customer account line ("02036688293_wifi") is no longer taken as the building
+//               (user's message: "D1J / date / 9 / 02036688293_wifi / D1J-L2/1/3 / NAMDEV SRUSHTI").
+//   2026-11-27  Rider / Splicer pickers list the chosen team's riders / splicers; a team's only
+//               rider / splicer is filled in (load_team_people).
+//   2026-11-28  No team and no vendor: the EVisions team of the node's team area is filled in.
 // ---------------------------------------------------------------------------------------------
 
 // Workflow states after which a complaint no longer counts as open (for the duplicate check).
@@ -137,6 +150,22 @@ frappe.ui.form.on("Complaint Information", {
 		// 2026-10-07: added with the Site master.
 		// One node has many sites: with a Node ID, only that node's sites can be picked.
 		frm.set_query("site", () => (frm.doc.node_id ? { filters: { node: frm.doc.node_id } } : {}));
+		// 2026-11-27: with a team chosen, Rider / Splicer list only that team's riders / splicers
+		const team_query = (role) => () => {
+			const ids = (frm.__team_people || {})[role];
+			return ids && ids.length ? { filters: { name: ["in", ids] } } : {};
+		};
+		frm.set_query("rider", team_query("Rider"));
+		frm.set_query("second_rider", team_query("Rider"));
+		frm.set_query("splicer", team_query("Splicer"));
+		frm.set_query("second_splicer", team_query("Splicer"));
+	},
+
+	// Date: 2026-11-27
+	// Team chosen: its riders / splicers become the choices, and a team's only rider or only
+	// splicer is filled in (user's request "assign splicer and rider according to the team").
+	maintenance_team(frm) {
+		load_team_people(frm, true);
 	},
 
 	// Date: 2026-09-30
@@ -148,6 +177,7 @@ frappe.ui.form.on("Complaint Information", {
 		complaint_stage_tracker(frm);
 		set_paste_hint(frm);
 		set_type_options(frm);
+		load_team_people(frm, false);   // 2026-11-27: Rider / Splicer choices from the team
 		if (frm.is_new() && frm.doc.message_attachment) {
 			frm.add_custom_button(__("Read Screenshot Again"), () => read_screenshot_text(frm));
 		}
@@ -186,6 +216,9 @@ frappe.ui.form.on("Complaint Information", {
 		}
 		frm.set_value("received_via", "WhatsApp");
 		if (!frm.doc.complaint_details) frm.set_value("complaint_details", text);
+		// 2026-11-27: the building named in the message, used to pick the node's Site and LINKID
+		frm.__society_hint = p.society_hint || null;
+		if (p.node_id && p.society_hint) match_building(frm, p.node_id, p.society_hint);
 
 		const filled = Object.entries(p).filter(([, v]) => v).map(([k]) => k.replace(/_/g, " "));
 		frappe.show_alert({
@@ -226,6 +259,7 @@ frappe.ui.form.on("Complaint Information", {
 			return;
 		}
 		if (!node) return;
+		fill_team_area_manager(frm, node); // 2026-11-27
 		// 2026-10-07: clear the Site when the Node ID changes to a different node.
 		if (frm.doc.site) {
 			// A site from another node is no longer valid.
@@ -274,11 +308,14 @@ frappe.ui.form.on("Complaint Information", {
 		}
 		if (!frm.doc.section && l.section) await frm.set_value("section", l.section);
 		if (!frm.doc.society_name && l.society_building) await frm.set_value("society_name", l.society_building);
+		// 2026-11-27: the team area's manager (Field Staff) comes from the node; the login below
+		// stays as before for areas that have one
+		if (l.node_id && await fill_team_area_manager(frm, l.node_id)) return;
 		if (l.area) {
 			const am = await frappe.db.get_value("Area", l.area, "area_manager");
 			const manager = am?.message?.area_manager;
 			if (manager && !frm.doc.area_manager) await frm.set_value("area_manager", manager);
-			if (!manager) {
+			if (!manager && !frm.doc.area_manager_staff) {
 				frappe.show_alert({ message: __("Area {0} has no Area Manager set. Please choose one.", [l.area]), indicator: "orange" });
 			}
 		}
@@ -428,8 +465,13 @@ function duplicate_message(dups) {
 // Date: 2026-09-30
 // Airtel FTTH: the LINKID is the Network Link on the message's node (e.g. MPJ).
 async function pick_link_by_node(frm, node) {
-	const links = await frappe.db.get_list("Network Link", { filters: { node_id: node }, fields: ["name"], limit: 5 });
-	if (links.length === 1) {
+	// 2026-11-27: society_building too, and up to 500 links, so the message's building can pick one
+	const links = await frappe.db.get_list("Network Link", { filters: { node_id: node }, fields: ["name", "society_building"], limit: 500 });
+	const by_name = links.length > 1 && frm.__society_hint ? best_building_match(frm.__society_hint, links, "society_building") : null;
+	if (by_name) {
+		await frm.set_value("linkid", by_name.name);
+		frappe.show_alert({ message: __("LINKID {0} matched to {1}", [by_name.name, by_name.society_building]), indicator: "green" });
+	} else if (links.length === 1) {
 		await frm.set_value("linkid", links[0].name);
 		frappe.show_alert({ message: __("LINKID {0} is on node {1}", [links[0].name, node]), indicator: "green" });
 	} else if (links.length > 1) {
@@ -437,6 +479,86 @@ async function pick_link_by_node(frm, node) {
 	} else {
 		frappe.msgprint(__("No Network Link has Node ID {0}. Add it to the right link first, or check the node name.", [node]));
 	}
+}
+
+// Date: 2026-11-27
+// The chosen Maintenance Team's active members by role, for the Rider / Splicer pickers. With
+// fill set (team just chosen), an empty Rider / Splicer gets the team's only rider / splicer.
+async function load_team_people(frm, fill) {
+	frm.__team_people = null;
+	if (!frm.doc.maintenance_team) return;
+	const team = await frappe.db.get_doc("Maintenance Team", frm.doc.maintenance_team).catch(() => null);
+	if (!team) return;
+	const people = { Rider: [], Splicer: [] };
+	(team.members || []).forEach((m) => {
+		if (m.active && m.employee && people[m.role]) people[m.role].push(m.employee);
+	});
+	frm.__team_people = people;
+	if (!fill || frm.doc.mapped_vendor) return;   // a vendor sends its own people
+	if (!frm.doc.rider && people.Rider.length === 1) await frm.set_value("rider", people.Rider[0]);
+	if (!frm.doc.splicer && people.Splicer.length === 1) await frm.set_value("splicer", people.Splicer[0]);
+}
+
+// Date: 2026-11-27
+// Area and Area Manager from the node's EVision team area (Area 1-6): the manager follows the
+// area, the login only fills an empty field. True when the node has a team area.
+async function fill_team_area_manager(frm, node) {
+	const r = await frappe.xcall("emp_tracking.emp_tracking.doctype.area.area.team_area_of_node",
+		{ node, area: frm.doc.area || null });
+	if (!r || !r.area) return false;
+	// a node's team area replaces the Area; a locality (no node team area) stays as it is
+	const changed = r.from_node && frm.doc.area !== r.area;
+	if (changed) await frm.set_value("area", r.area);
+	if (frm.doc.team_area !== r.area) await frm.set_value("team_area", r.area);
+	// 2026-11-28: no team and no vendor yet -> the EVisions team of that area (its riders /
+	// splicers then become the choices); a team or vendor already chosen is kept
+	if (r.team && !frm.doc.maintenance_team && !frm.doc.mapped_vendor) await frm.set_value("maintenance_team", r.team);
+	if (r.staff && (changed || !frm.doc.area_manager_staff)) await frm.set_value("area_manager_staff", r.staff);
+	if (r.user && (changed || !frm.doc.area_manager)) await frm.set_value("area_manager", r.user);
+	return true;
+}
+
+// Date: 2026-11-27
+// The message names a building on the node: pick that node's Site (Society / Building) by name.
+// The LINKID is picked by pick_link_by_node(), which uses the same hint (frm.__society_hint).
+async function match_building(frm, node, hint) {
+	if (frm.doc.site) return;
+	const sites = await frappe.db.get_list("Site", { filters: { node }, fields: ["name", "site_name"], limit: 1000 });
+	const best = best_building_match(hint, sites, "site_name");
+	if (best) {
+		await frm.set_value("site", best.name);
+		frappe.show_alert({ message: __("Building matched: {0}", [best.site_name]), indicator: "green" });
+	} else {
+		frappe.show_alert({ message: __("Building \"{0}\" from the message is not a Site of node {1}. Please pick it.", [hint, node]), indicator: "orange" });
+	}
+}
+
+// Date: 2026-11-27
+// Best record for a building name from a message, or null when none (or two) match clearly.
+// Words are compared without case, punctuation or filler words; a record must have at least 3 of
+// every 4 of its words in the message, and the message's building part (before the first comma,
+// e.g. "DAD COMPLEX DEFENCE ACCOUNT DEPARTMENT" of "..., BIBWEWADI") half of its words in the record.
+function best_building_match(hint, records, field) {
+	const FILLER = new Set(["SOCIETY", "SOC", "CHS", "CHSL", "APARTMENT", "APARTMENTS", "APPT", "APT", "BUILDING",
+		"BLDG", "CO", "OP", "HSG", "LTD", "PVT", "THE", "AND", "OF", "NEW"]);
+	const words = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]+/g, " ").split(" ").filter((w) => w && !FILLER.has(w));
+	const all = new Set(words(hint));
+	const head = words(hint.split(",")[0]);
+	let best = null, best_score = 0, tie = false;
+	for (const r of records) {
+		const w = words(r[field]);
+		if (!w.length || !head.length) continue;
+		const in_msg = w.filter((x) => all.has(x)).length / w.length;
+		const in_rec = head.filter((x) => w.includes(x)).length / head.length;
+		if (in_msg < 0.75 || in_rec < 0.5) continue;
+		const score = in_msg + in_rec;
+		if (score > best_score) {
+			best = r; best_score = score; tie = false;
+		} else if (score === best_score && r[field] !== best[field]) {
+			tie = true;
+		}
+	}
+	return tie ? null : best;
 }
 
 // Date: 2026-09-30
@@ -543,8 +665,8 @@ emp_tracking.parse_complaint_message = function (text, operator) {
 		out.complaint_type = "FTTH";
 	}
 
-	// Airtel FTTH, one value per line after the INC number. Only the 3-character node ID is
-	// used; PON ports and society names are ignored:
+	// Airtel FTTH, one value per line after the INC number. The 3-character node ID is used, and
+	// (2026-11-27) the society line as society_hint; PON ports are not kept:
 	//   S1B / 2 (customers down) / 9/9/2026 4:22:39 PM (down time)          -> node S1B
 	//   PON TT / 17 / MPJ-H1/5/3 / PLANET MILLENNIUM ... / [down time]      -> node MPJ
 	//   PON TT / 24W-G1/1/15 / VRUNDAVAN SANKUL,SHIVANE / 16 / [down time]   -> node 24W
@@ -559,24 +681,36 @@ emp_tracking.parse_complaint_message = function (text, operator) {
 			let node = null;
 			if (!is_pon_tt && /^[A-Z0-9]{3}$/i.test(rest[0] || "") && !/^\d+$/.test(rest[0])) node = rest.shift();   // S1B
 			let customers = null;
+			let society = null;
 			for (const l of rest) {
 				if (/^\d{1,2}:\d{2}\s*(?:am|pm)?$/i.test(l)) continue;   // WhatsApp's own "5:17 PM"
 				const t = parse_date_time(l);
 				if (t) {
-					out.down_time = t;
-					break;
+					// 2026-11-27: the first date is the down time; reading goes on, because the date can
+					// come before the port and society ("date / 1 / GGG-L1/1/11 / DAD COMPLEX ...")
+					if (!out.down_time) out.down_time = t;
+					continue;
 				}
 				if (customers === null && /^\d{1,5}$/.test(l)) {
 					customers = parseInt(l, 10);
 					continue;
 				}
 				const port = l.match(/^([A-Z0-9]{3})-[A-Z0-9]{1,4}(?:\/\d{1,3}){1,3}$/i);   // MPJ-H1/5/3 -> MPJ
-				if (port && !node) node = port[1];
+				if (port) {
+					if (!node) node = port[1];
+					continue;
+				}
+				// 2026-11-27: a customer account such as "02036688293_wifi" (one word with a long
+				// number) is not the society
+				if (!/\s/.test(l) && /\d{5,}/.test(l)) continue;
+				// 2026-11-27: the first line with words is the society, e.g. "VRUNDAVAN SANKUL,SHIVANE"
+				if (!society && /[A-Z]{3,}/i.test(l)) society = l;
 			}
 			if (is_pon_tt || node || customers !== null) {
 				out.complaint_type = "FTTH";
 				if (customers !== null) out.customers_affected = customers;
 				if (node) out.node_id = node.toUpperCase();
+				if (society) out.society_hint = society;
 			}
 		}
 	}

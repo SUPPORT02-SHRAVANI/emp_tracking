@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "creation": "2026-11-28 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "editable_grid": 1,
+ "field_order": [
+  "label",
+  "formula",
+  "fields",
+  "default_formula",
+  "formula_key"
+ ],
+ "fields": [
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Number",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "formula",
+   "fieldtype": "Data",
+   "label": "Formula",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4,
+   "description": "Use the field names on the right, numbers, + - * / ( ), <= >= < > ==, and / or, max() min() round() abs()."
+  },
+  {
+   "fieldname": "fields",
+   "fieldtype": "Small Text",
+   "label": "Fields you can use",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "default_formula",
+   "fieldtype": "Data",
+   "label": "Default",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "formula_key",
+   "fieldtype": "Data",
+   "label": "Key",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-28 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "EVision Formula",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

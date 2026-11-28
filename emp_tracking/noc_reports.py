@@ -38,6 +38,9 @@
 #
 # Change log
 #   2026-11-26  Created (user's request: show the NOC dashboard and reports like the NOC workbook).
+#   2026-11-27  location_hours() takes an employee list (Field Staff Location Hours: team members).
+#   2026-11-27  Own-fibre RFO, outage days per month and day / night hours from EVision Settings.
+#   2026-11-28  Pending now and In SLA % through the editable formulas (EVision Settings > Formulas).
 #   2026-11-26  who_closed, shift_of, performance, team_availability, location_hours, empty_message.
 #   2026-11-26  Blank RFO counts as own fibre (RFO is filled only at closing), so new open
 #               complaints show in the reports straight away.
@@ -47,7 +50,11 @@ from collections import Counter, defaultdict
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, date_diff, get_datetime, get_first_day, getdate, nowdate
+from frappe.utils import add_days, cint, date_diff, get_datetime, get_first_day, getdate, nowdate
+
+# 2026-11-27: own-fibre RFO, outage days per month and day / night hours come from EVision
+# Settings; OWN_FIBER, OUTAGE_DAYS_PER_MONTH and DAY_START_HOUR / NIGHT_START_HOUR are the defaults
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import formula, setting, sla_pct
 
 from emp_tracking.emp_tracking.doctype.complaint_information.complaint_information import DONE_STATES
 
@@ -122,7 +129,7 @@ def load(f, received_from=None):
 	# pending for ever.
 	rows = [r for r in rows if r.evision_closed_on or r.company_closed_on or r.workflow_state not in DONE_STATES]
 	if f.own_fiber_only:
-		rows = [r for r in rows if not r.rfo or r.rfo == OWN_FIBER]
+		rows = [r for r in rows if not r.rfo or r.rfo == setting("own_fiber_rfo")]
 	start_dt = get_datetime(f.from_date)
 	names = employee_names({r.get(k) for r in rows for k in ("splicer", "second_splicer", "rider", "second_rider")})
 	kept = []
@@ -156,7 +163,7 @@ DAY, NIGHT = "Day", "Night"
 
 
 def shift_of(received):
-	return DAY if DAY_START_HOUR <= received.hour < NIGHT_START_HOUR else NIGHT
+	return DAY if setting("day_start_hour") <= received.hour < setting("night_start_hour") else NIGHT
 
 
 # Date: 2026-11-26
@@ -228,7 +235,8 @@ def carry_forward(f, items, by_team, start, end, sla, closer=None):
 		for team in teams:
 			k = (team, day)
 			available = new[k] + carry.get(team, 0)
-			closing = max(0, available - closed[k])
+			# 2026-11-28: editable "Pending now" formula (default max(0, opening + received - closed))
+			closing = cint(formula("pending_now", opening=carry.get(team, 0), received=new[k], closed=closed[k]) or 0)
 			rows.append(frappe._dict(date=day, team=team, new=new[k], opening=carry.get(team, 0),
 				available=available, closed=closed[k], closing=closing, in_sla=in_sla[k], out_sla=out_sla[k],
 				who_closed=with_counts(closers[k])))
@@ -308,7 +316,7 @@ def major_outage(filters):
 	out = []
 	for (month, team) in sorted(by_month_team):
 		days = sorted(by_month_team[(month, team)], key=lambda t: (-t.new, -t.available, t.date))
-		for rank, t in enumerate(days[:OUTAGE_DAYS_PER_MONTH], 1):
+		for rank, t in enumerate(days[:setting("outage_days_per_month")], 1):
 			k = (team, t.date)
 			working = {n for n in splicers[k] if n != OTHER} | set(splicers2[k]) | {n for n in closers[k] if n != OTHER}
 			out.append(frappe._dict(
@@ -353,7 +361,7 @@ def sla_tat_summary(filters, group_by="Month, Team"):
 		row.total = len(members)
 		row.cuts = len({r.cut for r in members})
 		closed = [r for r in members if r.closed]
-		row.sla_pct = round(100.0 * row.in_sla / len(closed), 1) if closed else None
+		row.sla_pct = sla_pct(row.in_sla, row.out_sla) if closed else None
 		row.avg_mttr = round(sum((r.closed - r.received).total_seconds() for r in closed) / len(closed) / 3600, 2) if closed else None
 		out.append(row)
 	return keys, out
@@ -406,7 +414,7 @@ def figures(prefix, members):
 		f"{prefix}_closed": len(closed),
 		f"{prefix}_in": in_sla,
 		f"{prefix}_out": out_sla,
-		f"{prefix}_pct": round(100.0 * in_sla / (in_sla + out_sla), 1) if in_sla + out_sla else None,
+		f"{prefix}_pct": sla_pct(in_sla, out_sla),
 		f"{prefix}_mttr": round(sum((r.closed - r.received).total_seconds() for r in closed) / len(closed) / 3600, 1)
 			if closed else None,
 	}
@@ -472,11 +480,12 @@ def team_availability(filters):
 
 
 # Date: 2026-11-26
-def location_hours(filters):
+def location_hours(filters, employees=None):
 	"""Hours at home / office / complaint sites (field) / elsewhere per field employee per day,
 	from the phone's Location Pings, with the complaints they were sent on. Same rules as the NOC
 	Dashboard's Employee sheet (noc_dashboard.add_location_hours / add_complaint_counts). Employees:
-	the one picked, else everyone with Work Type = Field or with pings in the range."""
+	the given list (2026-11-27: the report passes the team members), else the one picked, else
+	everyone with Work Type = Field or with pings in the range."""
 	from emp_tracking.emp_tracking.page.noc_dashboard.noc_dashboard import (
 		LOCATION_TYPES,
 		add_complaint_counts,
@@ -485,7 +494,9 @@ def location_hours(filters):
 	)
 
 	f = normalise(filters)
-	if f.employee:
+	if employees is not None:
+		employees = list(employees)
+	elif f.employee:
 		employees = [f.employee]
 	else:
 		pinged = frappe.get_all("Location Ping", filters={"timestamp": ["between", [f.from_date, f.to_date]]},
@@ -572,7 +583,7 @@ def get_performance(from_date=None, to_date=None, team=None, own_fiber_only=1, o
 		teams.append({
 			"team": team_name, "received": sum(t.new for t in mine), "closed": sum(t.closed for t in mine),
 			"pending": mine[-1].closing if mine else 0, "in_sla": t_in, "out_sla": t_out,
-			"sla_pct": round(100.0 * t_in / (t_in + t_out), 1) if t_in + t_out else None,
+			"sla_pct": sla_pct(t_in, t_out),
 			"new_cuts": sum(t.new for t in my_cuts), "closed_cuts": sum(t.closed for t in my_cuts),
 		})
 
@@ -587,11 +598,12 @@ def get_performance(from_date=None, to_date=None, team=None, own_fiber_only=1, o
 			"pending": daily[-1].closing if daily else 0,
 			"in_sla": in_sla,
 			"out_sla": out_sla,
-			"sla_pct": round(100.0 * in_sla / (in_sla + out_sla), 1) if in_sla + out_sla else None,
+			"sla_pct": sla_pct(in_sla, out_sla),
 			"new_cuts": sum(1 for c in cuts if f.from_date <= c.first_day <= f.to_date),
 			"closed_cuts": sum(1 for c in cuts if c.closed_day and f.from_date <= c.closed_day <= f.to_date),
 			"avg_mttr_hours": round(sum((r.closed - r.received).total_seconds() for r in closed) / len(closed) / 3600, 1)
 				if closed else None,
+			"sla_hours": setting("sla_hours"),  # 2026-11-28: for the "closed within N hours" caption
 		},
 		"daily": [{"date": str(d.date), "new": d.new, "closed": d.closed, "pending": d.closing} for d in daily],
 		"teams": teams,

@@ -15,8 +15,11 @@
   "team_leader_name",
   "manager_name",
   "status",
+  "team_colour",
   "sec_members",
-  "members"
+  "members",
+  "sec_areas",
+  "areas_html"
  ],
  "fields": [
   {
@@ -48,18 +51,25 @@
    "fieldname": "team_leader",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "Team Leader",
-   "options": "Employee"
+   "label": "Team Leader / Supervisor",
+   "options": "Employee",
+   "hidden": 1
   },
   {
    "fieldname": "team_leader_name",
    "fieldtype": "Data",
-   "label": "Team Leader / Supervisor Name"
+   "label": "Team Leader / Supervisor Name",
+   "hidden": 1,
+   "read_only": 1,
+   "fetch_from": "team_leader.employee_name"
   },
   {
    "fieldname": "manager_name",
    "fieldtype": "Data",
-   "label": "Manager Name"
+   "label": "Area Manager",
+   "read_only": 1,
+   "fetch_from": "area.field_manager",
+   "description": "From the team's Area (Area 1-6). Change it on the Area."
   },
   {
    "default": "Active",
@@ -72,6 +82,13 @@
    "reqd": 1
   },
   {
+   "fieldname": "team_colour",
+   "fieldtype": "Color",
+   "label": "Team Colour",
+   "in_list_view": 1,
+   "description": "The team's colour on the maps (its area boundary)."
+  },
+  {
    "description": "The team's splicers and riders. Members marked Present in Attendance on a day are the team's available people in NOC Team Availability.",
    "fieldname": "sec_members",
    "fieldtype": "Section Break",
@@ -82,12 +99,23 @@
    "fieldtype": "Table",
    "label": "Members",
    "options": "Maintenance Team Member"
+  },
+  {
+   "fieldname": "sec_areas",
+   "fieldtype": "Section Break",
+   "label": "Areas",
+   "depends_on": "area"
+  },
+  {
+   "fieldname": "areas_html",
+   "fieldtype": "HTML",
+   "label": "Areas"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-26 16:00:00.000000",
+ "modified": "2026-11-28 23:00:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Maintenance Team",

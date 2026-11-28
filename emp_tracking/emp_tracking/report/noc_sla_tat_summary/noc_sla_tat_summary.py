@@ -15,11 +15,14 @@
 #   2026-11-26  Created.
 #   2026-11-26  Readable look: plain bucket names that fit the header ("Same day In" instead of
 #               "Within 1 Day · IN"), summary columns first, chart per first key with whole numbers.
+#   2026-11-28  Dashboard tiles on top: SRs, In / Out of SLA, In SLA %, average MTTR, still open.
 # ---------------------------------------------------------------------------------------------
 
 from collections import OrderedDict
 
 from frappe import _
+
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import sla_pct
 
 from emp_tracking.noc_reports import IN, KEY_LABELS, OUT, TAT_BUCKETS, column_key, empty_message, sla_tat_summary
 
@@ -57,7 +60,28 @@ def execute(filters=None):
 				"fieldtype": "Int", "width": 130})
 	columns.append({"fieldname": "open", "label": _("Still open"), "fieldtype": "Int", "width": 90})
 	# 2026-11-26: empty period -> message instead of an empty table
-	return columns, rows, None if rows else empty_message(filters), chart(keys, rows)
+	if not rows:
+		return columns, rows, empty_message(filters), None
+	return columns, rows, None, chart(keys, rows), summary(rows)
+
+
+# Date: 2026-11-28
+def summary(rows):
+	"""Dashboard tiles (user: "for all summary reports make dashboard"). MTTR is the average over
+	all closed SRs (each row's average weighted by its closed SRs)."""
+	inside = sum(r.in_sla for r in rows)
+	outside = sum(r.out_sla for r in rows)
+	closed = inside + outside
+	mttr = sum((r.avg_mttr or 0) * (r.in_sla + r.out_sla) for r in rows) / closed if closed else None
+	return [
+		{"label": _("SRs received"), "value": sum(r.total for r in rows), "datatype": "Int", "indicator": "Blue"},
+		{"label": _("In SLA"), "value": inside, "datatype": "Int", "indicator": "Green"},
+		{"label": _("Out of SLA"), "value": outside, "datatype": "Int", "indicator": "Red"},
+		{"label": _("In SLA %"), "value": f"{sla_pct(inside, outside, 0):g} %" if closed else "–", "datatype": "Data",
+			"indicator": "Green" if closed and inside / closed >= 0.8 else "Orange"},
+		{"label": _("Avg MTTR"), "value": f"{mttr:.1f} h" if mttr is not None else "–", "datatype": "Data", "indicator": "Blue"},
+		{"label": _("Still open"), "value": sum(r.open or 0 for r in rows), "datatype": "Int", "indicator": "Orange"},
+	]
 
 
 # Date: 2026-11-26
@@ -87,6 +111,8 @@ def chart(keys, rows):
 		"type": "bar",
 		"height": 240,
 		"fieldtype": "Int",
-		"barOptions": {"stacked": 1, "spaceRatio": 0.45},
+		# 2026-11-28: whole numbers on the axis; few bars (e.g. 2 months) are kept narrow
+		"ev_axis": {"integer": 1},
+		"barOptions": {"stacked": 1, "spaceRatio": 0.45 if len(sums) > 4 else 0.8},
 		"colors": ["#22c55e", "#ef4444"],
 	}

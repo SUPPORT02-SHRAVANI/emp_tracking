@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-11-27 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "modified": "2026-11-27 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "links": [],
+ "name": "Complaint List Colours",
+ "issingle": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "NOC Head",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "All",
+   "read": 1
+  }
+ ],
+ "field_order": [
+  "help",
+  "colours"
+ ],
+ "fields": [
+  {
+   "fieldname": "help",
+   "fieldtype": "HTML",
+   "label": "Help",
+   "options": "<p class=\"text-muted small\">Colour of each value in the Complaint list. Values not listed stay grey. Reload the list after saving.</p>"
+  },
+  {
+   "fieldname": "colours",
+   "fieldtype": "Table",
+   "label": "Colours",
+   "options": "Complaint List Colour"
+  }
+ ]
+}

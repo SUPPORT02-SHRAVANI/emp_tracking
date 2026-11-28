@@ -2,6 +2,639 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-28: Commit of the NOC complaint work only (OverHead Project and data loaders held back)
+
+- **Summary** (user: "commit and push only NOC complaint, not OverHead project, and not data"; chose "NOC + what it needs" and left all data loaders out):
+  - **In the commit:**
+    - Complaint Information (form, list colours, team area / manager / default team, message reader, workflow condition), Complaint List Colours.
+    - NOC Dashboard (map, enclosers, show / hide routes), NOC reports with their dashboards, NOC Summary page, Field Staff Location Hours.
+    - EVision Settings (rules, formulas, map index).
+    - Team Map page; Area (team areas, tree, list / Team view) with the Area tree patch.
+    - Maintenance Team (Area Manager, colour, areas table, team map button), Network Link rules.
+    - GIS Node Team Area field and rules (and its Area dropdown).
+    - Shared `evision.js`, the NOC sidebar (incl. Master Data) and Field Staff read for NOC roles.
+  - **Held back (still only on newsite, not committed):**
+    - OverHead: FTTH Master Data, KMZ Map / Upload / Polygons, Fiber Team, the OverHead sidebar changes, GIS Node → FTTH Master Data connection.
+    - Data loaders: FTTH Master Data import and the Network Links / Sites / nodes made from it, team areas placement (v1, v2), team members from the sheet, complaint backfills, colour / settings defaults, the Site number fix.
+  - **Code change for the split:** `point_in_ring` moved from KMZ Polygon to Area, so Area / Network Link / complaints do not import the held-back KMZ code. KMZ Polygon and the team areas patch import it from Area.
+- **What the main site has after deploying only this:**
+  - No Area 1-6 or boundaries (they come with the held-back team areas data), so complaints get no team area / Area Manager until that data is loaded.
+  - The complaint list colours page starts empty (grey badges).
+  - EVision Settings use the built-in defaults until saved.
+  - All new fields exist, so saving complaints works.
+- **Pending items:** The held-back OverHead code and data loaders.
+
+## 2026-11-28: "Master Data" section shared by the OverHead Project and NOC Helpdesk sidebars
+
+- **Summary:** The user asked that the data common to OverHead and NOC be named "Master Data" and also shown in NOC's sidebar.
+  - One **Master Data** section, the same in both sidebars: Areas (list; "Team view" for the tree), GIS Nodes, Sites, Network Links (LINKIDs, used by complaints), EVisions Teams, Vendors, Field Staff.
+  - **OverHead:**
+    - "Network" keeps Link Register, KMZ Map, Upload KMZ and Team Map. GIS Nodes and Sites moved to Master Data.
+    - "Teams & Vendors" became Master Data plus a "Teams" section with Fiber Teams.
+  - **NOC:** "Maintenance Teams" (Performance & Teams) and "Areas" (Settings) moved into Master Data. Team Map stays in Performance & Teams.
+  - NOC roles (NOC Head, Maintenance Agent) were given read / select on Field Staff (`OH_LINK_PERMS`). They already had it on Area, GIS Node, Site, Network Link, Maintenance Team and Maintenance Vendor.
+- **Files or modules affected:** `page/workforce_dashboard/setup.py`.
+- **Testing (newsite.local, migrate):**
+  - The NOC sidebar reads: Complaints … NOC Reports … Performance & Teams … **Master Data (Areas, GIS Nodes, Sites, Network Links, EVisions Teams, Vendors, Field Staff)** … Settings.
+  - The OverHead sidebar reads: FTTH … Fiber Store … Network … **Master Data (same 7)** … Teams (Fiber Teams).
+  - Custom DocPerm rows exist for NOC Head / Maintenance Agent on Field Staff, GIS Node and Network Link.
+- **Not tested:** Logging in as a NOC-only user and opening each Master Data list. The Frappe Cloud site.
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-28: Updated team areas map applied (Evision team (1).kmz)
+
+- **Summary:**
+  - The user sent an updated team map ("Evision team (1).kmz", Google Drive), still Team 1-6 = Area 1-6.
+  - Areas 1, 2, 3 and 5 got smaller: 116 → 46, 46 → 31, 199 → 144 and 125 → 68 km². Areas 4 and 6 are unchanged.
+  - `evision_team_areas.json` holds the new boundaries, so a fresh site such as the main site uses them directly.
+  - New patch `team_areas_v2` clears what the old boundaries decided and places everything again with the same rules:
+    - node team area and Area Manager
+    - link area (links now outside every boundary go back to their locality, or "Pune", since Area is required)
+    - localities' team area
+    - complaints' team area and Area Manager
+    - the Areas tree
+  - Teams' members, colours and the links' assigned teams are not touched.
+- **Files or modules affected:** `patches/evision_team_areas.json` (boundaries), new `patches/team_areas_v2.py`, `patches.txt`.
+- **Testing (newsite.local, migrate):**
+
+  | | Before | After |
+  |---|---|---|
+  | GIS Nodes placed | 446 (A1 76, A2 51, A3 159, A4 34, A5 85, A6 41) | 375 (A1 59, A2 50, A3 135, A4 34, A5 53, A6 44) |
+  | Network Links in a team area | 7,612 | 7,102 (A1 750, A2 1,436, A3 2,541, A4 393, A5 1,087, A6 895) |
+  | Localities with a team area | 80 | 78 |
+  | Complaints with a team area | 15,568 | 15,355 |
+  | Links assigned to a team of another area (Team Map) | 262 | 256 |
+
+  - Spot checks: GGG Area 6 / Amar Belapurkar; D1J and G3Q Area 2 / Rahul Dilliwala; H6Q Area 4 / Sachin Khude. Open complaints keep their area team and manager.
+  - Team Map draws the new boundaries.
+- **Not tested:** The Frappe Cloud site.
+- **Pending items:**
+  - 235 GIS Nodes (was 164) and 97 localities are now in no team area: the new boundaries leave them outside, or they have no position.
+  - Two test complaints (hbqbj795og, CMP-2609-00005) have no team area.
+  - Not committed or deployed.
+
+## 2026-11-28: "Areas" menu opens the list again
+
+- **Summary:**
+  - The user said "clicking Areas opens the tree view". Both "Areas" menu items (OverHead Project → Teams & Vendors, NOC Helpdesk → Settings) open the **list** (`/app/area/view/list`), with + Add Area and filters. A tree doctype otherwise opens in tree view by default.
+  - New `area_list.js` adds a **"Team view"** button that opens the tree (Area 1-6 with their localities).
+- **Files or modules affected:** `page/workforce_dashboard/setup.py`, new `doctype/area/area_list.js`.
+- **Testing (newsite.local):** migrate; `/app/area/view/list` shows 20 of 181 areas with the buttons "Team view", "List View", "Actions", "Add Area". The menu items point to the list address in `setup.py`; the menu click itself was not clicked in the headless test (the script did not reach the sidebar item).
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-28: GIS Node Area dropdown, and "Create new area?" for a name not in the list
+
+- **Summary:**
+  - **Area dropdown** on GIS Node (user: "in GIS node no dropdown for area"). The field stays free text, because 242 of 610 nodes have area spellings not in the Area list ("Kondhawa", "Tathwade", "Not set" …) and a strict link would stop them saving.
+    - A dropdown of every locality, A-Z, each with its team area ("Hadapsar · Area 1"), opens on click and narrows while typing.
+  - **Picking or typing an Area on a GIS Node:**
+    - A locality in a team area fills the Team Area; its Area Manager follows on save.
+    - Another capitalisation ("hadapsar") becomes the Area's own spelling.
+    - A name not in the list asks **"Create new area?"** (user: "if adding new, always ask should I create new"). The dialog has the name, the Team Area (Area 1-6) and a code "NOC-<NAME>" filled in; Yes creates the locality Area and uses it, No keeps the typed text.
+  - The Team Area picker shows Area 1-6 only.
+- **Files or modules affected:** `public/js/gis_node.js`.
+- **Testing (browser, newsite.local, GIS Node GGG, not saved):**
+  - On click the dropdown listed 50; "hadap" narrowed it to "Hadapsar · Area 1".
+  - "hadapsar" became "Hadapsar".
+  - "Demo Nagar XYZ" opened the dialog with Area 6 and code NOC-DEMO-NAGAR-XYZ and the Yes / No buttons. Yes was not clicked, and no Area was created (checked).
+- **Not tested:** The "Yes, create" button (creating the Area). The Frappe Cloud site.
+- **Pending items:** The 242 node area spellings outside the Area list could be cleaned up (mapped to the right Area) so the field can later become a strict dropdown. Not committed or deployed.
+
+## 2026-11-28: NOC Summary page (all report dashboards in tabs); new node → link → complaint flow fixed end to end
+
+- **Summary:**
+  - **NOC Summary page** (`/app/noc-summary`, first item in NOC Reports; user: "put all these dashboards in one, with tabs"):
+    - One tab per report: Pending, Cut Team, Unique Cut, Cut Master, Major Outage, SLA / TAT, Performance, Team Availability, Field Staff Hours.
+    - Shared filters: From, To, Team, own fibre faults only, own teams only.
+    - Each tab runs its report through `frappe.desk.query_report.run` (same numbers as the report) and shows the tiles and chart. "Open full report" opens the report with the same filters for its table.
+    - Tabs load when opened; the last tab is remembered.
+  - **Adding records from the start** (user: "if someone has to add a new node, link or anything from start, how to do it"). Checked by creating a node → site → link → complaint and rolling it back; fixed on the way:
+    - **New Sites failed** ("Duplicate entry SITE-34944"). `format:SITE-{#####}` keeps its number in Frappe's shared series row "" (also Complaint, KMZ Upload, FTTH Work Order …), but `match_network_to_master` (2026-11-27) only moved "SITE-" after inserting SITE-30894 … 40574.
+      - Patch `fix_site_series` moves "" to the highest SITE number (40574), and `match_network_to_master` now moves both.
+      - New complaint, KMZ Upload … numbers jump forward to 40575+.
+    - **GIS Node:**
+      - The Team Area picker shows only Area 1-6.
+      - Without a Team Area, it is taken from the area most of its Network Links are in.
+      - The Area Manager (and phone) always follows the Team Area.
+    - **Network Link:**
+      - With no position, Area = its node's Team Area.
+      - With no team and no vendor, it gets the area's EVisions team (TEAM N, responsibility EVisions).
+    - **New complaint:** Link Status "NEED TO ASSIGN" from the start. The workflow sets "New" only after validate, so the empty check now counts a blank state as New.
+- **Files or modules affected:**
+  - new `page/noc_summary/`; `page/workforce_dashboard/setup.py`
+  - `ftth/doctype/gis_node/gis_node.py`, `public/js/gis_node.js`
+  - `doctype/network_link/network_link.py`, `doctype/complaint_information/complaint_information.py`
+  - `ftth/patches/match_network_to_master.py`, new `patches/fix_site_series.py`, `patches.txt`
+- **Testing (newsite.local):**
+  - Browser: all 9 NOC Summary tabs load: tiles 4/4/4/6/6/6/6/5/5, a chart on 8 (Field Staff Hours has none: only one team has location data).
+  - Flow (rolled back, nothing kept): GIS Node ZZ9 (Hadapsar, Team Area 2) → Area Manager Rahul Dilliwala; Site SITE-40575; Network Link DEMO-LINK-1 without position → Area 2, TEAM 2, EVisions; Complaint CMP-2611-40576 → New, NEED TO ASSIGN, Area 2, Rahul Dilliwala, TEAM 2, building Demo Heights.
+  - Before the series fix the Site step failed. Before the link-status fix the complaint had none.
+- **Not tested:** The same steps through the browser forms (done in code with the same validations). The Frappe Cloud site.
+- **Pending items:**
+  - Rahul Dilliwala (Area 2) has no phone in Field Staff, so the node's Area Manager No stays empty.
+  - Not committed or deployed.
+
+## 2026-11-28: No Team Leader, only the Area Manager
+
+- **Summary** (user: "no TL, only area manager", with the list Area 1 Akash Pardeshi, Area 2 Rahul Dilliwala, Area 3 Sanket Kandhare, Area 4 Sachin Khude, Area 5 Vilas Gaikwad, Area 6 Amar Belapurkar; these were already the Area Managers on Area 1-6):
+  - **Maintenance Team:**
+    - Team Leader and its name are hidden.
+    - "Manager Name" is now **Area Manager**, read only, and always the team Area's Area Manager (fetch + `validate`).
+    - The stored leader Employees are not deleted: they are the area managers' Employee records, and `app_attendance` gives a team's leader the field (12 h) shift, so new Employees' default shift does not change.
+  - **Complaint form:** "Team Leader" hidden.
+  - **Team Map cards:** Area Manager only.
+  - Found and noted: the old leaders came from the client's OH Project sheet ("Team / Vendor Name", loaded 2026-10-09). The NOC Master Data complaints show the real per-team names match the area manager list (TEAM N = Area N's manager).
+- **Files or modules affected:**
+  - `doctype/maintenance_team/` (json, py)
+  - `doctype/complaint_information/complaint_information.json`
+  - `page/team_map/team_map.js`
+- **Testing (newsite.local):** migrate; TEAM 3 form shows Team Type, Area, Area Manager (Sanket Khandare, read only), Status, Team Colour, Members, with no leader field.
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-28: Team Map page (team assignment view)
+
+- **Summary:** New Desk page **Team Map** (`/app/team-map`; user: "make new map for team assignment view"). It is on the menu under NOC Helpdesk → Performance & Teams and OverHead Project → Teams & Vendors.
+  - **Map:**
+    - Each team area's boundary filled in its Team Colour.
+    - Network Links as dots in their assigned team's colour. A link assigned to a team of **another area** gets a red ring.
+    - GIS Nodes (their own KMZ pin) in their area team's colour.
+    - Open complaints as "!" pins in their team's colour.
+    - Vendor / no-team items are grey. Clicking a link, node or complaint opens it.
+  - **Controls:** Links: All / Other area only / Hide; GIS Nodes and Open complaints on / off; a count line ("8182 links shown · 262 assigned to a team of another area"); a legend.
+  - **Team cards** (TEAM 1-6):
+    - Area, manager and phone, leader, splicers, riders, areas, links, links of another area (red), open complaints.
+    - Click a card to zoom to that team and fade the others; "All teams" shows all again; "Open team" opens the form.
+  - **Data:** `team_map.get_team_map`, one call.
+  - **Team form button:** "View team on map" on the Maintenance Team form now opens this separate Team Map, zoomed to that team with its card highlighted and scrolled into view (route option `team`). It used to open the KMZ Map (user: "separate map for it"). Browser check: TEAM 6 → Team Map on Area 6, 836 links, other cards faded.
+- **Files or modules affected:**
+  - new `page/team_map/` (json, py, js)
+  - `page/workforce_dashboard/setup.py` (menus)
+- **Testing (newsite.local):**
+  - `node --check` / `py_compile` passed.
+  - After migrate, the page shows 6 team cards and boundaries; 8,182 links, 262 of them assigned to a team of another area. The menu has "Team Map".
+  - Seen on the cards: TEAM 1 has 154 links of other areas, TEAM 2 has 29, TEAM 3 has 16.
+- **Not tested:** Clicking a card and the "Other area only" switch in the browser (drawn from the same data; the code path was read only). The Frappe Cloud site.
+- **Pending items:** The 262 links on a team of another area are data for the user to correct (link team or area boundary). Not committed or deployed.
+
+## 2026-11-28: Maintenance Team: one leader field, team colour, "View team on map"; NOC flow check and fixes
+
+- **Summary:**
+  - **One leader field** (user: "why two, give one option only"):
+    - "Team Leader / Supervisor" (Employee) is the only one shown.
+    - The name is hidden and always follows the Employee, because complaints copy it.
+    - Every team that had a name also had the Employee, so nothing was lost.
+  - **Team Colour** (new field):
+    - TEAM 1-6 got their area's boundary colour (patch `maintenance_team_colours`).
+    - The colour is used for the team's area boundary on the KMZ Map.
+  - **"View team on map"** button on the team form:
+    - Opens the KMZ Map filtered to the team's area, with that area's boundary in the team colour.
+    - New `set_area` / route option `area`.
+    - Found while testing and fixed: on the first open the Area value was lost, because `on_page_show` set it before the filter choices loaded. It now waits for the page's load step.
+  - **NOC flow check** (user: "make sure the whole NOC flow is valid and connected"). A read-only check over all 28,665 complaints, links, nodes and teams:
+    - Consistent (0 problems): complaint node is a GIS Node; LINKID on the complaint's node; Site on the complaint's node; complaint team area = node's team area; complaint Area Manager = team area's manager; node Area Manager = team area's manager.
+    - Fixed in code (and applied by patch `noc_flow_fixes`):
+      - A complaint with **no team and no vendor** gets the EVisions team of its team area (`set_default_team`; on the form as soon as the node is known). The 6 open ones without a team were fixed; the 2 test complaints with no node / area stay empty.
+      - An **empty Link Status** takes its workflow step's one, not only when the step changes. 4 open complaints were fixed.
+- **Files or modules affected:**
+  - `doctype/maintenance_team/` (json, py, js)
+  - `doctype/complaint_information/` (py, js)
+  - `doctype/area/area.py`
+  - `page/kmz_map/` (py, js)
+  - patches `maintenance_team_colours`, `noc_flow_fixes`; `patches.txt`
+- **Testing (newsite.local):**
+  - `node --check` / `py_compile` passed; the migrate ran both patches.
+  - Teams: colours `#2563eb … #7c3aed`; leader names follow the Employee (Pune Fiber Team → Sunil Kale).
+  - After the patch, every open complaint has a Link Status and a team or vendor, except CMP-2610-00748 / 00749, which have no node or area.
+  - Browser: TEAM 6 → "View team on map" → KMZ Map with Area 6, 37 GIS nodes, 867 routes, 2,264 pins and 1 boundary shape.
+- **Not tested:** The default-team step on a brand new complaint in the browser (checked through the patch and code path). The Frappe Cloud site.
+- **Pending items (data, for the user to decide; nothing changed):**
+  - 587 complaints were done by an EVisions team of another area (history), and 262 Network Links name an EVisions team of another area. Either the link's team or the area boundary is off.
+  - 1,013 Network Links have no team and no vendor.
+  - 24 old complaints name a vendor and also a rider / splicer. 1 open complaint has a splicer / rider who is not in its team.
+  - 69 closed complaints have no Team SR closed time, and 14 have a closed time before the received time (sheet typing errors, e.g. CMP-2610-10350 closed "1900-01-07"); their SLA cannot be worked out.
+  - TEAM 6 has no Team Leader.
+  - Each team's leader is another area's manager (e.g. TEAM 1 leader Rahul Dilliwala, manager of Area 2); this may be intended.
+  - Not committed or deployed.
+
+## 2026-11-28: Summary report dashboards fixed; Areas as a tree (team areas with their localities)
+
+- **Summary:**
+  - **NOC report dashboards** (user: "fix summary ka dashboard"):
+    - The tiles are one row of equal cards that fill the width, with label and value. Frappe's fixed tile height had squeezed the labels; there are no more single orphan tiles on a second row.
+    - The chart sits in a matching card.
+    - Frappe's table footers ("For comparison, use >5…", "Set Level / Expand All") are hidden while the table is.
+    - Scoped to NOC report pages (`.ev-noc-report`, removed when another report opens). `EV_ASSET_VERSION` bumped.
+  - **SLA / TAT chart:** whole numbers on the axis (was "600.00"), and narrow bars when there are only a few months. A first try with `spaceRatio` 1.6 made the bars vanish (Frappe Charts needs a value below 1) and was fixed to 0.8.
+  - **Areas as a tree** (user: "only show Team 1 … Team 6 and under teams the area names"):
+    - Area is a tree DocType (NestedSet, `parent_area`). Team areas are the groups; each locality sits under its Team Area, kept in step on save.
+    - The tree view (Settings → Areas) shows only Area 1-6 with manager and count. Opening one lists its localities A-Z.
+    - "Localities without a team area (95)" opens the list of the rest. "List view" button.
+    - Patch `area_tree` builds the tree; `get_tree_children`, `area_tree.js`.
+  - **Maintenance Team form → "Areas" section** (user: "here show areas too"):
+    - The team's Area with its manager and phone, and its localities as chips that open the Area.
+    - "Open Areas tree" button.
+    - `maintenance_team.json` / `.js`. Browser check: TEAM 1 shows Area 1 · 16 areas · Akash Pardeshi, with Akurdi … Undri.
+  - **Fiber Team: Team Area** (user: "put this in fiber team"; chose "give each fiber team an Area"):
+    - New field "Team Area". Only Area 1-6 can be picked, and the server refuses a locality.
+    - "Areas" section with the area, manager, phone and localities.
+    - The drawing is now shared with the Maintenance Team form (`evision.render_team_areas` in `public/js/evision.js`, asset version bumped).
+    - Files: `ftth/doctype/fiber_team/` (json, py, new js).
+    - Browser check: Amrut Rathod with Area 3 showed Sanket Khandare (7517652584) and 23 localities. The test value was taken off again, so both fiber teams have no Team Area yet. TEAM 1 still shows its 16 areas after the move to the shared helper.
+    - **Area list as a table** (user: "put the area list in this format", the Members table): No., Area (link), Area Code, Status pill and an open icon, styled like a Frappe child table. It replaces the chips, on both the Maintenance Team and Fiber Team forms. Browser check: TEAM 6 shows its 12 areas (Bibvewadi 411037, Chikhali, Dhankawadi …).
+    - **"Add row" under the area table** (user: "give option to add row, only from areas not assigned anywhere"):
+      - Opens a picker (multi-select, searchable) that lists only localities in no team area.
+      - The chosen ones are put under the team's area (`area.add_to_team_area`). Each Area is saved, so the tree follows.
+      - Complaints in those localities with no team area get this team area and its manager.
+      - A locality already in a team, or a team area itself, is never moved from here.
+      - Browser test on TEAM 6: 50 options, none already assigned. Adding "9 DRD" made the table 13 rows, and its tree parent was Area 6. Undone afterwards (it has no complaints).
+    - **Menu:** "Fiber Teams" is back in OverHead Project → Teams & Vendors. It was taken off on 2026-10-29, and the user could not find it. "Areas" there now opens the Areas tree. Browser check after migrate: the menu lists Areas, EVisions Teams, Fiber Teams, Vendors, and the Fiber Team list shows the Team Area column.
+- **Files or modules affected:**
+  - `public/js/evision.js`, `hooks.py`
+  - `report/noc_sla_tat_summary/noc_sla_tat_summary.py`
+  - `doctype/area/` (json, py, new `area_tree.js`)
+  - `page/workforce_dashboard/setup.py` (Settings → Areas opens the tree)
+  - `patches/area_tree.py`, `patches.txt`
+- **Testing (newsite.local):**
+  - `py_compile` / `node --check` passed; the migrate built the tree: 6 team areas holding 16 / 10 / 23 / 9 / 10 / 12 localities, and 95 without a team area.
+  - Browser: SLA / TAT and Team Availability dashboards with six even cards and the carded chart; the SLA chart shows its bar. The Areas tree shows Area 1-6, and Area 3 opened lists Balewadi, Baner, Bavdhan …
+- **Not tested:** Saving an Area from the form after the change (tree update on save), and creating new Areas through the NOC complaint import. The Frappe Cloud site.
+- **Pending items:**
+  - The team areas stay named "Area 1-6" (user's decision 2026-11-28: "don't rename, use that only").
+  - Not committed or deployed.
+
+## 2026-11-28: Map Index settings; Maps limits explained
+
+- **Summary:**
+  - **Map Index settings** (user: "add option to set index on map"; chose position, what it shows, folded / open, labels / colours). EVision Settings → Maps, for the KMZ Map and the NOC complaint map:
+    - Index corner (any of four) or Hidden.
+    - Starts open or folded.
+    - A row per Index line (21 rows, new child DocType **EVision Map Index Row**): Show tick, label, colour, with the default shown beside it.
+    - A colour changed there is also drawn on the map: complaint dots, routes, building squares, encloser diamonds; no-node routes, down and affected on the KMZ Map. A colour left at its default keeps the map's own (KMZ Map Settings, or the NOC theme colours that differ in dark mode).
+    - `get_map_index`; patch `evision_map_index`.
+  - **Maps limits** now say what they are (user asked "what are these"): the most lines / pins / shapes / complaints / routes drawn at once, and why (the browser slows down).
+- **Files or modules affected:**
+  - `doctype/evision_settings/` (json, py), new `doctype/evision_map_index_row/`
+  - `page/kmz_map/kmz_map.js`, `page/noc_dashboard/noc_dashboard.js`
+  - `patches/evision_map_index.py`, `patches.txt`
+- **Testing (newsite.local):** `node --check` / `py_compile` passed, and the migrate created 21 rows. Browser test with:
+  - KMZ Map Top left, Folded, Shapes hidden: the Index was top-left, folded, with no Shapes row.
+  - NOC map Top right, encloser `#ff0000`, "Closed late" renamed to "Late": the key was top-right, with a red diamond and "Late".
+  - Settings restored to the defaults afterwards.
+- **Not tested:** Changing these from the browser form (set from code). Hidden position and all-rows-unticked (code path only). The Frappe Cloud site.
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-28: NOC reports open on their dashboard; editable formulas in EVision Settings
+
+- **Summary:**
+  - **Dashboard first** (user: "first show dashboard, then a button on top to see the summary"):
+    - Every NOC report (and Field Staff Location Hours) opens with only its tiles and chart.
+    - The table is hidden until **See summary** is clicked; **Hide summary** hides it again. The choice is remembered per report while the tab is open.
+    - Other (non-NOC) reports are not affected.
+    - `public/js/evision.js` (`noc_apply_table`: a class with `display:none !important`, because Frappe calls `$report.show()` after `after_datatable_render`); `EV_ASSET_VERSION` bumped.
+  - **Editable formulas** (user: "give option to change formula and also suggest field names").
+    - EVision Settings → Formulas has a table with one row per number. Each row shows the formula, "Fields you can use" and the default:
+      - SLA In when (`restore_hours <= sla_hours`)
+      - In SLA % (`in_sla / (in_sla + out_sla) * 100`)
+      - Pending now (`max(0, opening + received - closed)`)
+      - Office Present from / Absent under hours
+      - In field %
+    - On save each formula is checked. Only the listed field names, numbers, + − × ÷, comparisons, and / or, and `max() min() round() abs()` are allowed, and it is run on sample values.
+    - Rows are fixed: Add row is hidden, and unknown rows are dropped on save.
+    - Formulas run with Frappe's restricted compiler. A broken one falls back to the default (Error Log).
+    - Used by the complaint SLA, all NOC reports and the dashboard (In SLA %, Pending), the office Shift Type thresholds, and Field Staff Location Hours.
+    - The explanation text shows the formulas as written. New child DocType **EVision Formula**; patch `evision_formulas`.
+- **Files or modules affected:**
+  - `public/js/evision.js`, `hooks.py` (asset version)
+  - `doctype/evision_settings/` (json, py, js), new `doctype/evision_formula/`
+  - `doctype/complaint_information/complaint_information.py`, `noc_reports.py`
+  - `report/noc_pending_summary`, `noc_performance`, `noc_major_outage_closure`, `noc_sla_tat_summary`, `noc_unique_cut_master`, `field_staff_location_hours` (py)
+  - `patches/evision_formulas.py`, `patches.txt`
+- **Testing (newsite.local):**
+  - `py_compile` / `node --check` passed; migrate ran the patch, and the 6 formula rows were created with today's formulas.
+  - Defaults give the old results: SLA 3.5 h In / 5 h Out, In SLA % 3/1 = 75.0, Pending 2+5−4 = 3. The Pending Summary for November gives the same pending (3).
+  - Refused with a message: `in_sla / total * 100` (unknown name), `__import__('os')`, `in_sla.__class__`, `open('x')`.
+  - Changed "SLA In when" to `restore_hours <= sla_hours + 1`: a 4.5 h restore became In; Out again after restoring the default.
+  - Found while testing and fixed: the compile cache first used `frappe.local.__dict__`, which Frappe does not allow.
+  - Browser: Unique Cut Summary opens with no table (0 visible); See summary shows it (1) and the button turns to "Hide summary". The Formulas tab table renders.
+- **Not tested:** Changing a formula from the browser form (tested from code). The Frappe Cloud site.
+- **Pending items:** Not committed or deployed.
+
+## 2026-11-28: A dashboard on every NOC summary report; Formulas tab in EVision Settings
+
+- **Summary:**
+  - **Dashboard inside each report** (user's choice: "dashboard inside each report"). Every NOC summary report now opens with summary tiles and a chart above its table. New ones:
+    - **Major Outage Closure:** months, outage days, new cuts, closed, In SLA %, busiest day; chart of new vs closed cuts per team.
+    - **Unique Cut Master:** cuts, SRs, closed, still open, In SLA %, Out of SLA; chart of cuts per team (In / Out / Open, stacked). Counted before the Cut SLA filter.
+    - **SLA / TAT Summary:** SRs, In / Out of SLA, In SLA %, average MTTR (over all closed SRs), still open.
+    - **Team Availability:** more tiles (days, present per day, people sent); chart of members present and SRs per day for each team.
+    - Pending / Cut Team / Unique Cut Summary, Performance and Field Staff Location Hours already had tiles and charts.
+  - **SLA hours in labels:** "Closed within N h" (Pending Summary tile) and "closed within N hours" (NOC Dashboard Performance) now follow EVision Settings. They were a fixed "4".
+  - **EVision Settings → Formulas tab** (user: "in settings add show calculation formula"). It explains how each number is worked out, with the page's current values:
+    - pending / received / closed / pending now
+    - SLA, MTTR, In SLA %, TAT
+    - unique cuts and major outage days
+    - day / night calls
+    - office Present / Half Day / Absent
+    - location hours
+    - team areas and complaint managers
+- **Files or modules affected:**
+  - `report/noc_major_outage_closure`, `noc_unique_cut_master`, `noc_sla_tat_summary`, `noc_team_availability`, `noc_pending_summary` (py)
+  - `noc_reports.py`
+  - `page/noc_dashboard/noc_dashboard.js`
+  - `doctype/evision_settings/` (json, js)
+- **Testing (newsite.local, on the server):**
+  - `py_compile` / `node --check` passed.
+  - All 8 NOC summary reports were run for 1 Sep – 28 Nov 2026. Each returns a chart and tiles, e.g.:
+    - Unique Cut Master: 580 cuts, 577 closed, 51 % In SLA
+    - Major Outage Closure: 14 outage days, busiest 11 Sep 2026 · Team 4 · 13
+    - SLA / TAT: 582 SRs, 7.2 h MTTR
+  - Browser: Unique Cut Master and Major Outage Closure dashboards and the Formulas tab look right.
+- **Not tested:** In the browser, SLA / TAT, Team Availability and the "closed within N hours" caption after an SLA change. The Frappe Cloud site.
+- **Pending items:**
+  - Team Availability shows "Present per day 0.0": no Attendance is marked for the team members on newsite.
+  - Not committed or deployed.
+
+## 2026-11-27: EVision Settings (rules on screen); Field Staff Location Hours redesigned
+
+- **Summary:**
+  - **EVision Settings (new single DocType).** These business rules were fixed in code and can now be changed on screen:
+    - SLA hours (complaint SLA In / Out and NOC overdue / in-SLA)
+    - RFO counted as own fibre, and major outage days per month (NOC reports)
+    - Day / night call hours
+    - Office full day and grace. Saving writes them onto the office Shift Type's Half Day / Absent thresholds.
+    - Home / office radius, and the longest gap between pings (location hours)
+    - KMZ Map and NOC map drawing limits
+  - An empty field falls back to the old value (`DEFAULTS`). The page also links to the other settings screens: Complaint List Colours, KMZ Map Settings, Areas, Maintenance Teams, Field Staff, Shift Types, FTTH and WhatsApp Settings.
+  - New NOC menu group "Settings": EVision Settings, Complaint List Colours, Areas.
+  - 2026-11-28: the page is in tabs (user: "give this in tabs"): Complaints & SLA, Office Attendance, Field Location, Maps, Other Settings (the links). JSON only; checked in the browser on newsite.
+  - 2026-11-28: day / night call times are 12-hour IST dropdowns ("8:00 AM", "8:00 PM"; user: "show indian timing"). Patch `evision_settings_ist_times` converts the saved 8 / 20. Checked on newsite: stored "8:00 AM" / "8:00 PM", still read as hours 8 / 20.
+  - 2026-11-28: Other Settings is a row of tabs, one per settings page (user: "make this into tabs"). Each tab has a live preview and an "Open to edit" button:
+    - List Colours, Map Pin Types
+    - Areas (managers, phones, localities without a team area)
+    - Maintenance Teams, Field Staff
+    - Shift Types (times in 12-hour format)
+    - FTTH, WhatsApp
+    - Checked in the browser on newsite (Areas and Shift Types previews).
+  - 2026-11-28: **NOC Dashboard "Live complaints" tab removed**. The user said "remove whole dashboard because we already have summary reports". The page keeps Performance, Map and Employee sheet, opens on Map, and no longer reloads the overview every minute. Checked in the browser on newsite: tabs Performance / Map / Employee sheet, with Map open even when "live" was the remembered tab.
+  - **Field Staff Location Hours** (user: "not good"):
+    - Lists every Maintenance Team member (plus other field staff), grouped Team → person → day, with Role, "In field" share and "Last seen (app)".
+    - People whose phone sent nothing are listed as "No location from app" instead of being left out.
+    - Summary tiles: staff, sent location (x / y), field hours, home / office hours, complaints.
+    - The chart compares teams and is shown only when two or more teams have hours.
+    - Zero hours show as a quiet dash. Team and Role filters added.
+- **Reason:** User's requests: "give settings for each thing so nothing is hard coded…" and "not good" (one person, one full-width bar).
+- **Files or modules affected:**
+  - new `doctype/evision_settings/`
+  - `doctype/complaint_information/complaint_information.py`
+  - `page/noc_dashboard/noc_dashboard.py`, `page/kmz_map/kmz_map.py`, `page/workforce_dashboard/setup.py`
+  - `noc_reports.py`
+  - `report/field_staff_location_hours/` (py, js)
+  - patch `evision_settings_defaults`, `patches.txt`
+- **Testing (newsite.local):**
+  - `py_compile` / `node --check` passed, and the migrate ran the patch.
+  - Saved values equal the old ones (SLA 4, office 9 h / 15 min, day 8, NOC routes 400). The office Shift Type stays at 8.75 / 4.5.
+  - SLA set to 5: a 4.5 h restore went from Out to In. Office 8 h / 10 min set the Shift Type to 7.83 / 4.0. Everything restored afterwards.
+  - Browser:
+    - The settings page and its links render.
+    - The report from 1 Sep to 27 Nov shows 36 field staff, 6 / 36 sending location, and TEAM 1-6 with their members.
+- **Not tested:**
+  - Changing day / night hours, radius, ping gap or map limits and checking the reports / maps (only read through `setting()`; their defaults are unchanged).
+  - The Frappe Cloud site.
+- **Pending items:**
+  - The team members have no location pings on newsite (only 7 employees ever sent any), so their hours are 0 until they use the phone app.
+  - Code names, labels, workflow states and page layouts are still in code. They are structure, not business rules.
+  - Not committed or deployed.
+
+## 2026-11-27: Complaints get their team area's Area Manager; coloured complaint list; enclosers on the NOC map; account line not read as the building
+
+- **Summary:**
+  - **Complaint Area Manager:**
+    - New fields: "Area Manager" (Field Staff) with phone, and "Team Area". The User field is now "Area Manager (Login)".
+    - On save and when a node or LINKID is chosen, these come from the node's Team Area.
+    - With no node, they come from the locality's Team Area (new Area field "Team Area"; localities set by patch from the placed nodes, links and complaints).
+    - The login fills only when the manager has a User (none of the six has one yet).
+    - Workflow "Assign to Area Manager" now needs either the login or the Field Staff manager.
+  - **Complaint list colours:** new page "Complaint List Colours" (list menu → Colours, for System Manager / NOC Head). It holds column, value and colour, with default colours.
+    - Status, Operator, Link Status, Link Type and EVisions SLA are coloured badges.
+    - The Area column shows Area 1-6 in its colour, with the locality as tooltip.
+  - **NOC Dashboard map:** the complaint node's Encloser / JC pins are yellow diamonds, with a map key row. The words come from KMZ Map Settings.
+  - **Complaint message reader:** a one-word line with a long number (customer account "02036688293_wifi") is no longer taken as the building.
+  - **Calmer complaint list** (user: "can we make this look better?"):
+    - Pills only for Status and Link Status. Link Status is in sentence case ("Need to assign"), so it is no longer cut off.
+    - Operator, Link Type and Area show as a coloured dot with plain text. A locality with no team area shows a hollow dot.
+    - SLA "In" is a small green tick; "Out" stays a red pill.
+  - **Team splicers / riders** (user's team sheet):
+    - TEAM 1-6 members set by patch `team_members_from_sheet`: 27 Employees with role Splicer or Rider.
+    - On a complaint, the Rider / Splicer pickers list only the chosen team's riders / splicers. A team's only rider or splicer is filled in.
+- **Reason:** User's requests: "assign area manager according to area in complaint", "give option to add colors… they all look grey", "add area name like this, colors to different areas", "give some symbol for encloser in NOC complaint map", and the D1J / NAMDEV SRUSHTI message not filling the building.
+- **Files or modules affected:**
+  - `doctype/complaint_information/` (json, py, js, new `complaint_information_list.js`)
+  - `doctype/area/` (json, py)
+  - new `doctype/complaint_list_colour/` and `doctype/complaint_list_colours/`
+  - `fixtures/workflow.json`
+  - `page/noc_dashboard/` (py, js)
+  - patches `complaint_team_area_manager`, `locality_team_areas`, `complaint_list_colours`
+  - `patches.txt`
+- **Testing (newsite.local, `bench migrate` on the server):**
+  - **Patches:**
+    - The first run of `complaint_team_area_manager` failed (a counter bug) and was fixed and re-run.
+    - Localities: 80 got a Team Area; 95 have none (no placed data).
+    - 15,565 complaints have an Area Manager, and 15,568 a Team Area.
+  - **Save logic:** complaint on GGG → Area 6 / Amar Belapurkar. Locality Baner (no node) → Sanket Khandare (Area 3).
+  - **Browser:**
+    - The user's D1J message fills node D1J, Namdev Srushti (SITE-39739), LINKID 202603239, 9 customers, down time 2026-11-16 19:10:49, Area 2 / Rahul Dilliwala.
+    - NOC map, GGG complaint: "14 enclosers", 15 diamonds (including the key). Hide routes → "Show routes" (routes off), and back.
+    - The complaint list shows the coloured badges (101 on one page) and Area 1-6 pills. After the restyle, the screenshot shows 60 dot labels and pills only on Status / Link Status / Out.
+    - Team patch: "all found". New complaint, TEAM 1 → rider Kuldeep Kamathe filled. The splicer choices are only Rahul Tupe, Rohan Tupe, Shamburaj Khilare.
+- **Not tested:**
+  - Saving the colour page and seeing the list change (only defaults were viewed).
+  - The workflow transition with only a Field Staff manager.
+  - The Frappe Cloud site.
+- **Pending items:**
+  - 95 localities have no Team Area (e.g. Lohogaon, Shivajinagar, Aundh T.S.). Set it on the Area record, then save the complaints or run the patch again. 10,818 complaints have no Area at all.
+  - From the team sheet, Pramod Mali (TEAM 2 rider) and Alok (TEAM 4 splicer) have no Employee record and were not added.
+  - "Gaurav" (TEAM 3 rider) and "Deepak" (TEAM 3 splicer) were taken to be Gaurav Thorat and Deepak Lad; their Employee records have first names only.
+  - The six managers have no User login, so "Area Manager (Login)" stays empty. Area-Manager-only screens (NOC dashboard "my areas") need logins.
+  - Not committed or deployed.
+
+## 2026-11-27: EVision team areas (Area 1-6) with their Area Managers
+
+- **Summary:**
+  - **Area:**
+    - New fields: "EVision Team Area" tick, "Area Manager (Field Staff)" with phone, and Boundary (JSON).
+    - `team_area_at(lat, lon)` finds the team area that a point lies in.
+  - **Areas 1-6** made from the user's "Evision team.kmz" (Team 1-6). Managers:
+    - Area 1 Akash Pardeshi
+    - Area 2 Rahul Dilliwala
+    - Area 3 Sanket Khandare
+    - Area 4 Sachin Khude
+    - Area 5 Vilas Gaikwad
+    - Area 6 Amar Belapurkar
+  - **Maintenance Team** TEAM 1-6 gets its Area and manager name.
+  - **GIS Node:**
+    - New "Team Area" field. Area keeps the locality.
+    - The team area comes from the node's own KMZ pin if it lies inside a boundary, else the area most of its Network Links lie in, else the "Team N" most of its FTTH Master Data rows name.
+    - Area Manager and Area Manager No are replaced by that area's manager (user's choice).
+  - **Network Link:**
+    - Area is the team area the link lies in. Links outside every boundary take their node's area. Location keeps the locality.
+    - New or edited links with a position get their team area on save, unless they already have one.
+  - **KMZ Map:** the six boundaries are drawn (folder "EVision Team Areas"). The Area filter takes a team area or a locality.
+- **Reason:** User's request with the team area KMZ and the list of area managers. 3,969 Network Links had the fallback area "Pune".
+- **Files or modules affected:**
+  - `doctype/area/` (json, py)
+  - `doctype/network_link/network_link.py`
+  - `ftth/doctype/gis_node/gis_node.json`
+  - `patches/evision_team_areas.py` + `evision_team_areas.json` (boundaries and managers)
+  - `patches.txt`
+  - `page/kmz_map/kmz_map.py`
+- **Testing (newsite.local, `bench migrate` on the server):**
+  - The patch ran. 446 of 609 GIS Nodes were placed: 195 by their own pin, 243 by their links, 8 by master data team. Per area: Area 1 76, Area 2 51, Area 3 159, Area 4 34, Area 5 85, Area 6 41.
+  - 7,612 of 8,237 Network Links were placed. "Pune" fell from 3,969 to 263.
+  - TEAM 1-6 have their area and manager.
+  - GGG is in Area 6 under Amar Belapurkar.
+  - A new link at GGG's position gets Area 6 on validate.
+  - The Area 3 filter on the KMZ Map gives 151 nodes.
+- **Not tested:** In a real browser by a user. The Frappe Cloud site.
+- **Pending items:**
+  - 163 GIS Nodes are not placed: no pin and no link inside a boundary, and no "Team N" in the master. 625 links are not placed.
+  - Area 2's manager (Rahul Dilliwala) has no phone number in Field Staff.
+  - Field Staff still has the duplicates "Sanket k" / "Sanket Kandare".
+  - Not committed or deployed.
+
+## 2026-11-27: Full KMZ file shows on the KMZ Map; KMZ polygons imported; NOC map "Show routes" after "Hide routes"
+
+- **Summary:**
+  - **KMZ Polygon (new DocType, FTTH):**
+    - The KMZ's shapes (area remarks, DSA / cluster boundaries, team areas), which were skipped before.
+    - Stores the outer ring, the Google Earth line / fill colours and the area in sq m.
+    - KMZ Upload imports them ("KMZ Polygons Created") with the same dedupe and node matching as routes.
+    - The KMZ Map draws them under the routes (fill kept see-through, at most 0.35), in the "Shapes" layer, the folder tree and the search. The popup shows the area.
+  - **KMZ Upload:** rows that already existed are now stamped with the new upload (`custom_kmz_upload`). Before, only new rows were.
+  - **KMZ Map → KMZ File filter:**
+    - Lists every completed upload.
+    - Finds rows by their first file name or by the upload that holds them.
+    - Choosing "KMZ - Till - 16.09.2026.kmz" showed nothing before, because all 38,548 of its distinct routes / pins already came from the 8 "Part" files. Its name was not even in the list.
+  - **NOC Dashboard:** "Hide routes" turns into "Show routes", which puts the complaint's routes back. Before, the button disappeared.
+- **Reason:** User's reports: "not everything in it is getting imported on map" and "when clicked on hide route then also give show routes options".
+- **Files or modules affected:**
+  - `ftth/doctype/kmz_polygon/` (new)
+  - `doctype/kmz_upload/` (py, json)
+  - `page/kmz_map/` (py, js)
+  - `page/noc_dashboard/noc_dashboard.js`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` and `node --check` passed.
+  - The file holds 44,876 pins, 14,346 lines and 892 polygons. 20,654 of them are exact repeats (same name, same place / length). Every distinct line and pin (10,650 routes, 27,898 pins) was already in the database.
+  - Re-ran KMZ-UP-34939: 10,650 routes and 27,898 pins stamped. The file is in the KMZ File list.
+  - Second re-run, after polygon support: 594 KMZ Polygons created (892 in the file, the rest exact repeats). 480 have a colour from the KMZ, 106 have a GIS Node.
+  - Browser, node G3Q: "68 routes and 172 pins on the map. 39 shapes." Search "dsa" found 39, and Enter zoomed to the yellow DSA shapes under the routes.
+  - Found and fixed while testing: the route loop reused the name `site`, which hid the shapes whenever the last route had a Site.
+  - The filter on that file returns the 4,000 / 8,000 drawing limit (totals 10,650 / 27,898), and 18 routes / 33 pins with node H6Q. Part 3 still returns its own rows (1,394 / 3,920).
+- **Not tested:** The NOC "Show routes" button was only syntax-checked, not clicked. Nothing was tested on the Frappe Cloud site.
+- **Pending items:**
+  - The whole file at once is more than the map draws (4,000 lines / 8,000 pins). It shows fully with a GIS Node, Area or KMZ Path filter.
+  - 1,504 routes and 4,920 pins in this file have no GIS Node.
+  - Not committed or deployed.
+
+## 2026-11-27: KMZ Map folder tree like Google Earth; deeper zoom; building name read from complaint messages
+
+- **Summary:**
+  - **KMZ Map → "Map contents" tab:** the KMZ folder chains as a tree, as in Google Earth (Completed node KMZ → H6Q → "Dayanand Apartment to LAXMI MOHAN ODF" → its line and pins). Each folder shows how many lines / pins it holds.
+    - Clicking a folder opens it and zooms to everything inside it; the arrow only opens / shuts.
+    - Clicking a pin or line zooms to it and opens its popup.
+    - The eye hides or shows a folder or a single row; this is kept when the map reloads.
+    - Pins whose type is off in the Index (ODF, Encloser, Pole, Tree by default) are still listed, with the eye shut, so a folder shows all its contents; opening one puts it on the map.
+    - Large folders list 300 rows at a time ("Show more").
+    - The old node list is now the "GIS Nodes" tab.
+    - **Search box** above the tree (like Google Earth's Places search). Every typed word must appear in a folder, pin or line name, in any case. Only matches and the folders leading to them stay, and those folders open by themselves. A folder whose own name matches shows all its contents. The box shows "N found", and Enter zooms the map to everything found.
+    - `get_map_data` sends each folder chain once (`paths`), and every row ends with its index in that list.
+  - **Zoom:** the KMZ Map and the NOC Dashboard map now zoom to level 22. Frappe's tile settings have no maximum, so Leaflet stopped at 18; past level 19 the level-19 tiles are enlarged.
+  - **Complaint form, building from the message:**
+    - Airtel PON TT messages now keep the society line (e.g. "DAD COMPLEX DEFENCE ACCOUNT DEPARTMENT, BIBWEWADI") as `society_hint`. It was ignored before.
+    - The hint is matched by words (case, punctuation and filler words such as Society / Apartment ignored) against the node's Sites and Network Links.
+    - When one building clearly matches, Society / Building and LINKID fill themselves; otherwise the form asks NOC to pick it.
+    - Reading no longer stops at the down time. In messages where the date comes before the port and society ("INC / PON TT / date / 1 / GGG-L1/1/11 / DAD COMPLEX ..."), the node and building used to be lost.
+- **Reason:** User's requests: "in places give search option", "building name fetch nahi ho raha", "show folders inside folders on the map like this" (Google Earth screenshot), and "zoom doesn't go in enough".
+- **Files or modules affected:** `page/kmz_map/kmz_map.js`, `page/kmz_map/kmz_map.py`, `page/noc_dashboard/noc_dashboard.js`, `doctype/complaint_information/complaint_information.js`
+- **Testing (newsite.local, on the server):**
+  - `node --check` and `py_compile` passed.
+  - Browser test, new Complaint with the message "INC… / PON TT / GGG-L1/1/11 / DAD COMPLEX DEFENCE ACCOUNT DEPARTMENT, BIBWEWADI / 12 / date": node GGG, Society / Building "Dad Complex Defence Account Department" (SITE-39272), LINKID 202601048, customers 12.
+  - The user's own layout (date first, building over two lines): node GGG, the same building and LINKID, down time 2026-11-21 14:02:28, customers 1. The older layouts (S1B / MPJ "PLANET MILLENNIUM" / 24W "VRUNDAVAN SANKUL,SHIVANE") still read correctly.
+  - Browser test, KMZ Map on node H6Q:
+    - The tree shows Completed node KMZ and My Places; H6Q lists the same building folders as the user's Google Earth screenshot.
+    - The first folder holds its line, "Dayanand Apartment" and "Laxmi Mohan ODF" (ODF type off, listed with the eye shut). Clicking that ODF pin showed it, zoomed to it and opened its popup.
+    - Map maxZoom 22.
+    - Search "odf": 19 found. Only Completed node KMZ → H6Q (opened by itself) with its 6 "… ODF" folders, and My Places → the two "RFS ODF & OLT" folders, were left. A search with no match showed "No place matches the search." Enter zoomed the map (zoom 17).
+- **Not tested:** In a real browser by a user. The NOC Dashboard zoom change was only syntax-checked. The Frappe Cloud site.
+- **Pending items:**
+  - The KPI tiles on the KMZ Map show counts as "13.000" / "22.000" (number format). This is older code and was not changed.
+  - Not committed or deployed.
+
+## 2026-11-27: GIS Nodes, Sites and Link Register matched to FTTH Master Data
+
+- **Summary:** The new patch `emp_tracking.ftth.patches.match_network_to_master` makes the OverHead Project → Network lists match FTTH Master Data. It only adds missing records and fills blank fields; nothing already entered is overwritten.
+  - **GIS Nodes:** 486 → 609. Every master GIS code that looks like a real code (3–4 letters / digits) and was missing is created, with the area and team seen most often on its master rows. 10 codes were skipped as typos (19 rows): `.35Q`, `2 E2`, `2E 2`, `2E'2`, `2E2.`, `BCW (1BE)`, `Kamdhenu Mira D Wing`, `Ravet`, `S0A/1QA`, `Tube Park`.
+  - **Sites:** 772 → 9,681. Every master building (name + GIS) without a Site on its node is created: B Location = Survey B End, Vendor Name = Team, Month = "Mon/YYYY". Existing sites only had blank B Location / Vendor / Month filled; their ETIPL topology codes are unchanged (696 before and after). Numbering continues SITE-31666 … SITE-40574.
+  - **Link Register:** blank GIS filled from the master (links with no GIS: 16,902 → 8,835; the rest are links not in the master), and blank A End filled. The one missing master Link ID (619062023) was added. Values that differ from the master (177 A End spellings, 2 GIS) were left as they are.
+- **Reason:** User's request: "can you make this data match to Master data" (Network menu: GIS Nodes, Link Register, Sites).
+- **Files or modules affected:** `ftth/patches/match_network_to_master.py` (new), `patches.txt`
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed. `bench migrate` ran the patch; no errors from it. The Error Log only has `helpdesk.search.build_index` entries from the helpdesk app's own search index job.
+  - Running the patch a second time changed nothing (609 nodes, 9,681 sites, 16,992 links, 8,835 without GIS), and was rolled back.
+  - GIS Node GGG: Site 24, FTTH Link 24, FTTH Master Data 24, Network Link 24, and the Site Diagram draws the 24 buildings.
+  - 101 master rows have no Site: 82 have no GIS, and 19 are on the skipped codes.
+- **Not tested:** The Frappe Cloud site.
+- **Pending items:**
+  - Fix the 10 skipped GIS codes in the sheet / master and run again.
+  - 1,854 new sites have no B Location (blank in the master).
+  - Not committed or deployed.
+
+## 2026-11-27: Network Links created from FTTH Master Data (fixes "No Network Link has Node ID GGG")
+
+- **Summary:**
+  - The Complaint form finds the LINKID by the node in the operator's message, by looking up Network Link where Node ID = node. Network Link held only 2 demo links, so every real node failed with "No Network Link has Node ID GGG".
+  - The new patch `emp_tracking.patches.network_links_from_ftth_master` makes one Network Link per Evisions Link ID in FTTH Master Data: 8,235 links on 525 nodes. Each has:
+    - type FTTH, operator Airtel, status Active;
+    - Node ID and GIS Node ID = the site's GIS;
+    - Society / Building = the site name, and the lat-long from the sheet;
+    - Area = the Area record of the same name, else "Pune" (mandatory field); the sheet's area text goes in Location;
+    - "Team 1–6" → EVisions + that Maintenance Team; a vendor name matching a Maintenance Vendor → Vendor + that vendor; other vendor text → Vendor; blank → EVisions.
+  - Existing Link IDs are never changed. "OK" placeholders are skipped. A Link ID shared by several sites takes the first site.
+  - The GIS Node form gets a "Sites & Links" group: FTTH Master Data (by GIS) and Network Link (by Node ID), each with its count. The user expected a node's master-data rows to show on the node; e.g. GGG shows 24 and 24.
+- **Reason:** User's request: "to solve this error I gave you the master data", and "GGG was in the master data, why doesn't it show here?" (GIS Node list).
+- **Files or modules affected:** `patches/network_links_from_ftth_master.py` (new), `patches.txt`, `ftth/doctype/gis_node/gis_node.json` (connections)
+- **Testing (newsite.local, on the server):**
+  - `bench migrate` ran the patch with no errors: 8,237 Network Links (2 demo + 8,235 new); 24 on node GGG; 8,182 with lat-long; 3,969 with the fallback area "Pune".
+  - Browser test: a new Complaint with the Airtel message "INC… / GGG / 3 / date" fills node GGG and shows "Several links are on node GGG. Please pick the LINKID." instead of the error.
+  - LINKID search on node GGG for "gagan" returns Gagan Galaxy (202208055) and Gagan Enclave (202312067), with the building name shown.
+- **Not tested:** The Frappe Cloud site. Picking a LINKID in a real browser.
+- **Pending items:**
+  - A node with several buildings still needs the LINKID picked by hand. The message's society name is not used to choose one yet.
+  - 3,969 links have the fallback area "Pune", because the sheet's area name is not in the Area master.
+  - Not committed or deployed.
+
+## 2026-11-27: FTTH Master Data: one master of 9,730 FTTH sites in OverHead Project
+
+- **Summary:**
+  - New DocType **FTTH Master Data** (module FTTH), on the OverHead Project menu under FTTH.
+  - One record per site, with all 51 columns of the sheet grouped as Work Order, Site (A End), Survey, Survey by Area Manager, Approval, Fiber, Splicing, Completion and Data Match Notes.
+  - Records are named FMD-00001 … FMD-09730 in sheet order; new ones continue from FMD-09731.
+  - Values are kept as written. Distances such as "150+450" stay text, "yes" becomes "Yes", and the 6 cells that are not real dates (e.g. "16/16/2022", "Still not Recived") are kept in Data Match Notes.
+  - The columns the sheet leaves empty (snaps, video, phone numbers) are fields too, ready to fill.
+  - Data loads through the patch `emp_tracking.ftth.patches.import_ftth_master_data` (bulk insert from `ftth_master_data.json.gz`, 1.2 MB), so a Frappe Cloud deploy loads it too. The patch is skipped when the DocType already has rows.
+- **Reason:** User's request: "make one master in overhead project and take this data in it". Source: "Master Data for Software - ODN sites only (no vendor fill).xlsx" (Google Drive, last changed 2026-11-27; the identical copy in Downloads was used), tab "Master data". The year tabs repeat the same rows; the helper tabs were not imported.
+- **Files or modules affected:** `ftth/doctype/ftth_master_data/` (new), `ftth/patches/import_ftth_master_data.py` + `ftth_master_data.json.gz` (new), `patches.txt`, `page/workforce_dashboard/setup.py` (menu)
+- **Testing (newsite.local, on the server):**
+  - `py_compile` passed.
+  - `bench migrate` imported 9,730 records (FMD-00001 to FMD-09730). The first migrate stopped on empty number cells (Int columns are NOT NULL) and was rolled back; they are now stored as 0.
+  - Counts match the sheet: 9,657 with an RFS date, 8,543 with a Link ID. The FMD- series is at 9,730.
+  - A second migrate imported nothing more.
+  - A new record got FMD-09731, with spaces trimmed and Year filled from Month (rolled back). Saving an existing record works.
+  - Screenshots: list (name, GIS, area, team, RFS date, Link ID; filters GIS, Area, Team, Area Manager, Year, KMZ), the form, and the menu entry.
+- **Not tested:** The Frappe Cloud site.
+- **Pending items:**
+  - GIS, Area, Team and Link ID are plain text, not links to GIS Node / Area / Link Register.
+  - Not committed or deployed.
+
 ## 2026-11-27: Desk tiles hidden even when the menu rebuild fails
 
 - **Summary:** `after_migrate()` now runs `keep_only_desk_icons()` in its own try block. Until now it ran only as the last step of `make_navigation()`, so any earlier failure in the menu rebuild (logged as "rebuilding the desk menu after migrate failed") skipped the hiding.

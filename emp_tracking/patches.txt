@@ -27,3 +27,5 @@ emp_tracking.ftth.patches.ftth_settings_defaults
 emp_tracking.patches.backfill_unique_cut
 # 2026-11-27: office shift: Present when 9 h are completed, whatever the punch times (app_attendance.py)
 emp_tracking.patches.office_shift_hours_rule
+# 2026-11-28: Area as a tree (team areas with their localities under them)
+emp_tracking.patches.area_tree

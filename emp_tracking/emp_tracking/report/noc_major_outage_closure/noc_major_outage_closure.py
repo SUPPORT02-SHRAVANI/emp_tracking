@@ -16,9 +16,12 @@
 #   2026-11-26  Readable look: rows grouped under a bold month row (tree), short column names,
 #               names in title case.
 #   2026-11-26  Narrower columns so the table fits the screen; no 2nd splicer shown blank.
+#   2026-11-28  Dashboard on top: summary tiles and a chart of new / closed cuts per team.
 # ---------------------------------------------------------------------------------------------
 
 from frappe import _
+
+from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import sla_pct
 
 from emp_tracking.noc_reports import empty_message, major_outage
 
@@ -57,4 +60,41 @@ def execute(filters=None):
 		{"fieldname": "working", "label": _("Working"), "fieldtype": "Int", "width": 80},
 	]
 	# 2026-11-26: empty period -> message instead of an empty table
-	return columns, data, None if data else empty_message(filters or {})
+	if not data:
+		return columns, data, empty_message(filters or {})
+	rows = [d for d in data if not d.get("is_group")]
+	return columns, data, None, chart(rows), summary(rows)
+
+
+# Date: 2026-11-28
+def summary(rows):
+	"""Dashboard tiles (user: "for all summary reports make dashboard")."""
+	closed = sum(r["in_sla"] + r["out_sla"] for r in rows)
+	busiest = max(rows, key=lambda r: r["new"])
+	return [
+		{"label": _("Months"), "value": len({r["date"].strftime("%Y-%m") for r in rows}), "datatype": "Int", "indicator": "Blue"},
+		{"label": _("Outage days"), "value": len(rows), "datatype": "Int", "indicator": "Blue"},
+		{"label": _("New cuts on them"), "value": sum(r["new"] for r in rows), "datatype": "Int", "indicator": "Orange"},
+		{"label": _("Closed"), "value": sum(r["closed"] for r in rows), "datatype": "Int", "indicator": "Green"},
+		{"label": _("In SLA"), "value": f"{sla_pct(sum(r['in_sla'] for r in rows), sum(r['out_sla'] for r in rows), 0):g} %" if closed else "–",
+			"datatype": "Data", "indicator": "Green"},
+		{"label": _("Busiest day"), "value": f"{busiest['date'].strftime('%d %b %Y')} · {busiest['label']} · {busiest['new']}",
+			"datatype": "Data", "indicator": "Red"},
+	]
+
+
+# Date: 2026-11-28
+def chart(rows):
+	"""New cuts and closed cuts on the outage days, per team."""
+	teams = {}
+	for r in rows:
+		t = teams.setdefault(r["label"], [0, 0])
+		t[0] += r["new"]
+		t[1] += r["closed"]
+	return {
+		"data": {"labels": list(teams), "datasets": [
+			{"name": _("New cuts"), "values": [v[0] for v in teams.values()]},
+			{"name": _("Closed"), "values": [v[1] for v in teams.values()]}]},
+		"type": "bar", "height": 220, "fieldtype": "Int", "ev_axis": {"integer": 1}, "barOptions": {"spaceRatio": 0.5},
+		"colors": ["#f97316", "#22c55e"],
+	}

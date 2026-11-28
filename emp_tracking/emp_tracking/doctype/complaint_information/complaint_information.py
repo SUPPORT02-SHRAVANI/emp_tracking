@@ -39,6 +39,11 @@
 #   2026-11-26  Vendor assigned -> no Rider / Splicer (user's request): the four person fields are
 #               hidden on the form and cleared when a vendor is newly set (clear_people_for_vendor).
 #   2026-10-09  Transport removed as a link type: the client counts it as Backbone.
+#   2026-11-27  Area and Area Manager (Field Staff) from the node's EVision team area, Area 1-6
+#               (set_team_area_manager); the old User field is "Area Manager (Login)".
+#   2026-11-27  SLA hours from EVision Settings (was fixed at 4).
+#   2026-11-28  NOC flow check: no team and no vendor -> the EVisions team of the team area
+#               (set_default_team); an empty Link Status takes its workflow step's one.
 # ---------------------------------------------------------------------------------------------
 
 import frappe
@@ -61,6 +66,7 @@ OPERATOR_TYPES = {
 }
 
 # EVisions and company SLA: restored within this many hours = "In".
+# 2026-11-27: the default only; the value used is EVision Settings > SLA (hours).
 SLA_HOURS = 4
 
 # Link Status set when the complaint reaches a workflow step.
@@ -91,12 +97,23 @@ class ComplaintInformation(Document):
 		"""
 		self.fill_from_link()
 		self.fill_from_site()
+		self.set_default_team()
 		self.validate_operator_fields()
 		self.set_people()
 		self.stamp_workflow_times()
 		self.set_times_and_sla()
 		self.set_unique_cut()
 		self.clear_people_for_vendor()
+
+	# Date: 2026-11-28
+	def set_default_team(self):
+		"""No team and no vendor (neither from the LINKID nor chosen): the EVisions team working the
+		complaint's team area (Maintenance Team > Area), e.g. Area 6 -> TEAM 6, so the complaint
+		can be assigned. A team or vendor already there is never changed (NOC flow check)."""
+		if self.maintenance_team or self.mapped_vendor or not self.team_area:
+			return
+		self.maintenance_team = frappe.db.get_value("Maintenance Team",
+			{"area": self.team_area, "team_type": "EVisions", "status": "Active"}, "name")
 
 	# Date: 2026-11-26
 	def clear_people_for_vendor(self):
@@ -128,6 +145,11 @@ class ComplaintInformation(Document):
 	# Date: 2026-10-09
 	def stamp_workflow_times(self):
 		"""When the workflow step changes: stamp its time and move the Link Status along."""
+		# 2026-11-28 (NOC flow check): a complaint that never had a Link Status (imported, or made
+		# before this rule) gets its step's one, even when the step did not change
+		# (a brand new complaint has no workflow state yet here; the workflow sets "New" after validate)
+		if not self.link_status and (self.workflow_state or "New") in STATE_LINK_STATUS:
+			self.link_status = STATE_LINK_STATUS[self.workflow_state or "New"]
 		before = self.get_doc_before_save()
 		previous = before.workflow_state if before else None
 		if self.workflow_state == previous:
@@ -215,8 +237,35 @@ class ComplaintInformation(Document):
 					self.society_name = link.society_building
 				if not self.area and link.area:
 					self.area = link.area
+		self.set_team_area_manager()
 		if self.area and not self.area_manager:
 			self.area_manager = frappe.db.get_value("Area", self.area, "area_manager")
+
+	# Date: 2026-11-27
+	def set_team_area_manager(self):
+		"""Area and Area Manager from the node's EVision team area (Area 1-6), user's request
+		"assign area manager according to area in complaint". The node decides, as a link's own
+		area may lie just over a boundary. The manager follows the area; the login (area_manager)
+		is only filled when empty, so NOC can still pick someone else."""
+		from emp_tracking.emp_tracking.doctype.area.area import area_managers, team_area_of
+
+		team_area = frappe.db.get_value("GIS Node", self.node_id, "team_area") if self.node_id else None
+		if team_area:
+			area_changed = self.area != team_area
+			self.area = team_area
+		else:
+			# no node (e.g. imported NOC complaints): the Area is a locality such as Baner, which
+			# stays; its Team Area gives the manager
+			team_area = team_area_of(self.area)
+			area_changed = self.has_value_changed("area")
+		self.team_area = team_area  # 2026-11-27: shown (coloured) in the list's Area column
+		if not team_area:
+			return
+		staff, user = area_managers(team_area)
+		if staff and (area_changed or not self.area_manager_staff):
+			self.area_manager_staff = staff
+		if user and (area_changed or not self.area_manager):
+			self.area_manager = user
 
 	# Date: 2026-09-30
 	def validate_operator_fields(self):
@@ -248,10 +297,14 @@ def seconds_between(start, end):
 
 # Date: 2026-10-09
 def sla(seconds):
-	"""'In' if restored within SLA_HOURS, 'Out' if later, empty while not restored."""
+	"""'In' if restored within the SLA hours (EVision Settings), 'Out' if later, empty while not restored."""
+	from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import formula, setting
+
 	if seconds is None:
 		return None
-	return "In" if seconds <= SLA_HOURS * 3600 else "Out"
+	# 2026-11-28: the editable "SLA In when" formula (default: restore_hours <= sla_hours)
+	inside = formula("sla_in", restore_hours=seconds / 3600, sla_hours=setting("sla_hours"))
+	return "In" if inside else "Out"
 
 
 # Date: 2026-10-09

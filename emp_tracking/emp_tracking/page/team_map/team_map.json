@@ -1,0 +1,25 @@
+{
+ "content": null,
+ "creation": "2026-11-28 22:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "icon": "octicon octicon-globe",
+ "idx": 0,
+ "modified": "2026-11-28 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Emp Tracking",
+ "name": "team-map",
+ "owner": "Administrator",
+ "page_name": "team-map",
+ "restrict_to_domain": null,
+ "roles": [
+  { "role": "System Manager" },
+  { "role": "Project Head" },
+  { "role": "NOC Head" },
+  { "role": "Area Manager" },
+  { "role": "Maintenance Agent" }
+ ],
+ "standard": "Yes",
+ "system_page": 0,
+ "title": "Team Map"
+}

@@ -109,6 +109,12 @@ Change log:
 	            (hide_others_in_saved_layouts), since Frappe 16.54 uses the layout's hidden flags.
 	2026-11-27  after_migrate() runs keep_only_desk_icons() in its own try block, so a failure in the
 	            menu rebuild no longer skips it (Milestone still showed on the Frappe Cloud site).
+	2026-11-27  NOC Helpdesk menu: "Settings" (EVision Settings, Complaint List Colours, Areas).
+	2026-11-28  "Team Map" page in NOC Performance & Teams.
+	2026-11-28  "NOC Summary" page (all report dashboards in tabs) first in NOC Reports.
+	2026-11-28  "Master Data" section in the NOC sidebar: Areas, GIS Nodes, Sites, Network Links,
+	            EVisions Teams, Vendors, Field Staff (NOC roles get Field Staff read).
+	2026-11-28  "Areas" opens the list again (user: tree on click); the tree is the list's "Team view" button.
 """
 
 import os
@@ -527,6 +533,7 @@ OH_LINK_PERMS = {
 	"Network Link": ("select", "read"),
 	"GIS Node": ("select", "read"),  # 2026-10-24: was Node, merged into GIS Node
 	"Site": ("select", "read"),
+	"Field Staff": ("select", "read"),  # 2026-11-28: in the shared "Master Data" menu of OverHead and NOC
 }
 
 
@@ -669,6 +676,17 @@ def oh_menu():
 	#   FTTH Settings, Leaderboard Settings.
 	# 2026-10-29: one desk tile per module (user's request), each with its own sidebar sections:
 	#   {tile: {section: [items]}}. The tile order here is the order on the desk.
+	# 2026-11-28 (user: "data common to OverHead and NOC: name it Master Data, in NOC's sidebar
+	#   too"): one "Master Data" section, the same in both sidebars.
+	master_data = [
+		url("Areas", "/app/area/view/list", "Area"),  # the list (+ Add); "Team view" opens the tree
+		doctype("GIS Nodes", "GIS Node"),
+		doctype("Sites", "Site"),
+		doctype("Network Links", "Network Link"),  # LINKIDs (Complaint LINKID)
+		doctype("EVisions Teams", "Maintenance Team"),
+		doctype("Vendors", "Maintenance Vendor"),
+		doctype("Field Staff", "Field Staff"),
+	]
 	return {
 		"OverHead Project": {
 			# 2026-10-31: "Projects" (New Project) section removed: New Project was merged into
@@ -712,6 +730,8 @@ def oh_menu():
 			],
 			# 2026-11-26: the NOC workbook's tabs as reports (emp_tracking/noc_reports.py)
 			"NOC Reports": [
+				# 2026-11-28: every report's dashboard on one page, one tab each
+				page("NOC Summary", "noc-summary"),
 				report("Pending Summary", "NOC Pending Summary"),
 				# 2026-11-26: every SR counted per team and day, with who closed
 				report("Cut Team Summary", "NOC Cut Team Summary"),
@@ -725,7 +745,14 @@ def oh_menu():
 				report("Performance (Day / Night)", "NOC Performance"),
 				report("Team Availability", "NOC Team Availability"),
 				report("Field Staff Location Hours", "Field Staff Location Hours"),
-				doctype("Maintenance Teams", "Maintenance Team"),
+				page("Team Map", "team-map"),  # 2026-11-28: team areas, links and complaints by team
+			],
+			# 2026-11-28: the same Master Data as OverHead (teams and areas moved here)
+			"Master Data": [dict(i) for i in master_data],  # own copy per sidebar
+			# 2026-11-27: the app's rules on screen (user: "nothing hard coded")
+			"Settings": [
+				doctype("EVision Settings", "EVision Settings"),
+				doctype("Complaint List Colours", "Complaint List Colours"),
 			],
 		},
 	}

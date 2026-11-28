@@ -9,6 +9,7 @@
  "field_order": [
   "gis_code",
   "area",
+  "team_area",
   "is_active",
   "cb_1",
   "manager",
@@ -38,6 +39,15 @@
    "in_standard_filter": 1,
    "label": "Area",
    "reqd": 1
+  },
+  {
+   "fieldname": "team_area",
+   "fieldtype": "Link",
+   "options": "Area",
+   "label": "Team Area",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "EVision team area (Area 1-6), from where the node's links and pin lie."
   },
   {
    "default": "1",
@@ -128,9 +138,14 @@
    "group": "Network",
    "link_doctype": "KMZ Point",
    "link_fieldname": "gis"
+  },
+  {
+   "group": "Sites & Links",
+   "link_doctype": "Network Link",
+   "link_fieldname": "node_id"
   }
  ],
- "modified": "2026-11-24 14:40:00.000000",
+ "modified": "2026-11-27 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "FTTH",
  "name": "GIS Node",

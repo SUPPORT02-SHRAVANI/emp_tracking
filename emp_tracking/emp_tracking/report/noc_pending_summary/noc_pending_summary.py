@@ -134,11 +134,15 @@ def summary(rows):
 	out_sla = sum(v["out_sla"] for v in days.values())
 	pending = list(days.values())[-1]["closing"]
 	# nothing closed: "–" in grey, not a red 0% that reads as "all late"
+	# 2026-11-28: the hours come from EVision Settings (was a fixed "4 h")
+	from emp_tracking.emp_tracking.doctype.evision_settings.evision_settings import setting, sla_pct
+
+	label = _("Closed within {0} h").format(f"{setting('sla_hours'):g}")
 	if in_sla + out_sla:
-		pct = round(100.0 * in_sla / (in_sla + out_sla), 1)
-		sla = {"label": _("Closed within 4 h"), "value": pct, "datatype": "Percent", "indicator": "Green" if pct >= 80 else "Red"}
+		pct = sla_pct(in_sla, out_sla)  # 2026-11-28: editable formula
+		sla = {"label": label, "value": pct, "datatype": "Percent", "indicator": "Green" if pct >= 80 else "Red"}
 	else:
-		sla = {"label": _("Closed within 4 h"), "value": "–", "datatype": "Data", "indicator": "Gray"}
+		sla = {"label": label, "value": "–", "datatype": "Data", "indicator": "Gray"}
 	return [
 		{"label": _("Received"), "value": received, "datatype": "Int", "indicator": "Blue"},
 		{"label": _("Closed"), "value": closed, "datatype": "Int", "indicator": "Green"},
