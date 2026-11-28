@@ -2,6 +2,23 @@
 
 Created 2026-10-21. Earlier changes are recorded in git history and in the change logs inside each file.
 
+## 2026-11-28: Empty complaint list on the main site: list made fail-safe; one Area Manager on Area
+
+- **Summary:**
+  - **Complaint list** (the user's screenshot of evision.mymagicerp.com: "20 of 1,000+" and no rows):
+    - The main site runs a newer Frappe (`/desk/` URLs), and the new list script (`complaint_information_list.js`, commit 93b4423) is the likely cause. Without the main site's browser console the exact error is not known.
+    - The script is now fail-safe: every coloured column falls back to the plain value if drawing it fails (`clc_safe`); pills are drawn without `frappe.ui.badge` when that is missing; the status colour and colours loading can no longer stop the list. Errors are written to the console.
+  - **Area form** (user: "why two area managers"): the old "Area Manager" (User login, empty) is hidden; "Area Manager (Field Staff)" is now just **Area Manager**. A login is still found by the manager's name (`area_managers`).
+- **Files or modules affected:** `doctype/complaint_information/complaint_information_list.js`, `doctype/area/area.json`.
+- **Testing (newsite.local):**
+  - `node --check`; migrate.
+  - The Area 1 form shows Series No, Area Code, Status, Area Manager, Area Manager No, Boundary.
+  - The complaint list draws its rows (22) even with `frappe.ui.badge` removed.
+- **Not tested:** The main site (no access); the real cause there is not confirmed.
+- **Pending items:**
+  - Needs commit, push and deploy to reach the main site.
+  - The browser console error from the main site would confirm the cause.
+
 ## 2026-11-28: Commit of the team areas data (after the NOC commit 93b4423)
 
 - **Summary** (user: "commit the team areas data too"). The patches committed:

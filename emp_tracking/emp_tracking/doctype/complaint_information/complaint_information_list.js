@@ -17,6 +17,9 @@
 //   2026-11-27  Calmer look (user: "can we make this look better?"): pills only for Status and
 //               Link Status (sentence case, no more cut-off "NEED TO ASSI..."); Operator, Link
 //               Type and Area as a coloured dot with text; SLA "In" a small green tick, "Out" a red pill.
+//   2026-11-28  Fail-safe (main site showed an empty list): each column falls back to its plain
+//               value if drawing it fails (clc_safe), plain pills without frappe.ui.badge, and the
+//               status colour / colours loading never stop the list; errors go to the console.
 // ---------------------------------------------------------------------------------------------
 
 frappe.provide("emp_tracking");
@@ -60,6 +63,12 @@ function clc_sentence(text) {
 // a coloured, clickable (filters the list) badge like Frappe's own Select badges
 function clc_badge(fieldname, value, label, theme, title) {
 	if (!value) return "";
+	// 2026-11-28: Frappe versions without frappe.ui.badge get a plain indicator pill
+	if (!(frappe.ui && frappe.ui.badge && frappe.ui.badge.html)) {
+		const esc = frappe.utils.escape_html;
+		return `<span class="indicator-pill ${CLC_INDICATOR[theme] || theme || "gray"} filterable ellipsis"
+			data-filter="${esc(fieldname)},=,${esc(value)}" title="${esc(title || value)}">${esc(label || __(value))}</span>`;
+	}
 	return frappe.ui.badge.html({
 		label: label || __(value),
 		theme: theme || "gray",
@@ -67,6 +76,20 @@ function clc_badge(fieldname, value, label, theme, title) {
 		css_class: "filterable ellipsis",
 		attrs: { "data-filter": `${fieldname},=,${value}` },
 	});
+}
+
+// 2026-11-28 (main site showed an empty complaint list): a formatter that fails shows the plain
+// value instead of breaking the whole list, and says why in the browser console
+function clc_safe(fieldname, fn) {
+	return function (value, df, doc) {
+		try {
+			const html = fn(value, df, doc);
+			return html == null ? frappe.utils.escape_html(value == null ? "" : String(value)) : html;
+		} catch (e) {
+			console.error(`Complaint list: column ${fieldname} could not be drawn`, e);
+			return frappe.utils.escape_html(value == null ? "" : String(value));
+		}
+	};
 }
 
 function clc_colour(column, value) {
@@ -77,34 +100,39 @@ frappe.listview_settings["Complaint Information"] = {
 	add_fields: ["team_area", "area", "workflow_state"],
 
 	onload(listview) {
-		frappe.xcall("emp_tracking.emp_tracking.doctype.complaint_list_colours.complaint_list_colours.get_colours")
-			.then((c) => {
-				emp_tracking.complaint_colours = c || {};
-				listview.refresh();
-			});
-		if (frappe.user.has_role(["System Manager", "NOC Head"])) {
-			listview.page.add_menu_item(__("Colours"), () => frappe.set_route("Form", "Complaint List Colours"));
+		try {
+			frappe.xcall("emp_tracking.emp_tracking.doctype.complaint_list_colours.complaint_list_colours.get_colours")
+				.then((c) => {
+					emp_tracking.complaint_colours = c || {};
+					listview.refresh();
+				})
+				.catch((e) => console.error("Complaint list: colours could not be loaded", e));
+			if (frappe.user.has_role(["System Manager", "NOC Head"])) {
+				listview.page.add_menu_item(__("Colours"), () => frappe.set_route("Form", "Complaint List Colours"));
+			}
+		} catch (e) {
+			console.error("Complaint list: onload failed", e);
 		}
 	},
 
 	formatters: {
-		link_status: (value) => clc_badge("link_status", value, clc_sentence(value), clc_colour("Link Status", value), value),
-		operatorcustomer: (value) => clc_dot("operatorcustomer", value, null, clc_colour("Operator", value)),
-		complaint_type: (value) => clc_dot("complaint_type", value, null, clc_colour("Link Type", value)),
+		link_status: clc_safe("link_status", (value) => clc_badge("link_status", value, clc_sentence(value), clc_colour("Link Status", value), value)),
+		operatorcustomer: clc_safe("operatorcustomer", (value) => clc_dot("operatorcustomer", value, null, clc_colour("Operator", value))),
+		complaint_type: clc_safe("complaint_type", (value) => clc_dot("complaint_type", value, null, clc_colour("Link Type", value))),
 		// Area 1-6 with its colour; the locality (e.g. Baner) in the tooltip. A locality with no
 		// team area yet is grey text with a hollow dot.
-		area(value, df, doc) {
-			const team = doc.team_area;
+		area: clc_safe("area", (value, df, doc) => {
+			const team = doc && doc.team_area;
 			if (!team) return clc_dot("area", value, null, null, __("{0}: no team area set yet", [value]), true);
 			return clc_dot("team_area", team, team, clc_colour("Area", team), value && value !== team ? `${team} · ${value}` : team);
-		},
+		}),
 		// Out is what needs attention: a pill; In is a small tick
-		evision_sla(value) {
+		evision_sla: clc_safe("evision_sla", (value) => {
 			if (value === "In") {
 				return `<a class="filterable clc-sla-in" data-filter="evision_sla,=,In" title="${__("Within SLA")}">✓ ${__("In")}</a>`;
 			}
 			return clc_badge("evision_sla", value, null, clc_colour("EVisions SLA", value));
-		},
+		}),
 	},
 };
 
@@ -115,9 +143,13 @@ if (!frappe.__clc_indicator_wrapped) {
 	const original = frappe.get_indicator;
 	frappe.get_indicator = function (doc, doctype, show_workflow_state) {
 		const out = original.apply(this, arguments);
-		if (doctype === "Complaint Information" && doc && doc.workflow_state) {
-			const theme = clc_colour("Status", doc.workflow_state);
-			if (theme && out) out[1] = CLC_INDICATOR[theme] || theme;
+		try {
+			if (doctype === "Complaint Information" && doc && doc.workflow_state && Array.isArray(out)) {
+				const theme = clc_colour("Status", doc.workflow_state);
+				if (theme) out[1] = CLC_INDICATOR[theme] || theme;
+			}
+		} catch (e) {
+			console.error("Complaint list: status colour failed", e); // Frappe's own colour stays
 		}
 		return out;
 	};

@@ -43,9 +43,10 @@
   {
    "fieldname": "area_manager",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Area Manager",
-   "options": "User"
+   "in_list_view": 0,
+   "label": "Area Manager (Login)",
+   "options": "User",
+   "hidden": 1
   },
   {
    "default": "Active",
@@ -79,7 +80,7 @@
    "fieldname": "field_manager",
    "fieldtype": "Link",
    "options": "Field Staff",
-   "label": "Area Manager (Field Staff)",
+   "label": "Area Manager",
    "in_list_view": 1,
    "depends_on": "is_team_area"
   },
@@ -150,7 +151,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-28 18:00:00.000000",
+ "modified": "2026-11-28 23:55:00.000000",
  "modified_by": "Administrator",
  "module": "Emp Tracking",
  "name": "Area",
